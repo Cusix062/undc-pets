@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Pet, Post, DonationCampana } from './types';
 import { INITIAL_PETS, INITIAL_POSTS, FAQS } from './data';
 import PetCard from './components/PetCard';
@@ -45,6 +45,8 @@ const INITIAL_CAMPAIGNS: DonationCampana[] = [
 export default function App() {
   // Tabs: 'directorio' | 'comunidad' | 'donaciones' | 'ia_assistant' | 'faqs' | 'album'
   const [activeTab, setActiveTab] = useState<'directorio' | 'comunidad' | 'donaciones' | 'ia_assistant' | 'faqs' | 'album'>('directorio');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   
   // Data States
   const [pets, setPets] = useState<Pet[]>(INITIAL_PETS);
@@ -62,6 +64,19 @@ export default function App() {
   
   // FAQ active indexes
   const [activeFaq, setActiveFaq] = useState<string | null>(null);
+
+  // Close mobile menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
+        setMobileMenuOpen(false);
+      }
+    };
+    if (mobileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [mobileMenuOpen]);
 
   // Show a toast message
   const triggerNotification = (message: string) => {
@@ -218,26 +233,64 @@ export default function App() {
             </button>
           </div>
 
-          {/* Mobile menu trigger icon */}
-          <div className="md:hidden flex gap-2">
+          {/* Mobile menu trigger */}
+          <div className="md:hidden flex items-center gap-2">
             <button
-              onClick={() => setActiveTab('ia_assistant')}
+              onClick={() => { setActiveTab('ia_assistant'); setMobileMenuOpen(false); }}
               className="bg-[#00346f] text-white p-2 rounded-full shadow-xs flex items-center justify-center"
               title="Preguntar a la IA"
             >
               <span className="material-symbols-outlined text-[18px]">smart_toy</span>
             </button>
             <button
-              onClick={() => setActiveTab('comunidad')}
-              className="bg-rose-50 text-rose-700 p-2 rounded-full flex items-center justify-center border border-rose-100"
-              title="Reportar Mascota"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 border border-slate-200 flex items-center justify-center"
+              title="Menú"
             >
-              <span className="material-symbols-outlined text-[18px] font-bold">report</span>
+              <span className="material-symbols-outlined text-[22px]">{mobileMenuOpen ? 'close' : 'menu'}</span>
             </button>
           </div>
 
         </div>
       </header>
+
+      {/* Mobile Navigation Dropdown */}
+      {mobileMenuOpen && (
+        <div ref={mobileMenuRef} className="md:hidden fixed inset-x-0 top-16 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-lg animate-slide-down">
+          <nav className="flex flex-col py-3 px-4 gap-1">
+            {[
+              { tab: 'directorio' as const, icon: 'folder_special', label: 'Mascotas del Campus' },
+              { tab: 'comunidad' as const, icon: 'forum', label: 'Comunidad' },
+              { tab: 'album' as const, icon: 'photo_library', label: 'Álbum' },
+              { tab: 'donaciones' as const, icon: 'volunteer_activism', label: 'Donaciones' },
+              { tab: 'ia_assistant' as const, icon: 'smart_toy', label: 'Asistente AI' },
+              { tab: 'faqs' as const, icon: 'help', label: 'FAQs' },
+            ].map((item) => (
+              <button
+                key={item.tab}
+                onClick={() => { setActiveTab(item.tab); setMobileMenuOpen(false); }}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === item.tab
+                    ? 'bg-[#eef4ff] text-[#00346f]'
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+            <div className="border-t border-slate-100 mt-2 pt-2">
+              <button
+                onClick={() => { setActiveTab('donaciones'); setMobileMenuOpen(false); }}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#6b3900] bg-[#fc9d41]/10 hover:bg-[#fc9d41]/20 transition-all w-full"
+              >
+                <span className="material-symbols-outlined text-[20px]">favorite</span>
+                Apadrinar Mascota
+              </button>
+            </div>
+          </nav>
+        </div>
+      )}
 
       {/* Hero Header Section */}
       {activeTab === 'directorio' && (
