@@ -27,6 +27,7 @@ async function createPost(post: Post): Promise<Post[]> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(post),
   });
+  if (!res.ok) throw new Error('Error del servidor: ' + res.status);
   return res.json();
 }
 
@@ -162,8 +163,9 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
       setNewPostImage('');
       setNewPostFile(null);
       onShowNotification('¡Publicación compartida!');
-    } catch {
-      onShowNotification('Error al publicar');
+    } catch (e) {
+      console.error('Error al publicar:', e);
+      onShowNotification('Error al publicar: ' + (e instanceof Error ? e.message : 'desconocido'));
     }
   };
 

@@ -1,4 +1,21 @@
-export default async (req) => {
+import { getStore } from '@netlify/blobs';
+
+async function getPosts() {
+  try {
+    const store = getStore('undc-community');
+    const raw = await store.get('posts', { type: 'json' });
+    return raw || [];
+  } catch {
+    return [];
+  }
+}
+
+async function savePosts(posts) {
+  const store = getStore('undc-community');
+  await store.setJSON('posts', posts);
+}
+
+export const handler = async (event, context) => {
   const headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
@@ -6,30 +23,21 @@ export default async (req) => {
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers });
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers, body: '' };
   }
 
   try {
-    const { getStore } = await import('@netlify/blobs');
-    const store = getStore('undc-community');
+    const path = event.path.replace(/\/\.netlify\/functions\/api/, '').replace(/^\/api/, '') || '/';
 
-    const url = new URL(req.url);
-    let path = url.pathname;
-    path = path.replace(/\/\.netlify\/functions\/api/, '');
-    path = path.replace(/^\/api/, '') || '/';
-
-    // GET /posts — list all posts
-    if (req.method === 'GET' && path === '/posts') {
-      const raw = await store.get('posts', { type: 'json' });
-      return new Response(JSON.stringify(raw || []), { headers });
+    if (event.httpMethod === 'GET' && path === '/posts') {
+      const posts = await getPosts();
+      return { statusCode: 200, headers, body: JSON.stringify(posts) };
     }
 
-    // POST /posts — create a new post
-    if (req.method === 'POST' && path === '/posts') {
-      const body = await req.json();
-      const raw = await store.get('posts', { type: 'json' });
-      const posts = raw || [];
+    if (event.httpMethod === 'POST' && path === '/posts') {
+      const body = JSON.parse(event.body || '{}');
+      const posts = await getPosts();
       posts.unshift({
         ...body,
         id: body.id || `post_${Date.now()}`,
@@ -38,28 +46,26 @@ export default async (req) => {
         comments: body.comments || [],
         createdAt: new Date().toISOString(),
       });
-      await store.setJSON('posts', posts);
-      return new Response(JSON.stringify(posts), { headers });
+      await savePosts(posts);
+      return { statusCode: 200, headers, body: JSON.stringify(posts) };
     }
 
-    // PUT /posts/:id — update a post (likes, comments)
-    if (req.method === 'PUT' && path.startsWith('/posts/')) {
+    if (event.httpMethod === 'PUT' && path.startsWith('/posts/')) {
       const postId = path.replace('/posts/', '');
-      const body = await req.json();
-      const raw = await store.get('posts', { type: 'json' });
-      const posts = raw || [];
+      const body = JSON.parse(event.body || '{}');
+      const posts = await getPosts();
       const idx = posts.findIndex((p) => p.id === postId);
       if (idx === -1) {
-        return new Response(JSON.stringify({ error: 'Post not found' }), { status: 404, headers });
+        return { statusCode: 404, headers, body: JSON.stringify({ error: 'Post not found' }) };
       }
       posts[idx] = { ...posts[idx], ...body };
-      await store.setJSON('posts', posts);
-      return new Response(JSON.stringify(posts), { headers });
+      await savePosts(posts);
+      return { statusCode: 200, headers, body: JSON.stringify(posts) };
     }
 
-    return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers });
+    return { statusCode: 404, headers, body: JSON.stringify({ error: 'Not found' }) };
   } catch (err) {
     console.error('API Error:', err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
+    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
 };

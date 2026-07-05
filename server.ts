@@ -5,6 +5,7 @@
 
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
@@ -15,7 +16,7 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  app.use(express.json({ limit: '10mb' }));
 
   // Initialize Gemini AI client safely using lazy initialization
   const apiKey = process.env.GEMINI_API_KEY;
@@ -84,6 +85,49 @@ async function startServer() {
         details: error.message || String(error),
       });
     }
+  });
+
+  // API Routes for Community Posts (local dev — uses JSON file for persistence)
+  const POSTS_FILE = path.join(process.cwd(), 'data', 'posts.json');
+
+  function readPosts(): any[] {
+    try { return JSON.parse(fs.readFileSync(POSTS_FILE, 'utf-8')); }
+    catch { return []; }
+  }
+  function writePosts(posts: any[]) {
+    try {
+      const dir = path.dirname(POSTS_FILE);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(POSTS_FILE, JSON.stringify(posts, null, 2));
+    }
+    catch { /* ignore */ }
+  }
+
+  app.get('/api/posts', (req, res) => {
+    res.json(readPosts());
+  });
+
+  app.post('/api/posts', (req, res) => {
+    const posts = readPosts();
+    posts.unshift({
+      ...req.body,
+      id: req.body.id || `post_${Date.now()}`,
+      likes: req.body.likes || 0,
+      commentsCount: req.body.commentsCount || 0,
+      comments: req.body.comments || [],
+      createdAt: new Date().toISOString(),
+    });
+    writePosts(posts);
+    res.json(posts);
+  });
+
+  app.put('/api/posts/:id', (req, res) => {
+    const posts = readPosts();
+    const idx = posts.findIndex((p) => p.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Post not found' });
+    posts[idx] = { ...posts[idx], ...req.body };
+    writePosts(posts);
+    res.json(posts);
   });
 
   // Vite middleware for development
