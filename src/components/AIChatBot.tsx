@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { GoogleGenAI } from '@google/genai';
 import { INITIAL_PETS, INITIAL_POSTS, FAQS } from '../data';
 
 interface ChatMessage {
@@ -8,155 +9,42 @@ interface ChatMessage {
 
 const PRESET_PROMPTS = [
   { text: '¿Quién es Curly?', icon: 'pets' },
-  { text: '¿Cómo puedo adoptar una mascota?', icon: 'volunteer_activism' },
+  { text: '¿Cómo adoptar una mascota?', icon: 'volunteer_activism' },
   { text: '¿Qué donaciones se necesitan?', icon: 'favorite' },
   { text: '¿Cómo está RunRun?', icon: 'healing' }
 ];
 
-function findAnswer(input: string): string {
-  const q = input.toLowerCase();
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+const API_AVAILABLE = API_KEY.length > 0;
 
-  // Pet-specific queries
-  for (const pet of INITIAL_PETS) {
-    const petName = pet.name.toLowerCase();
-    if (q.includes(petName)) {
-      const gender = pet.gender === 'male' ? 'macho' : pet.gender === 'female' ? 'hembra' : 'grupo';
-      const species = pet.species === 'dog' ? 'perro' : 'gato';
-      let answer = `**${pet.name}** es un ${species} ${gender} de **${pet.age}** que está en **${pet.location}**.\n\n`;
-      answer += `${pet.story}\n\n`;
-      answer += `**Estado:** ${pet.status}\n`;
-      answer += `**Etiquetas:** ${pet.tags.join(', ')}`;
-      if (pet.status === 'Buscando hogar' || q.includes('adopt') || q.includes('hogar')) {
-        answer += '\n\nSi deseas adoptarlo, ve a la sección **Mascotas del Campus**, haz clic en su tarjeta y llena el formulario de adopción responsable.';
-      }
-      return answer;
-    }
-  }
+const SYSTEM_CONTEXT = `Eres el asistente virtual oficial de "UNDC Pets - Bienestar Animal" de la Universidad Nacional de Cañete (UNDC).
 
-  // Adoption
-  if (q.includes('adopt') || q.includes('adopción') || q.includes('hogar')) {
-    const adoptables = INITIAL_PETS.filter(p => p.status === 'Buscando hogar' || p.status.toLowerCase().includes('hogar'));
-    let answer = '**Proceso de Adopción Responsable:**\n\n';
-    answer += '1. Ve a la sección **Mascotas del Campus**\n';
-    answer += '2. Haz clic en la mascota que te interese\n';
-    answer += '3. Completa el formulario de solicitud con tus datos\n';
-    answer += '4. El equipo de Bienestar Universitario te contactará\n\n';
-    if (adoptables.length > 0) {
-      answer += `**Mascotas buscando hogar actualmente:** ${adoptables.map(p => p.name).join(', ')}\n\n`;
-    }
-    answer += '**Requisitos:**\n';
-    answer += '- Ser mayor de edad\n';
-    answer += '- Contar con espacio adecuado\n';
-    answer += '- Compromiso de cuidado y alimentación\n';
-    answer += '- Seguimiento post-adopción por parte del voluntariado';
-    return answer;
-  }
+Información actual sobre las mascotas del campus:
+${INITIAL_PETS.map(p =>
+  `- ${p.name}: ${p.species === 'dog' ? 'Perro' : 'Gato'}, ${p.gender === 'male' ? 'Macho' : 'Hembra'}, ${p.age}. Ubicación: ${p.location}. Estado: ${p.status}. Historia: ${p.story}. Etiquetas: ${p.tags.join(', ')}.`
+).join('\n')}
 
-  // Donations
-  if (q.includes('don') || q.includes('donación') || q.includes('donar') || q.includes('aport') || q.includes('colabor')) {
-    let answer = '**Formas de Donar:**\n\n';
-    answer += '💳 **Donación con Tarjeta:** Ve a la sección **Donaciones**, elige una campaña y dona con tarjeta de crédito/débito simulada.\n\n';
-    answer += '🏦 **Transferencia Bancaria:** Usa las cuentas institucionales:\n';
-    answer += '  - Banco de la Nación Cta. Cte: **00-068-123456**\n';
-    answer += '  - BCP (Recaudadora): **191-9876543-0-12**\n\n';
-    answer += '📱 **Yape / Plin:** 993 376 465\n\n';
-    answer += '📦 **Donaciones Físicas:** Alimento, medicinas y accesorios en:\n';
-    answer += '  - Puerta Principal (Vigilancia) Lun-Sáb 8am-6pm\n';
-    answer += '  - Oficina de Bienestar Universitario (2do Piso)\n\n';
-    answer += '**Campañas activas:**\n';
-    for (const c of INITIAL_POSTS.filter(() => true).slice(0, 3)) {
-      const camp = [{t:'Alimento Mensual',a:340,m:500},{t:'Cirugía Firulais',a:210,m:800},{t:'Esterilización',a:950,m:1200}];
-      // just use static campaign info
-    }
-    answer += '- Alimento Mensual para el Campus (S/.340 / S/.500)\n';
-    answer += '- Cirugía y Terapia de RunRun (S/.210 / S/.800)\n';
-    answer += '- Campaña de Esterilización Integral (S/.950 / S/.1200)';
-    return answer;
-  }
+Publicaciones recientes de la comunidad:
+${INITIAL_POSTS.slice(0, 3).map(p => `- ${p.authorName}: "${p.content}"`).join('\n')}
 
-  // Volunteer
-  if (q.includes('volunt') || q.includes('voluntariado') || q.includes('ayudar') || q.includes('participar')) {
-    return '**¿Cómo ser Voluntario?**\n\n'
-      + 'El voluntariado de bienestar animal de la UNDC coordina:\n\n'
-      + '🐾 Paseos supervisados los fines de semana\n'
-      + '🍖 Jornadas de alimentación\n'
-      + '💉 Campañas de vacunación\n'
-      + '🛁 Baños y cuidado básico\n\n'
-      + 'Contáctanos vía WhatsApp: **987 654 321**\n\n'
-      + 'También puedes ir a la **Oficina de Bienestar Universitario** en el Pabellón de Servicios Centrales, 2do Piso.';
-  }
+Preguntas frecuentes:
+${FAQS.map(f => `- ${f.question}: ${f.answer}`).join('\n')}
 
-  // Veterinary / health
-  if (q.includes('vete') || q.includes('veterin') || q.includes('salud') || q.includes('enfer') || q.includes('herid')) {
-    let answer = '**Atención Veterinaria en la UNDC:**\n\n';
-    answer += 'Si encuentras una mascota herida o en mal estado:\n\n';
-    answer += '1. **Reporta** en la sección **Comunidad > Reportar Mascota**\n';
-    answer += '2. Los voluntarios coordinarán la atención con la veterinaria aliada\n';
-    answer += '3. Las campañas de donación cubren gastos médicos\n\n';
-    const inTreatment = INITIAL_PETS.filter(p => p.statusType === 'error' || p.status === 'En tratamiento');
-    if (inTreatment.length > 0) {
-      answer += `**Mascotas en tratamiento:** ${inTreatment.map(p => `${p.name} (${p.status})`).join(', ')}`;
-    }
-    return answer;
-  }
+Información de donaciones:
+- Se puede donar con tarjeta en la sección Donaciones
+- Transferencia bancaria: Banco de la Nación Cta. Cte: 00-068-123456, BCP: 191-9876543-0-12
+- Yape / Plin: 993 376 465
+- Donaciones físicas en Puerta Principal (Lun-Sáb 8am-6pm) u Oficina de Bienestar Universitario
 
-  // Location / campus
-  if (q.includes('dónde') || q.includes('donde') || q.includes('ubic') || q.includes('campus') || q.includes('universidad')) {
-    let answer = '**Ubicación de las Mascotas en el Campus UNDC:**\n\n';
-    for (const pet of INITIAL_PETS) {
-      answer += `- **${pet.name}**: ${pet.location}\n`;
-    }
-    answer += '\nRecuerda respetar sus espacios y horarios de descanso.';
-    return answer;
-  }
-
-  // Food
-  if (q.includes('comid') || q.includes('aliment') || q.includes('croqu') || q.includes('comer')) {
-    return '**Alimentación Recomendada:**\n\n'
-      + '🍗 **Marcas recomendadas:** Ricocan, Ricocat, Mimaskot, Cambo o similares.\n'
-      + '❌ **Evita:** Alimento suelto o a granel, comida chatarra, huesos de pollo cocidos.\n\n'
-      + 'Puedes donar alimento en los **Puntos de Acopio** (Puerta Principal u Oficina de Bienestar).\n\n'
-      + 'Si ves a alguien dándoles comida inapropiada, repórtalo amablemente o avisa al voluntariado.';
-  }
-
-  // About the project
-  if (q.includes('quién') || q.includes('quien') || q.includes('qué es') || q.includes('que es') || q.includes('proyect') || q.includes('iniciativ')) {
-    return '**UNDC Pets - Bienestar Animal**\n\n'
-      + 'Es una iniciativa solidaria de la **Universidad Nacional de Cañete** para:\n\n'
-      + '🐶 Brindar refugio y cuidado a perros y gatos del campus\n'
-      + '🏥 Costear tratamientos veterinarios y alimentación\n'
-      + '📢 Concientizar sobre la tenencia responsable\n'
-      + '🤝 Facilitar adopciones responsables\n\n'
-      + 'Todo esto es posible gracias a estudiantes, docentes, voluntarios y donantes de la comunidad cañetana.';
-  }
-
-  // Greetings
-  if (q.includes('hola') || q.includes('buen') || q.includes('salud')) {
-    return '¡Hola! 🐾 Soy el **Asistente Virtual UNDC Pets**.\n\n¿En qué puedo ayudarte? Puedes preguntarme sobre:\n\n'
-      + '• **Mascotas** del campus (Curly, Princesa, RunRun, Gata Ingeniera)\n'
-      + '• **Adopción** responsable\n'
-      + '• **Donaciones** y campañas activas\n'
-      + '• **Voluntariado** universitario\n'
-      + '• **Ubicación** de los animales en el campus\n\n'
-      + '¡Escribe tu pregunta o elige una de las sugerencias!';
-  }
-
-  // Default fallback
-  return '**¡Buena pregunta!** 🤔\n\n'
-    + 'Puedo ayudarte con información sobre:\n\n'
-    + '🐾 **Mascotas:** Quiénes son, dónde están, su historia\n'
-    + '🏠 **Adopción:** Cómo adoptar responsablemente\n'
-    + '💰 **Donaciones:** Cómo donar con tarjeta, Yape, Plin o transferencia\n'
-    + '🤲 **Voluntariado:** Cómo unirte al equipo de bienestar\n'
-    + '📍 **Ubicaciones:** Dónde encontrar a cada mascota\n\n'
-    + '¿Podrías ser más específico? Por ejemplo: _"¿Quién es Princesa?"_, _"¿Cómo donar?"_ o _"¿Dónde está RunRun?"_';
-}
+Responde en español, sé amigable y entusiasta, usa emojis ocasionalmente. Mantén las respuestas concisas pero informativas. Si no sabes algo, sugiere al usuario consultar en la página web.`;
 
 export default function AIChatBot() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'model',
-      content: '¡Hola! 🐾 Soy **UNDC Pets AI**, tu asistente del bienestar animal de la **Universidad Nacional de Cañete**. Pregúntame sobre las mascotas del campus, adopciones, donaciones o voluntariado. ¿En qué puedo ayudarte?'
+      content: API_AVAILABLE
+        ? '¡Hola! 🐾 Soy **UNDC Pets AI**, tu asistente del bienestar animal de la **Universidad Nacional de Cañete**. Pregúntame sobre las mascotas del campus, adopciones, donaciones o voluntariado. ¿En qué puedo ayudarte?'
+        : '¡Hola! 🐾 Soy **UNDC Pets AI**.\n\n⚠️ **Importante:** Para que funcione con inteligencia real de Gemini, necesito una clave API. Sigue estos pasos:\n\n1. Ve a **https://aistudio.google.com/app/apikey**\n2. Haz clic en **"Create API Key"**\n3. Copia la clave\n4. Crea un archivo **.env** en la raíz del proyecto con: `VITE_GEMINI_API_KEY=tu_clave_aqui`\n5. Ejecuta `npm run dev:client` de nuevo\n\nMientras tanto, puedo responder preguntas básicas sobre las mascotas del campus? 🐶🐱'
     }
   ]);
   const [userInput, setUserInput] = useState('');
@@ -176,12 +64,51 @@ export default function AIChatBot() {
     setUserInput('');
     setIsLoading(true);
 
-    // Simulate a short delay for realism
-    await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 400));
+    if (!API_AVAILABLE) {
+      // No API key configured - use local response
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setIsLoading(false);
+      setMessages(prev => [...prev, {
+        role: 'model',
+        content: '⚠️ No hay una clave API configurada.\n\nPara activar Gemini, ve a **https://aistudio.google.com/app/apikey**, genera una clave gratis y créa un archivo **.env** con:\n\n`VITE_GEMINI_API_KEY=tu_clave`\n\nLuego reinicia el servidor de desarrollo.'
+      }]);
+      return;
+    }
 
-    const answer = findAnswer(text);
-    setMessages(prev => [...prev, { role: 'model', content: answer }]);
-    setIsLoading(false);
+    try {
+      const genAI = new GoogleGenAI({ apiKey: API_KEY });
+
+      const chatHistory = updatedMessages.slice(0, -1).map(m => ({
+        role: m.role === 'model' ? 'model' : 'user' as const,
+        parts: [{ text: m.content }]
+      }));
+
+      const chat = genAI.chats.create({
+        model: 'gemini-2.0-flash',
+        history: chatHistory,
+        config: {
+          systemInstruction: SYSTEM_CONTEXT,
+          maxOutputTokens: 800,
+          temperature: 0.7
+        }
+      });
+
+      const result = await chat.sendMessage({ text: userMsg.content });
+      const responseText = result.text || 'Lo siento, no pude generar una respuesta.';
+
+      setMessages(prev => [...prev, { role: 'model', content: responseText }]);
+    } catch (error) {
+      console.error('Gemini API error:', error);
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'model',
+          content: 'Ups, ocurrió un error al conectar con Gemini. 😅\n\nPosibles causas:\n- La clave API no es válida\n- Límite de peticiones alcanzado\n- Problema de conexión\n\nVerifica tu clave en **https://aistudio.google.com/app/apikey** e inténtalo de nuevo.'
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -226,7 +153,7 @@ export default function AIChatBot() {
           </div>
           <div>
             <h3 className="font-display font-extrabold text-lg leading-tight">Asistente Virtual UNDC Pets</h3>
-            <p className="text-[11px] text-slate-200 mt-1">Sistema inteligente de información sobre las mascotas del campus.</p>
+            <p className="text-[11px] text-slate-200 mt-1">Potenciado con **Gemini AI** de Google.</p>
           </div>
           <div className="border-t border-white/10 pt-4 space-y-3">
             <p className="text-xs font-bold text-[#fc9d41]">¿Qué me puedes preguntar?</p>
@@ -245,6 +172,11 @@ export default function AIChatBot() {
               </li>
             </ul>
           </div>
+          {!API_AVAILABLE && (
+            <div className="bg-amber-400/20 border border-amber-400/30 rounded-xl p-3 text-xs text-amber-200">
+              ⚠️ Modo local. Configura VITE_GEMINI_API_KEY en .env para activar Gemini.
+            </div>
+          )}
         </div>
         <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-5 space-y-3">
           <h4 className="font-display font-bold text-xs text-slate-800">Preguntas Frecuentes</h4>
@@ -272,19 +204,22 @@ export default function AIChatBot() {
               <div className="bg-[#00346f] text-white h-10 w-10 rounded-full flex items-center justify-center shadow-xs">
                 <span className="material-symbols-outlined text-[22px] font-bold">pets</span>
               </div>
-              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white" title="Conectado"></span>
+              <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${API_AVAILABLE ? 'bg-emerald-500' : 'bg-amber-500'}`} title={API_AVAILABLE ? 'Conectado a Gemini' : 'Modo local'}></span>
             </div>
             <div>
               <h3 className="font-display font-bold text-xs text-slate-800">UNDC Pets Guardián AI</h3>
-              <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
-                <span className="material-symbols-outlined text-[10px] font-bold">circle</span> En Línea
+              <p className={`text-[10px] font-bold flex items-center gap-0.5 ${API_AVAILABLE ? 'text-emerald-600' : 'text-amber-600'}`}>
+                <span className="material-symbols-outlined text-[10px] font-bold">circle</span>
+                {API_AVAILABLE ? 'Gemini AI Conectado' : 'Sin API Key'}
               </p>
             </div>
           </div>
           <button 
             onClick={() => setMessages([{
               role: 'model',
-              content: '¡Conversación reiniciada! 🐾 Pregúntame lo que gustes sobre el bienestar de nuestras mascotas de la UNDC.'
+              content: API_AVAILABLE
+                ? '¡Conversación reiniciada! 🐾 Pregúntame lo que gustes sobre las mascotas de la UNDC.'
+                : '¡Conversación reiniciada! 🐾 Recuerda configurar VITE_GEMINI_API_KEY en .env para usar Gemini.'
             }])}
             className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
             title="Reiniciar chat"
@@ -324,7 +259,7 @@ export default function AIChatBot() {
                 <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '150ms' }}></span>
                 <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '300ms' }}></span>
               </div>
-              <span className="text-[9px] text-slate-400 font-medium mt-1 px-1">Guardián está escribiendo...</span>
+              <span className="text-[9px] text-slate-400 font-medium mt-1 px-1">Gemini está pensando...</span>
             </div>
           )}
           <div ref={messagesEndRef} />
