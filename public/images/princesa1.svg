@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#f472b6"/>
+  <circle cx="200" cy="140" r="80" fill="#ec4899"/>
+  <circle cx="160" cy="120" r="10" fill="white"/>
+  <circle cx="240" cy="120" r="10" fill="white"/>
+  <circle cx="163" cy="120" r="4" fill="#1e293b"/>
+  <circle cx="243" cy="120" r="4" fill="#1e293b"/>
+  <ellipse cx="200" cy="170" rx="25" ry="12" fill="#be185d"/>
+  <path d="M175 85 Q200 50 225 85" stroke="#1e293b" fill="none" stroke-width="2"/>
+  <text x="200" y="30" text-anchor="middle" font-size="14" fill="white" font-weight="bold" font-family="sans-serif">Princesa</text>
+</svg>
