@@ -46,6 +46,8 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostAuthorName, setNewPostAuthorName] = useState('Anónimo (Estudiante)');
   const [newPostImage, setNewPostImage] = useState('');
+  const [newPostFile, setNewPostFile] = useState<File | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [reportName, setReportName] = useState('');
   const [reportSpecies, setReportSpecies] = useState<'dog' | 'cat'>('dog');
   const [reportGender, setReportGender] = useState<'male' | 'female' | 'group'>('male');
@@ -110,6 +112,32 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
     }
   };
 
+  const handleFileSelect = (file: File | null) => {
+    setNewPostFile(file);
+    if (!file) { setNewPostImage(''); return; }
+    setUploadingImage(true);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        const max = 1200;
+        if (w > max || h > max) {
+          if (w > h) { h = h * max / w; w = max; }
+          else { w = w * max / h; h = max; }
+        }
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, w, h);
+        setNewPostImage(canvas.toDataURL('image/jpeg', 0.7));
+        setUploadingImage(false);
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleCreatePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPostContent.trim()) return;
@@ -132,6 +160,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
       setPosts(updated);
       setNewPostContent('');
       setNewPostImage('');
+      setNewPostFile(null);
       onShowNotification('¡Publicación compartida!');
     } catch {
       onShowNotification('Error al publicar');
@@ -226,8 +255,20 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
                     <input type="text" value={newPostAuthorName} onChange={(e) => setNewPostAuthorName(e.target.value)} placeholder="Ej. María López (Sistemas)" className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#00346f] bg-slate-50" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Enlace de Imagen (Opcional)</label>
-                    <input type="url" value={newPostImage} onChange={(e) => setNewPostImage(e.target.value)} placeholder="https://..." className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#00346f] bg-slate-50" />
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Subir Foto (Opcional)</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
+                      className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#00346f] bg-slate-50 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-[#00346f] file:text-white hover:file:bg-[#002450"
+                    />
+                    {uploadingImage && <span className="text-[10px] text-slate-400 mt-1 block">Procesando imagen...</span>}
+                    {newPostImage && !uploadingImage && (
+                      <div className="mt-1 flex items-center gap-2">
+                        <img src={newPostImage} alt="Preview" className="h-8 w-8 rounded object-cover border" />
+                        <button type="button" onClick={() => { setNewPostFile(null); setNewPostImage(''); }} className="text-[10px] text-rose-600 font-bold">Quitar</button>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex justify-end pt-2">
@@ -399,7 +440,13 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
                   </div>
                 ))}
               </div>
-              <input type="url" value={reportImage} onChange={(e) => setReportImage(e.target.value)} placeholder="O pega tu propio enlace..." className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50" />
+              <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = (ev) => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); let w = img.width, h = img.height, max = 1200; if (w > max || h > max) { if (w > h) { h = h * max / w; w = max; } else { w = w * max / h; h = max; } } c.width = w; c.height = h; c.getContext('2d')!.drawImage(img, 0, 0, w, h); setReportImage(c.toDataURL('image/jpeg', 0.7)); }; img.src = ev.target?.result as string; }; r.readAsDataURL(f); }} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-rose-600 file:text-white hover:file:bg-rose-700" />
+              {reportImage && reportImage.startsWith('data:') && (
+                <div className="mt-2 flex items-center gap-2">
+                  <img src={reportImage} alt="Preview" className="h-10 w-10 rounded object-cover border" />
+                  <button type="button" onClick={() => setReportImage(REPORT_IMAGE_PRESETS[0].url)} className="text-[10px] text-rose-600 font-bold">Usar imagen por defecto</button>
+                </div>
+              )}
             </div>
             <div className="border-t border-slate-100 pt-4">
               <label className="block text-xs font-bold text-slate-700 mb-1">Tu Correo (Opcional)</label>
