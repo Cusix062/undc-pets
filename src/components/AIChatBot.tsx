@@ -1,9 +1,5 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState, useRef, useEffect } from 'react';
+import { INITIAL_PETS, INITIAL_POSTS, FAQS } from '../data';
 
 interface ChatMessage {
   role: 'user' | 'model';
@@ -11,24 +7,162 @@ interface ChatMessage {
 }
 
 const PRESET_PROMPTS = [
-  { text: '¿Quién es Bobby?', icon: 'pets' },
-  { text: '¿Cómo puedo adoptar a Luna?', icon: 'volunteer_activism' },
+  { text: '¿Quién es Curly?', icon: 'pets' },
+  { text: '¿Cómo puedo adoptar una mascota?', icon: 'volunteer_activism' },
   { text: '¿Qué donaciones se necesitan?', icon: 'favorite' },
-  { text: '¿Cómo está Firulais de la cadera?', icon: 'healing' }
+  { text: '¿Cómo está RunRun?', icon: 'healing' }
 ];
+
+function findAnswer(input: string): string {
+  const q = input.toLowerCase();
+
+  // Pet-specific queries
+  for (const pet of INITIAL_PETS) {
+    const petName = pet.name.toLowerCase();
+    if (q.includes(petName)) {
+      const gender = pet.gender === 'male' ? 'macho' : pet.gender === 'female' ? 'hembra' : 'grupo';
+      const species = pet.species === 'dog' ? 'perro' : 'gato';
+      let answer = `**${pet.name}** es un ${species} ${gender} de **${pet.age}** que está en **${pet.location}**.\n\n`;
+      answer += `${pet.story}\n\n`;
+      answer += `**Estado:** ${pet.status}\n`;
+      answer += `**Etiquetas:** ${pet.tags.join(', ')}`;
+      if (pet.status === 'Buscando hogar' || q.includes('adopt') || q.includes('hogar')) {
+        answer += '\n\nSi deseas adoptarlo, ve a la sección **Mascotas del Campus**, haz clic en su tarjeta y llena el formulario de adopción responsable.';
+      }
+      return answer;
+    }
+  }
+
+  // Adoption
+  if (q.includes('adopt') || q.includes('adopción') || q.includes('hogar')) {
+    const adoptables = INITIAL_PETS.filter(p => p.status === 'Buscando hogar' || p.status.toLowerCase().includes('hogar'));
+    let answer = '**Proceso de Adopción Responsable:**\n\n';
+    answer += '1. Ve a la sección **Mascotas del Campus**\n';
+    answer += '2. Haz clic en la mascota que te interese\n';
+    answer += '3. Completa el formulario de solicitud con tus datos\n';
+    answer += '4. El equipo de Bienestar Universitario te contactará\n\n';
+    if (adoptables.length > 0) {
+      answer += `**Mascotas buscando hogar actualmente:** ${adoptables.map(p => p.name).join(', ')}\n\n`;
+    }
+    answer += '**Requisitos:**\n';
+    answer += '- Ser mayor de edad\n';
+    answer += '- Contar con espacio adecuado\n';
+    answer += '- Compromiso de cuidado y alimentación\n';
+    answer += '- Seguimiento post-adopción por parte del voluntariado';
+    return answer;
+  }
+
+  // Donations
+  if (q.includes('don') || q.includes('donación') || q.includes('donar') || q.includes('aport') || q.includes('colabor')) {
+    let answer = '**Formas de Donar:**\n\n';
+    answer += '💳 **Donación con Tarjeta:** Ve a la sección **Donaciones**, elige una campaña y dona con tarjeta de crédito/débito simulada.\n\n';
+    answer += '🏦 **Transferencia Bancaria:** Usa las cuentas institucionales:\n';
+    answer += '  - Banco de la Nación Cta. Cte: **00-068-123456**\n';
+    answer += '  - BCP (Recaudadora): **191-9876543-0-12**\n\n';
+    answer += '📱 **Yape / Plin:** 993 376 465\n\n';
+    answer += '📦 **Donaciones Físicas:** Alimento, medicinas y accesorios en:\n';
+    answer += '  - Puerta Principal (Vigilancia) Lun-Sáb 8am-6pm\n';
+    answer += '  - Oficina de Bienestar Universitario (2do Piso)\n\n';
+    answer += '**Campañas activas:**\n';
+    for (const c of INITIAL_POSTS.filter(() => true).slice(0, 3)) {
+      const camp = [{t:'Alimento Mensual',a:340,m:500},{t:'Cirugía Firulais',a:210,m:800},{t:'Esterilización',a:950,m:1200}];
+      // just use static campaign info
+    }
+    answer += '- Alimento Mensual para el Campus (S/.340 / S/.500)\n';
+    answer += '- Cirugía y Terapia de RunRun (S/.210 / S/.800)\n';
+    answer += '- Campaña de Esterilización Integral (S/.950 / S/.1200)';
+    return answer;
+  }
+
+  // Volunteer
+  if (q.includes('volunt') || q.includes('voluntariado') || q.includes('ayudar') || q.includes('participar')) {
+    return '**¿Cómo ser Voluntario?**\n\n'
+      + 'El voluntariado de bienestar animal de la UNDC coordina:\n\n'
+      + '🐾 Paseos supervisados los fines de semana\n'
+      + '🍖 Jornadas de alimentación\n'
+      + '💉 Campañas de vacunación\n'
+      + '🛁 Baños y cuidado básico\n\n'
+      + 'Contáctanos vía WhatsApp: **987 654 321**\n\n'
+      + 'También puedes ir a la **Oficina de Bienestar Universitario** en el Pabellón de Servicios Centrales, 2do Piso.';
+  }
+
+  // Veterinary / health
+  if (q.includes('vete') || q.includes('veterin') || q.includes('salud') || q.includes('enfer') || q.includes('herid')) {
+    let answer = '**Atención Veterinaria en la UNDC:**\n\n';
+    answer += 'Si encuentras una mascota herida o en mal estado:\n\n';
+    answer += '1. **Reporta** en la sección **Comunidad > Reportar Mascota**\n';
+    answer += '2. Los voluntarios coordinarán la atención con la veterinaria aliada\n';
+    answer += '3. Las campañas de donación cubren gastos médicos\n\n';
+    const inTreatment = INITIAL_PETS.filter(p => p.statusType === 'error' || p.status === 'En tratamiento');
+    if (inTreatment.length > 0) {
+      answer += `**Mascotas en tratamiento:** ${inTreatment.map(p => `${p.name} (${p.status})`).join(', ')}`;
+    }
+    return answer;
+  }
+
+  // Location / campus
+  if (q.includes('dónde') || q.includes('donde') || q.includes('ubic') || q.includes('campus') || q.includes('universidad')) {
+    let answer = '**Ubicación de las Mascotas en el Campus UNDC:**\n\n';
+    for (const pet of INITIAL_PETS) {
+      answer += `- **${pet.name}**: ${pet.location}\n`;
+    }
+    answer += '\nRecuerda respetar sus espacios y horarios de descanso.';
+    return answer;
+  }
+
+  // Food
+  if (q.includes('comid') || q.includes('aliment') || q.includes('croqu') || q.includes('comer')) {
+    return '**Alimentación Recomendada:**\n\n'
+      + '🍗 **Marcas recomendadas:** Ricocan, Ricocat, Mimaskot, Cambo o similares.\n'
+      + '❌ **Evita:** Alimento suelto o a granel, comida chatarra, huesos de pollo cocidos.\n\n'
+      + 'Puedes donar alimento en los **Puntos de Acopio** (Puerta Principal u Oficina de Bienestar).\n\n'
+      + 'Si ves a alguien dándoles comida inapropiada, repórtalo amablemente o avisa al voluntariado.';
+  }
+
+  // About the project
+  if (q.includes('quién') || q.includes('quien') || q.includes('qué es') || q.includes('que es') || q.includes('proyect') || q.includes('iniciativ')) {
+    return '**UNDC Pets - Bienestar Animal**\n\n'
+      + 'Es una iniciativa solidaria de la **Universidad Nacional de Cañete** para:\n\n'
+      + '🐶 Brindar refugio y cuidado a perros y gatos del campus\n'
+      + '🏥 Costear tratamientos veterinarios y alimentación\n'
+      + '📢 Concientizar sobre la tenencia responsable\n'
+      + '🤝 Facilitar adopciones responsables\n\n'
+      + 'Todo esto es posible gracias a estudiantes, docentes, voluntarios y donantes de la comunidad cañetana.';
+  }
+
+  // Greetings
+  if (q.includes('hola') || q.includes('buen') || q.includes('salud')) {
+    return '¡Hola! 🐾 Soy el **Asistente Virtual UNDC Pets**.\n\n¿En qué puedo ayudarte? Puedes preguntarme sobre:\n\n'
+      + '• **Mascotas** del campus (Curly, Princesa, RunRun, Gata Ingeniera)\n'
+      + '• **Adopción** responsable\n'
+      + '• **Donaciones** y campañas activas\n'
+      + '• **Voluntariado** universitario\n'
+      + '• **Ubicación** de los animales en el campus\n\n'
+      + '¡Escribe tu pregunta o elige una de las sugerencias!';
+  }
+
+  // Default fallback
+  return '**¡Buena pregunta!** 🤔\n\n'
+    + 'Puedo ayudarte con información sobre:\n\n'
+    + '🐾 **Mascotas:** Quiénes son, dónde están, su historia\n'
+    + '🏠 **Adopción:** Cómo adoptar responsablemente\n'
+    + '💰 **Donaciones:** Cómo donar con tarjeta, Yape, Plin o transferencia\n'
+    + '🤲 **Voluntariado:** Cómo unirte al equipo de bienestar\n'
+    + '📍 **Ubicaciones:** Dónde encontrar a cada mascota\n\n'
+    + '¿Podrías ser más específico? Por ejemplo: _"¿Quién es Princesa?"_, _"¿Cómo donar?"_ o _"¿Dónde está RunRun?"_';
+}
 
 export default function AIChatBot() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'model',
-      content: '¡Hola! 🐾 Soy **UNDC Pets AI**, tu asistente inteligente y guardián virtual del bienestar animal de la **Universidad Nacional de Cañete**. Puedes preguntarme sobre las mascotas del campus, cómo adoptar responsablemente, cómo colaborar con alimentos/medicinas o unirte al voluntariado. ¿En qué puedo ayudarte hoy?'
+      content: '¡Hola! 🐾 Soy **UNDC Pets AI**, tu asistente del bienestar animal de la **Universidad Nacional de Cañete**. Pregúntame sobre las mascotas del campus, adopciones, donaciones o voluntariado. ¿En qué puedo ayudarte?'
     }
   ]);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
@@ -38,38 +172,16 @@ export default function AIChatBot() {
 
     const userMsg: ChatMessage = { role: 'user', content: text.trim() };
     const updatedMessages = [...messages, userMsg];
-    
     setMessages(updatedMessages);
     setUserInput('');
     setIsLoading(true);
 
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ messages: updatedMessages }),
-      });
+    // Simulate a short delay for realism
+    await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 400));
 
-      if (!response.ok) {
-        throw new Error('No se pudo conectar con el servidor.');
-      }
-
-      const data = await response.json();
-      setMessages(prev => [...prev, { role: 'model', content: data.text }]);
-    } catch (error) {
-      console.error('Error during AI Chat:', error);
-      setMessages(prev => [
-        ...prev,
-        {
-          role: 'model',
-          content: 'Ups, disculpa. Tuve un pequeño problema para conectarme al servidor de IA. Por favor intenta de nuevo.'
-        }
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
+    const answer = findAnswer(text);
+    setMessages(prev => [...prev, { role: 'model', content: answer }]);
+    setIsLoading(false);
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -77,20 +189,12 @@ export default function AIChatBot() {
     handleSendMessage(userInput);
   };
 
-  // Safe simple markdown-like formatter to render bold, bullet points, and headers
   const renderFormattedText = (text: string) => {
-    // Escape or split lines to render list items nicely
     const lines = text.split('\n');
     return lines.map((line, idx) => {
       let content = line;
-      
-      // Match bullet point
       const isBullet = content.trim().startsWith('- ') || content.trim().startsWith('* ');
-      if (isBullet) {
-        content = content.trim().substring(2);
-      }
-
-      // Formatting strong elements **bold**
+      if (isBullet) content = content.trim().substring(2);
       const boldParts = content.split('**');
       const renderedLine = boldParts.map((part, pIdx) => {
         if (pIdx % 2 === 1) {
@@ -98,7 +202,6 @@ export default function AIChatBot() {
         }
         return part;
       });
-
       if (isBullet) {
         return (
           <li key={idx} className="ml-4 list-disc pl-1 text-slate-700 leading-relaxed text-xs my-0.5">
@@ -106,7 +209,6 @@ export default function AIChatBot() {
           </li>
         );
       }
-
       return (
         <p key={idx} className="text-slate-700 leading-relaxed text-xs my-1">
           {renderedLine}
@@ -117,8 +219,6 @@ export default function AIChatBot() {
 
   return (
     <div id="ai-chatbot-container" className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-fade-in max-w-5xl mx-auto">
-      
-      {/* Quick guide and recommendations */}
       <div className="space-y-6 md:col-span-1">
         <div className="bg-gradient-to-br from-[#00346f] to-[#002450] text-white rounded-3xl p-6 space-y-4 shadow-md">
           <div className="bg-white/10 h-12 w-12 rounded-full flex items-center justify-center">
@@ -126,29 +226,26 @@ export default function AIChatBot() {
           </div>
           <div>
             <h3 className="font-display font-extrabold text-lg leading-tight">Asistente Virtual UNDC Pets</h3>
-            <p className="text-[11px] text-slate-200 mt-1">Desarrollado con inteligencia artificial de Google para guiar y concientizar a la comunidad universitaria.</p>
+            <p className="text-[11px] text-slate-200 mt-1">Sistema inteligente de información sobre las mascotas del campus.</p>
           </div>
-
           <div className="border-t border-white/10 pt-4 space-y-3">
             <p className="text-xs font-bold text-[#fc9d41]">¿Qué me puedes preguntar?</p>
             <ul className="space-y-2 text-[11px] text-slate-100 font-medium list-inside">
               <li className="flex gap-1.5 items-start">
                 <span className="material-symbols-outlined text-[14px] text-[#fc9d41] mt-0.5">help</span>
-                <span>Ubicación y estado de las mascotas en tiempo real.</span>
+                <span>Información de cada mascota del campus.</span>
               </li>
               <li className="flex gap-1.5 items-start">
                 <span className="material-symbols-outlined text-[14px] text-[#fc9d41] mt-0.5">help</span>
-                <span>Proceso para adoptar, apadrinar o ser voluntario.</span>
+                <span>Proceso de adopción y voluntariado.</span>
               </li>
               <li className="flex gap-1.5 items-start">
                 <span className="material-symbols-outlined text-[14px] text-[#fc9d41] mt-0.5">help</span>
-                <span>Normas para alimentar de forma segura a los animales.</span>
+                <span>Donaciones, campañas y puntos de acopio.</span>
               </li>
             </ul>
           </div>
         </div>
-
-        {/* Quick Suggestion Chips */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-5 space-y-3">
           <h4 className="font-display font-bold text-xs text-slate-800">Preguntas Frecuentes</h4>
           <div className="flex flex-col gap-2">
@@ -168,11 +265,7 @@ export default function AIChatBot() {
           </div>
         </div>
       </div>
-
-      {/* Main Chat Box */}
       <div className="md:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-md flex flex-col h-[550px] overflow-hidden">
-        
-        {/* Chat Header */}
         <div className="bg-slate-50 border-b border-slate-100 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -188,7 +281,6 @@ export default function AIChatBot() {
               </p>
             </div>
           </div>
-          
           <button 
             onClick={() => setMessages([{
               role: 'model',
@@ -200,8 +292,6 @@ export default function AIChatBot() {
             <span className="material-symbols-outlined text-[18px]">delete</span>
           </button>
         </div>
-
-        {/* Chat Messages Body */}
         <div className="flex-grow p-6 overflow-y-auto bg-slate-50/20 space-y-4 flex flex-col">
           {messages.map((msg, idx) => {
             const isUser = msg.role === 'user';
@@ -227,8 +317,6 @@ export default function AIChatBot() {
               </div>
             );
           })}
-
-          {/* Typing Indicator */}
           {isLoading && (
             <div className="align-start self-start text-left max-w-[85%]">
               <div className="bg-white text-slate-800 border border-slate-100 rounded-2xl p-3.5 shadow-3xs flex items-center gap-1.5">
@@ -236,21 +324,18 @@ export default function AIChatBot() {
                 <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '150ms' }}></span>
                 <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '300ms' }}></span>
               </div>
-              <span className="text-[9px] text-slate-400 font-medium mt-1 px-1">Guanrdián está escribiendo...</span>
+              <span className="text-[9px] text-slate-400 font-medium mt-1 px-1">Guardián está escribiendo...</span>
             </div>
           )}
-
           <div ref={messagesEndRef} />
         </div>
-
-        {/* Chat Input Footer */}
         <form onSubmit={handleFormSubmit} className="bg-white border-t border-slate-100 p-4 flex gap-2">
           <input
             type="text"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             disabled={isLoading}
-            placeholder="Pregúntame sobre Bobby, Luna, voluntariados, donaciones..."
+            placeholder="Pregúntame sobre Curly, adopciones, donaciones..."
             className="flex-grow text-xs px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] focus:ring-1 focus:ring-[#00346f] bg-slate-50"
           />
           <button
@@ -261,9 +346,7 @@ export default function AIChatBot() {
             <span className="material-symbols-outlined text-[18px]">send</span>
           </button>
         </form>
-
       </div>
-
     </div>
   );
 }
