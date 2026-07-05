@@ -4,8 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { Pet, Post, DonationCampana } from './types';
-import { INITIAL_PETS, INITIAL_POSTS, FAQS } from './data';
+import { Pet, DonationCampana } from './types';
+import { INITIAL_PETS, FAQS } from './data';
 import PetCard from './components/PetCard';
 import PetModal from './components/PetModal';
 import CommunityFeed from './components/CommunityFeed';
@@ -49,7 +49,6 @@ export default function App() {
   
   // Data States
   const [pets, setPets] = useState<Pet[]>(INITIAL_PETS);
-  const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
   const [campaigns, setCampaigns] = useState<DonationCampana[]>(INITIAL_CAMPAIGNS);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
 
@@ -75,18 +74,6 @@ export default function App() {
   // Add pet from report form
   const handleAddPetToDirectory = (newPet: Pet) => {
     setPets(prev => [newPet, ...prev]);
-  };
-
-  // Add post or edit (Likes/Comments)
-  const handleAddPost = (updatedPost: Post) => {
-    setPosts(prev => {
-      const exists = prev.some(p => p.id === updatedPost.id);
-      if (exists) {
-        return prev.map(p => p.id === updatedPost.id ? updatedPost : p);
-      } else {
-        return [updatedPost, ...prev];
-      }
-    });
   };
 
   // Process donation updates
@@ -459,14 +446,12 @@ export default function App() {
 
         {/* ALBUM VIEW */}
         {activeTab === 'album' && (
-          <PhotoAlbum pets={pets} posts={posts} />
+          <PhotoAlbum pets={pets} />
         )}
 
         {/* COMMUNITY VIEW */}
         {activeTab === 'comunidad' && (
           <CommunityFeed 
-            posts={posts}
-            onAddPost={handleAddPost}
             onAddPetToDirectory={handleAddPetToDirectory}
             onShowNotification={triggerNotification}
           />
