@@ -13,32 +13,14 @@ const REPORT_IMAGE_PRESETS = [
   { name: 'Gatito Pequeño', url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB5hU-Itt0ePmS68Rlw3j_hiG6UceKzWLfxKGnpSx1ZRO9cl3Uh97bYjERjO5AOP4eUHcqfqXMS1za5zgrh9toAOMtBsf6mzchv5ylEaxBaJ5VSblu_b3BU2mT7qTxls6kT6mOHg81kBL6wRyBcWKG-UGiJns_DgTD8bH8mIpOTTQ9f9LogYXF39ky-Zn4m9VWACp9NAL7xtqrl8vreo2uYgoiYyJdCqAttFw5Z11BT4iathr8jZ3Od0v6MQWjSra7A74RDb2jldQ' }
 ];
 
-const API_BASE = '/api';
+const STORAGE_KEY = 'undc_community_posts';
 
-async function fetchPosts(): Promise<Post[]> {
-  const res = await fetch(`${API_BASE}/posts`);
-  if (!res.ok) return [];
-  return res.json();
+function loadLocalPosts(): Post[] {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
 }
 
-async function createPost(post: Post): Promise<Post[]> {
-  const res = await fetch(`${API_BASE}/posts`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(post),
-  });
-  if (!res.ok) throw new Error('Error del servidor: ' + res.status);
-  return res.json();
-}
-
-async function updatePost(postId: string, updates: Partial<Post>): Promise<Post[]> {
-  const res = await fetch(`${API_BASE}/posts/${postId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updates),
-  });
-  return res.json();
-}
+function saveLocalPosts(posts: Post[]) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(posts)); } catch {} }
 
 export default function CommunityFeed({ onAddPetToDirectory, onShowNotification }: CommunityFeedProps) {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -62,35 +44,26 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
 
-  const loadPosts = useCallback(async () => {
-    try {
-      const data = await fetchPosts();
-      setPosts(data);
-    } catch (e) {
-      console.error('Failed to load posts:', e);
-    } finally {
-      setLoading(false);
-    }
+  const loadPosts = useCallback(() => {
+    setPosts(loadLocalPosts());
+    setLoading(false);
   }, []);
 
   useEffect(() => { loadPosts(); }, [loadPosts]);
 
-  const handleLike = async (postId: string) => {
+  const handleLike = (postId: string) => {
     const isLiked = likedPosts[postId];
     const post = posts.find(p => p.id === postId);
     if (!post) return;
     const newLikes = post.likes + (isLiked ? -1 : 1);
+    const updated = posts.map(p => p.id === postId ? { ...p, likes: newLikes } : p);
+    setPosts(updated);
     setLikedPosts(prev => ({ ...prev, [postId]: !isLiked }));
-    try {
-      const updated = await updatePost(postId, { likes: newLikes });
-      setPosts(updated);
-    } catch {
-      setLikedPosts(prev => ({ ...prev, [postId]: isLiked }));
-    }
+    saveLocalPosts(updated);
     onShowNotification(isLiked ? 'Quitaste tu Me gusta' : '¡Le diste Me gusta!');
   };
 
-  const handleAddComment = async (e: React.FormEvent, postId: string) => {
+  const handleAddComment = (e: React.FormEvent, postId: string) => {
     e.preventDefault();
     const commentText = commentInputs[postId];
     if (!commentText || !commentText.trim()) return;
@@ -103,14 +76,11 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
       timeAgo: 'Ahora',
     };
     const updatedComments = [...post.comments, newComment];
+    const updated = posts.map(p => p.id === postId ? { ...p, comments: updatedComments, commentsCount: updatedComments.length } : p);
+    setPosts(updated);
+    saveLocalPosts(updated);
     setCommentInputs(prev => ({ ...prev, [postId]: '' }));
-    try {
-      const updated = await updatePost(postId, { comments: updatedComments, commentsCount: updatedComments.length });
-      setPosts(updated);
-      onShowNotification('¡Comentario publicado!');
-    } catch {
-      onShowNotification('Error al publicar comentario');
-    }
+    onShowNotification('¡Comentario publicado!');
   };
 
   const handleFileSelect = (file: File | null) => {
@@ -139,7 +109,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
     reader.readAsDataURL(file);
   };
 
-  const handleCreatePostSubmit = async (e: React.FormEvent) => {
+  const handleCreatePostSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPostContent.trim()) return;
     const initials = newPostAuthorName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'ES';
@@ -156,17 +126,13 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
       comments: [],
       timeAgo: 'Ahora',
     };
-    try {
-      const updated = await createPost(newPost);
-      setPosts(updated);
-      setNewPostContent('');
-      setNewPostImage('');
-      setNewPostFile(null);
-      onShowNotification('¡Publicación compartida!');
-    } catch (e) {
-      console.error('Error al publicar:', e);
-      onShowNotification('Error al publicar: ' + (e instanceof Error ? e.message : 'desconocido'));
-    }
+    const updated = [newPost, ...posts];
+    setPosts(updated);
+    saveLocalPosts(updated);
+    setNewPostContent('');
+    setNewPostImage('');
+    setNewPostFile(null);
+    onShowNotification('¡Publicación compartida!');
   };
 
   const handleReportMascotSubmit = async (e: React.FormEvent) => {
@@ -205,10 +171,9 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
       timeAgo: 'Ahora',
       tag: 'Alerta de Mascota',
     };
-    try {
-      const updated = await createPost(newPost);
-      setPosts(updated);
-    } catch {}
+    const updated = [newPost, ...posts];
+    setPosts(updated);
+    saveLocalPosts(updated);
     setReportName('');
     setReportAge('');
     setReportLocation('');

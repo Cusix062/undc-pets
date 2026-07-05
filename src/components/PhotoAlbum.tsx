@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Pet, Post } from '../types';
 import { GALLERY_IMAGES } from '../gallery';
 
@@ -16,11 +16,9 @@ interface PhotoAlbumProps {
 export default function PhotoAlbum({ pets }: PhotoAlbumProps) {
   const [selectedItem, setSelectedItem] = useState<AlbumItem | null>(null);
   const [filter, setFilter] = useState<'all' | 'pets' | 'posts' | 'gallery'>('all');
-  const [posts, setPosts] = useState<Post[]>([]);
-
-  useEffect(() => {
-    fetch('/api/posts').then(r => r.ok && r.json()).then(d => setPosts(d || [])).catch(() => {});
-  }, []);
+  const [posts] = useState<Post[]>(() => {
+    try { return JSON.parse(localStorage.getItem('undc_community_posts') || '[]'); } catch { return []; }
+  });
 
   const items = useMemo<AlbumItem[]>(() => {
     const petItems: AlbumItem[] = pets.map(p => ({
