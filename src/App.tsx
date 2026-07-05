@@ -13,6 +13,7 @@ import DonationCampaigns from './components/DonationCampaigns';
 import AIChatBot from './components/AIChatBot';
 import PetCarousel from './components/PetCarousel';
 import PhotoAlbum from './components/PhotoAlbum';
+import GoogleSignIn from './components/GoogleSignIn';
 
 // Initial campaigns
 const INITIAL_CAMPAIGNS: DonationCampana[] = [
@@ -195,8 +196,9 @@ export default function App() {
             </button>
           </nav>
 
-          {/* Sponsoring callout button */}
-          <div className="hidden lg:block">
+          {/* Desktop Auth + Sponsoring */}
+          <div className="hidden md:flex items-center gap-3">
+            <GoogleSignIn />
             <button
               onClick={() => setActiveTab('donaciones')}
               className="bg-[#fc9d41] hover:bg-[#fa8b23] text-[#6b3900] text-xs font-bold px-4 py-2 rounded-xl shadow-xs transition-colors flex items-center gap-1.5"
@@ -235,6 +237,9 @@ export default function App() {
             onClick={() => setMobileMenuOpen(false)}
           />
           <div className="md:hidden fixed inset-x-0 top-16 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-lg animate-slide-down">
+            <div className="px-4 pt-3 pb-2 border-b border-slate-100">
+              <GoogleSignIn />
+            </div>
             <nav className="flex flex-col py-3 px-4 gap-1">
               {[
                 { tab: 'directorio' as const, icon: 'folder_special', label: 'Mascotas del Campus' },
