@@ -33,9 +33,7 @@ exports.handler = async (event) => {
       .replace(/^\/+/, '');
     route = route || '/';
 
-    console.log('API called:', { method: event.httpMethod, path: event.path, route });
-
-    if (event.httpMethod === 'GET' && route === 'health') {
+    if (route === 'health' || route === '/') {
       return { statusCode: 200, headers, body: JSON.stringify({ ok: true, path: event.path, route }) };
     }
 
