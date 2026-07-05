@@ -17,7 +17,7 @@ export const INITIAL_PETS: Pet[] = [
     tags: ['Juguetón', 'Vacunado', 'Social'],
     description: 'Curly es el guardián de la Universidad Nacional de Cañete , Sede en San Luis. Es muy juguetón y le encantan correr libremente por todo el campo.',
     story: 'Curly llegó al campus hace medio año, buscando a su familia. Fue rescatado por los estudiantes , quienes costearon su veterinario. Ahora, esta muy feliz con sus nuevos amiguitos, vive feliz custodiando los pabellones.',
-    image: '/images/curly.svg',
+    image: '/images/curly.jpeg',
     location: 'Sede San Luis'
   },
   {
@@ -31,7 +31,7 @@ export const INITIAL_PETS: Pet[] = [
     tags: ['Tranquila', 'Esterilizada', 'Sociable'],
     description: 'Princesa prefiere la tranquilidad de la biblioteca. Es la compañía perfecta para estudiar.',
     story: 'Princesa es una perrita llego hace menos de un año a la universidad a darnos muchas alegrias. Pasa sus tardes descansando en la biblioteca o en las aulas de la facultad de agronomia, brindando una presencia relajante a todos los que se preparan para sus exámenes.',
-    image: '/images/princesa.svg',
+    image: '/images/princesa.jpeg',
     location: 'Multiusos'
   },
   {
@@ -45,7 +45,7 @@ export const INITIAL_PETS: Pet[] = [
     tags: ['Leal', 'Paciente', 'Cariñoso'],
     description: 'RunRun necesita ayuda para su tratamiento de cadera. Cualquier donación es bienvenida.',
     story: 'RunRun es un perrito muy querido en el pabellón de Administración. Lamentablemente, tiene dificultades para caminar debido a su que solo tiene 3 patitas. Se encuentra bajo tratamiento médico con antiinflamatorios y sesiones de terapia gracias al apoyo del voluntariado y donaciones externas.',
-    image: '/images/runrun.svg',
+    image: '/images/runrun.jpeg',
     location: 'Pabellón de Administración'
   },
   {
@@ -59,7 +59,7 @@ export const INITIAL_PETS: Pet[] = [
     tags: ['Juguetona', 'Energética', 'Curiosa'],
     description: 'Es una gatita llena de energía y amor.',
     story: 'Gata Ingeniera fue hallada a las afueras de la facultad. Inmediatamente el personal administrativo la acogió. Es sumamente juguetona y ágil. Se pasa el día en las aulas de la facultad , compartiendo con los estudiantes, radiando alegria y felicidad.',
-    image: '/images/gata.svg',
+    image: '/images/gata.jpeg',
     location: 'Facultad de Ingenieria'
   },
 
@@ -73,7 +73,7 @@ export const INITIAL_POSTS: Post[] = [
     authorInitials: 'ML',
     avatarColor: 'bg-primary',
     content: 'Les presento a "RunRun ", el guardián de la facultad. Siempre nos espera para recibir sus caricias antes de clases.',
-    image: '/images/runrun1.svg',
+    image: '/images/runrun1.jpeg',
     likes: 124,
     commentsCount: 2,
     comments: [
@@ -100,7 +100,7 @@ export const INITIAL_POSTS: Post[] = [
     authorInitials: 'JC',
     avatarColor: 'bg-emerald-600',
     content: 'Michi ayudándome con el código de hoy. ¡Es el mejor depurador!',
-    image: '/images/post2.svg',
+    image: '/images/curly2.jpeg',
     likes: 86,
     commentsCount: 1,
     comments: [
@@ -120,7 +120,7 @@ export const INITIAL_POSTS: Post[] = [
     authorInitials: 'VA',
     avatarColor: 'bg-amber-600',
     content: 'Pincesa en el campo de agronomia <3.',
-    image: '/images/princesa1.svg',
+    image: '/images/princesa1.jpeg',
     likes: 245,
     commentsCount: 1,
     comments: [
@@ -140,7 +140,7 @@ export const INITIAL_POSTS: Post[] = [
     authorInitials: 'SR',
     avatarColor: 'bg-purple-600',
     content: 'Curly en su visia al veterinario.',
-    image: '/images/curly1.svg',
+    image: '/images/curly1.jpeg',
     likes: 52,
     commentsCount: 0,
     comments: [],
@@ -153,7 +153,7 @@ export const INITIAL_POSTS: Post[] = [
     authorInitials: 'PA',
     avatarColor: 'bg-indigo-600',
     content: 'Encontré a estos pequeños cerca del jardín botánico. Ya fueron revisados por el vete y están buscando hogar.',
-    image: '/images/post5.svg',
+    image: '/images/princesa2.jpeg',
     likes: 312,
     commentsCount: 1,
     comments: [
