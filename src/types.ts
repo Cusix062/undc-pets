@@ -23,12 +23,16 @@ export interface Pet {
 export interface Comment {
   id: string;
   authorName: string;
+  authorAvatar?: string;
+  userId?: string;
   content: string;
   timeAgo: string;
 }
 
 export interface Post {
   id: string;
+  userId?: string;
+  userAvatar?: string;
   authorName: string;
   authorRole: string;
   authorInitials: string;

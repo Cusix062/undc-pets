@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Post, Pet } from '../types';
 import { supabase } from '../lib/supabase';
+import GoogleSignIn from './GoogleSignIn';
+import type { User } from '@supabase/supabase-js';
 
 interface CommunityFeedProps {
   onAddPetToDirectory: (newPet: Pet) => void;
@@ -19,7 +21,6 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
   const [loading, setLoading] = useState(true);
   const [activeSubTab, setActiveSubTab] = useState<' muro' | 'reporte'>(' muro');
   const [newPostContent, setNewPostContent] = useState('');
-  const [newPostAuthorName, setNewPostAuthorName] = useState('Anónimo (Estudiante)');
   const [newPostImage, setNewPostImage] = useState('');
   const [newPostFile, setNewPostFile] = useState<File | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -35,6 +36,15 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
   const [reporterEmail, setReporterEmail] = useState('');
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
+    const { unsubscribe } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return unsubscribe;
+  }, []);
 
   const loadPosts = useCallback(async () => {
     try {
@@ -50,6 +60,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
   useEffect(() => { loadPosts(); }, [loadPosts]);
 
   const handleLike = async (postId: string) => {
+    if (!user) { onShowNotification('Debes iniciar sesión'); return; }
     const isLiked = likedPosts[postId];
     const post = posts.find(p => p.id === postId);
     if (!post) return;
@@ -63,13 +74,16 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
 
   const handleAddComment = async (e: React.FormEvent, postId: string) => {
     e.preventDefault();
+    if (!user) { onShowNotification('Debes iniciar sesión'); return; }
     const commentText = commentInputs[postId];
     if (!commentText || !commentText.trim()) return;
     const post = posts.find(p => p.id === postId);
     if (!post) return;
     const newComment = {
       id: `c_${Date.now()}`,
-      authorName: 'Estudiante UNDC',
+      authorName: user?.user_metadata?.full_name || user?.email || 'Estudiante UNDC',
+      authorAvatar: user?.user_metadata?.avatar_url,
+      userId: user?.id,
       content: commentText.trim(),
       timeAgo: 'Ahora',
     };
@@ -110,10 +124,15 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
   const handleCreatePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPostContent.trim()) return;
-    const initials = newPostAuthorName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'ES';
+    if (!user) { onShowNotification('Debes iniciar sesión para publicar'); return; }
+    const meta = user.user_metadata;
+    const name = meta.full_name || user.email || 'Anónimo';
+    const initials = name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
     const newPost: Post = {
       id: `post_${Date.now()}`,
-      authorName: newPostAuthorName || 'Anónimo (Estudiante)',
+      userId: user.id,
+      userAvatar: meta.avatar_url,
+      authorName: name,
       authorRole: 'Comunidad UNDC',
       authorInitials: initials,
       avatarColor: 'bg-indigo-600',
@@ -140,6 +159,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
 
   const handleReportMascotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) { onShowNotification('Debes iniciar sesión para reportar'); return; }
     if (!reportName || !reportLocation || !reportDescription) {
       alert('Completa todos los datos obligatorios.');
       return;
@@ -157,7 +177,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
       image: reportImage,
       story: reportStory || `Mascota reportada en la UNDC (${reportLocation}) por ${reporterEmail || 'Anónimo'}. Descripción: ${reportDescription}`,
       location: reportLocation,
-      reportedBy: reporterEmail || 'Anónimo',
+      reportedBy: reporterEmail || user?.email || 'Anónimo',
     };
     onAddPetToDirectory(newPet);
     const newPost: Post = {
@@ -193,21 +213,24 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
 
   return (
     <div id="community-feed-container" className="space-y-6">
-      <div className="flex bg-white p-1.5 rounded-2xl border border-slate-100 shadow-xs max-w-md mx-auto">
-        <button
-          onClick={() => setActiveSubTab(' muro')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-xs font-bold transition-all ${activeSubTab === ' muro' ? 'bg-[#00346f] text-white' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}
-        >
-          <span className="material-symbols-outlined text-[16px]">forum</span>
-          Muro de la Comunidad
-        </button>
-        <button
-          onClick={() => setActiveSubTab('reporte')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-xs font-bold transition-all ${activeSubTab === 'reporte' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-600 hover:bg-rose-50'}`}
-        >
-          <span className="material-symbols-outlined text-[16px] text-rose-500 font-bold">report</span>
-          Reportar Mascota (Alerta)
-        </button>
+      <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-slate-100 shadow-xs">
+        <div className="flex">
+          <button
+            onClick={() => setActiveSubTab(' muro')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-xs font-bold transition-all ${activeSubTab === ' muro' ? 'bg-[#00346f] text-white' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}
+          >
+            <span className="material-symbols-outlined text-[16px]">forum</span>
+            Muro
+          </button>
+          <button
+            onClick={() => setActiveSubTab('reporte')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-xs font-bold transition-all ${activeSubTab === 'reporte' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-600 hover:bg-rose-50'}`}
+          >
+            <span className="material-symbols-outlined text-[16px] text-rose-500 font-bold">report</span>
+            Reportar
+          </button>
+        </div>
+        <GoogleSignIn />
       </div>
 
       {activeSubTab === ' muro' ? (
@@ -215,43 +238,56 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-5">
               <div className="flex gap-3 mb-4">
-                <div className="bg-[#00346f] text-white font-bold h-10 w-10 rounded-full flex items-center justify-center">C</div>
+                {user?.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} alt="" className="h-10 w-10 rounded-full border border-slate-200" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="bg-[#00346f] text-white font-bold h-10 w-10 rounded-full flex items-center justify-center text-sm">
+                    {user ? user.user_metadata?.full_name?.charAt(0) || '?' : '?'}
+                  </div>
+                )}
                 <div className="flex-grow">
                   <p className="text-xs font-bold text-slate-800">¿Qué está pasando con los amigos peludos hoy?</p>
                   <p className="text-[11px] text-slate-400">Comparte fotos, anécdotas o actualizaciones del campus</p>
                 </div>
               </div>
-              <form onSubmit={handleCreatePostSubmit} className="space-y-3">
-                <textarea rows={3} value={newPostContent} onChange={(e) => setNewPostContent(e.target.value)} placeholder="Bobby está durmiendo plácidamente en el patio..." required className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] focus:ring-1 focus:ring-[#00346f] bg-slate-50 resize-none"></textarea>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tu Nombre/Facultad</label>
-                    <input type="text" value={newPostAuthorName} onChange={(e) => setNewPostAuthorName(e.target.value)} placeholder="Ej. María López (Sistemas)" className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#00346f] bg-slate-50" />
+              {user ? (
+                <form onSubmit={handleCreatePostSubmit} className="space-y-3">
+                  <textarea rows={3} value={newPostContent} onChange={(e) => setNewPostContent(e.target.value)} placeholder="Bobby está durmiendo plácidamente en el patio..." required className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] focus:ring-1 focus:ring-[#00346f] bg-slate-50 resize-none"></textarea>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tu Nombre</label>
+                      <input type="text" value={user.user_metadata?.full_name || user.email || ''} disabled className="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-500" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Subir Foto (Opcional)</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
+                        className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#00346f] bg-slate-50 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-[#00346f] file:text-white hover:file:bg-[#002450"
+                      />
+                      {uploadingImage && <span className="text-[10px] text-slate-400 mt-1 block">Procesando imagen...</span>}
+                      {newPostImage && !uploadingImage && (
+                        <div className="mt-1 flex items-center gap-2">
+                          <img src={newPostImage} alt="Preview" className="h-8 w-8 rounded object-cover border" />
+                          <button type="button" onClick={() => { setNewPostFile(null); setNewPostImage(''); }} className="text-[10px] text-rose-600 font-bold">Quitar</button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Subir Foto (Opcional)</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
-                      className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#00346f] bg-slate-50 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-[#00346f] file:text-white hover:file:bg-[#002450"
-                    />
-                    {uploadingImage && <span className="text-[10px] text-slate-400 mt-1 block">Procesando imagen...</span>}
-                    {newPostImage && !uploadingImage && (
-                      <div className="mt-1 flex items-center gap-2">
-                        <img src={newPostImage} alt="Preview" className="h-8 w-8 rounded object-cover border" />
-                        <button type="button" onClick={() => { setNewPostFile(null); setNewPostImage(''); }} className="text-[10px] text-rose-600 font-bold">Quitar</button>
-                      </div>
-                    )}
+                  <div className="flex justify-end pt-2">
+                    <button type="submit" className="bg-[#00346f] hover:bg-[#002450] text-white text-xs font-bold px-5 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[15px]">send</span>
+                      Publicar
+                    </button>
                   </div>
+                </form>
+              ) : (
+                <div className="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                  <span className="material-symbols-outlined text-[32px] text-slate-300">login</span>
+                  <p className="text-xs text-slate-500 mt-2">Inicia sesión con Google para compartir fotos y anécdotas</p>
                 </div>
-                <div className="flex justify-end pt-2">
-                  <button type="submit" className="bg-[#00346f] hover:bg-[#002450] text-white text-xs font-bold px-5 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[15px]">send</span>
-                    Publicar
-                  </button>
-                </div>
-              </form>
+              )}
             </div>
 
             {loading ? (
@@ -267,7 +303,11 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
                     <div key={post.id} className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
                       <div className="p-4 flex justify-between items-center border-b border-slate-50">
                         <div className="flex items-center gap-3">
-                          <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold font-display ${post.avatarColor}`}>{post.authorInitials}</div>
+                          {post.userAvatar ? (
+                            <img src={post.userAvatar} alt="" className="h-10 w-10 rounded-full border border-slate-200" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold font-display ${post.avatarColor}`}>{post.authorInitials}</div>
+                          )}
                           <div>
                             <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                               {post.authorName}
@@ -302,9 +342,13 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
                       <div className="p-4 bg-slate-50/40 space-y-3">
                         {post.comments.map((comment) => (
                           <div key={comment.id} className="text-xs flex gap-2 items-start bg-slate-50 p-2.5 rounded-xl border border-slate-100 shadow-2xs">
-                            <div className="bg-[#00346f]/10 text-primary h-6 w-6 rounded-full flex items-center justify-center font-bold text-[9px]">
-                              {comment.authorName.split(' ').map(n => n[0]).join('')}
-                            </div>
+                            {comment.authorAvatar ? (
+                              <img src={comment.authorAvatar} alt="" className="h-6 w-6 rounded-full border border-slate-200" referrerPolicy="no-referrer" />
+                            ) : (
+                              <div className="bg-[#00346f]/10 text-primary h-6 w-6 rounded-full flex items-center justify-center font-bold text-[9px]">
+                                {comment.authorName.split(' ').map(n => n[0]).join('')}
+                              </div>
+                            )}
                             <div className="flex-grow">
                               <div className="flex justify-between items-center mb-0.5">
                                 <span className="font-bold text-slate-800 text-[10px]">{comment.authorName}</span>
@@ -315,8 +359,13 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
                           </div>
                         ))}
                         <form onSubmit={(e) => handleAddComment(e, post.id)} className="flex gap-2 pt-2">
-                          <input type="text" value={commentInputs[post.id] || ''} onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))} placeholder="Escribe un comentario..." className="flex-grow text-xs px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] bg-white" />
-                          <button type="submit" className="bg-[#00346f] hover:bg-[#002450] text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xs flex items-center justify-center">
+                          {user?.user_metadata?.avatar_url ? (
+                            <img src={user.user_metadata.avatar_url} alt="" className="h-7 w-7 rounded-full border border-slate-200 mt-0.5" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="h-7 w-7 rounded-full bg-slate-300 text-white text-[9px] font-bold flex items-center justify-center mt-0.5">?</div>
+                          )}
+                          <input type="text" value={commentInputs[post.id] || ''} onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))} placeholder="Escribe un comentario..." disabled={!user} className="flex-grow text-xs px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] bg-white disabled:bg-slate-50 disabled:text-slate-400" />
+                          <button type="submit" disabled={!user} className="bg-[#00346f] hover:bg-[#002450] text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xs flex items-center justify-center disabled:opacity-40">
                             <span className="material-symbols-outlined text-[16px]">send</span>
                           </button>
                         </form>
@@ -422,10 +471,12 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
                 </div>
               )}
             </div>
-            <div className="border-t border-slate-100 pt-4">
-              <label className="block text-xs font-bold text-slate-700 mb-1">Tu Correo (Opcional)</label>
-              <input type="email" value={reporterEmail} onChange={(e) => setReporterEmail(e.target.value)} placeholder="alu.estudiante@undc.edu.pe" className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50" />
-            </div>
+            {!user && (
+              <div className="border-t border-slate-100 pt-4">
+                <label className="block text-xs font-bold text-slate-700 mb-1">Tu Correo (Opcional)</label>
+                <input type="email" value={reporterEmail} onChange={(e) => setReporterEmail(e.target.value)} placeholder="alu.estudiante@undc.edu.pe" className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50" />
+              </div>
+            )}
             <button type="submit" className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm py-3 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 mt-4">
               <span className="material-symbols-outlined font-bold">add_moderator</span>
               Registrar Alerta y Publicar
