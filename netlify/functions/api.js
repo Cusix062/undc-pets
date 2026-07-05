@@ -11,9 +11,7 @@ function readPosts() {
 }
 
 function writePosts(posts) {
-  try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(posts));
-  } catch {}
+  try { fs.writeFileSync(DATA_FILE, JSON.stringify(posts)); } catch {}
 }
 
 exports.handler = async (event) => {
@@ -29,29 +27,41 @@ exports.handler = async (event) => {
   }
 
   try {
-    const path = event.path.replace(/\/\.netlify\/functions\/api/, '').replace(/^\/api/, '') || '/';
+    let route = event.path
+      .replace(/\/\.netlify\/functions\/api/, '')
+      .replace(/^\/api/, '')
+      .replace(/^\/+/, '');
+    route = route || '/';
 
-    if (event.httpMethod === 'GET' && path === '/posts') {
-      return { statusCode: 200, headers, body: JSON.stringify(readPosts()) };
+    console.log('API called:', { method: event.httpMethod, path: event.path, route });
+
+    if (event.httpMethod === 'GET' && route === 'health') {
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, path: event.path, route }) };
     }
 
-    if (event.httpMethod === 'POST' && path === '/posts') {
-      const body = JSON.parse(event.body || '{}');
-      const posts = readPosts();
-      posts.unshift({
-        ...body,
-        id: body.id || `post_${Date.now()}`,
-        likes: body.likes || 0,
-        commentsCount: body.commentsCount || 0,
-        comments: body.comments || [],
-        createdAt: new Date().toISOString(),
-      });
-      writePosts(posts);
-      return { statusCode: 200, headers, body: JSON.stringify(posts) };
+    if (route === 'posts') {
+      if (event.httpMethod === 'GET') {
+        return { statusCode: 200, headers, body: JSON.stringify(readPosts()) };
+      }
+      if (event.httpMethod === 'POST') {
+        const body = JSON.parse(event.body || '{}');
+        const posts = readPosts();
+        posts.unshift({
+          ...body,
+          id: body.id || `post_${Date.now()}`,
+          likes: body.likes || 0,
+          commentsCount: body.commentsCount || 0,
+          comments: body.comments || [],
+          createdAt: new Date().toISOString(),
+        });
+        writePosts(posts);
+        return { statusCode: 200, headers, body: JSON.stringify(posts) };
+      }
     }
 
-    if (event.httpMethod === 'PUT' && path.startsWith('/posts/')) {
-      const postId = path.replace('/posts/', '');
+    const postMatch = route.match(/^posts\/(.+)/);
+    if (postMatch && event.httpMethod === 'PUT') {
+      const postId = postMatch[1];
       const body = JSON.parse(event.body || '{}');
       const posts = readPosts();
       const idx = posts.findIndex((p) => p.id === postId);
@@ -63,7 +73,7 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers, body: JSON.stringify(posts) };
     }
 
-    return { statusCode: 404, headers, body: JSON.stringify({ error: 'Not found' }) };
+    return { statusCode: 404, headers, body: JSON.stringify({ error: 'Not found', path: event.path, route }) };
   } catch (err) {
     console.error('API Error:', err);
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
