@@ -677,6 +677,63 @@ function DonacionesPanel({ onShowNotification, onConfigChanged }: { onShowNotifi
                 saveConfig({ ...config, campaigns });
                 setShowCampaignForm(false); setEditCampaign(null);
               }} className="flex-1 bg-[#00346f] text-white text-xs font-bold py-2.5 rounded-xl">Guardar</button>
+                          </div>
+          </div>
+        </div>
+      )}
+
+      {/* Celebration Modal when goal reached in admin */}
+      {celebrationVerify && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-fade-in">
+          <style>{`
+            @keyframes confetti-fall {
+              0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+              100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+            }
+            @keyframes confetti-shake {
+              0%, 100% { transform: translateX(0); }
+              50% { transform: translateX(30px); }
+            }
+            .confetti-particle {
+              position: absolute;
+              width: 10px; height: 10px; border-radius: 2px;
+              animation: confetti-fall linear forwards, confetti-shake ease-in-out infinite;
+            }
+          `}</style>
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {Array.from({ length: 50 }).map((_, i) => (
+              <div key={i} className="confetti-particle"
+                style={{
+                  left: `${Math.random() * 100}%`, top: `-10%`,
+                  backgroundColor: ['#fc9d41','#00346f','#10b981','#ef4444','#8b5cf6','#f59e0b','#ec4899','#06b6d4'][i % 8],
+                  animationDuration: `${2.5 + Math.random() * 3}s`,
+                  animationDelay: `${Math.random() * 2}s`,
+                  width: `${5 + Math.random() * 8}px`, height: `${5 + Math.random() * 8}px`,
+                  borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+                }}
+              />
+            ))}
+          </div>
+          <div
+            className="bg-white rounded-3xl max-w-sm w-full p-8 text-center space-y-4 shadow-2xl z-10 animate-scale-up border-2 border-[#fc9d41] relative overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-white to-emerald-50 pointer-events-none" />
+            <div className="relative">
+              <div className="text-6xl mb-2">🎉🐶🎉</div>
+              <h3 className="font-display font-extrabold text-2xl text-[#00346f]">¡SE LLEGÓ A LA META!</h3>
+              <p className="text-sm text-slate-600 font-medium">Los animalitos te lo agradecen ❤️</p>
+              <div className="bg-emerald-50 rounded-xl p-3 my-4 border border-emerald-100">
+                <p className="text-xs font-bold text-emerald-700">{celebrationVerify.title}</p>
+                <p className="text-[10px] text-emerald-600">Meta: S/. {celebrationVerify.targetAmount.toLocaleString()}</p>
+                <p className="text-[10px] text-slate-400 mt-1">Verificaste una donación de S/. {celebrationVerify.amount}</p>
+              </div>
+              <button
+                onClick={() => setCelebrationVerify(null)}
+                className="bg-gradient-to-r from-[#fc9d41] to-[#fa8b23] text-[#6b3900] font-extrabold text-sm px-8 py-3 rounded-xl shadow-md transition-all hover:scale-105"
+              >
+                ¡Sí, meta cumplida!
+              </button>
             </div>
           </div>
         </div>
