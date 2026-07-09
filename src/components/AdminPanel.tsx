@@ -329,6 +329,7 @@ function DonacionesPanel({ onShowNotification, onConfigChanged }: { onShowNotifi
   const [editCampaign, setEditCampaign] = useState<DonationCampana | null>(null);
   const [showCampaignForm, setShowCampaignForm] = useState(false);
   const [campForm, setCampForm] = useState<Partial<DonationCampana>>({});
+  const [celebrationVerify, setCelebrationVerify] = useState<{ title: string; targetAmount: number; amount: number } | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -503,9 +504,19 @@ function DonacionesPanel({ onShowNotification, onConfigChanged }: { onShowNotifi
                         const pendingDonations = (config.pendingDonations || []).map(d =>
                           d.id === pd.id ? { ...d, verified: true, verifiedAt: new Date().toISOString() } : d
                         );
-                        const campaigns = config.campaigns.map(c =>
+                        let campaigns = config.campaigns.map(c =>
                           c.id === pd.campaignId ? { ...c, currentAmount: c.currentAmount + pd.amount } : c
                         );
+                        // Check if this verify pushes a campaign to 100%
+                        const camp = campaigns.find(c => c.id === pd.campaignId);
+                        if (camp) {
+                          const wasBelow = config.campaigns.find(c => c.id === pd.campaignId);
+                          const isNow100 = camp.targetAmount > 0 && camp.currentAmount >= camp.targetAmount;
+                          const wasNot100 = wasBelow ? wasBelow.currentAmount < wasBelow.targetAmount : true;
+                          if (isNow100 && wasNot100) {
+                            setCelebrationVerify({ title: camp.title, targetAmount: camp.targetAmount, amount: pd.amount });
+                          }
+                        }
                         saveConfig({ ...config, pendingDonations, campaigns });
                         onShowNotification(`Donación de S/.${pd.amount} de ${pd.donorName} verificada`);
                       }}

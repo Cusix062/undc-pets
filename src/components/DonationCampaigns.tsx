@@ -1,14 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { DonationCampana, DonationConfig, PendingDonation } from '../types';
+import React, { useState, useEffect, useRef } from 'react';
+import { DonationCampana, DonationConfig, PendingDonation, DonationAccount } from '../types';
 
 interface DonationCampaignsProps {
   config: DonationConfig;
+  isAdmin: boolean;
   onAddPendingDonation: (pending: PendingDonation) => void;
+  onConfigChanged?: (config: DonationConfig) => void;
   onShowNotification: (msg: string) => void;
 }
 
-export default function DonationCampaigns({ config, onAddPendingDonation, onShowNotification }: DonationCampaignsProps) {
+export default function DonationCampaigns({ config, isAdmin, onAddPendingDonation, onConfigChanged, onShowNotification }: DonationCampaignsProps) {
   const [selectedCampaign, setSelectedCampaign] = useState<DonationCampana | null>(null);
+  const [celebrationCamp, setCelebrationCamp] = useState<DonationCampana | null>(null);
+  const celebratedRef = useRef<Set<string>>(new Set());
+
+  // Detect when a campaign just reached 100%
+  useEffect(() => {
+    for (const camp of config.campaigns) {
+      const percent = camp.targetAmount > 0 ? Math.round((camp.currentAmount / camp.targetAmount) * 100) : 0;
+      if (percent >= 100 && !celebratedRef.current.has(camp.id)) {
+        celebratedRef.current.add(camp.id);
+        setCelebrationCamp(camp);
+      }
+    }
+  }, [config.campaigns]);
 
   // Payment gateway states
   const [donorName, setDonorName] = useState('');
@@ -231,48 +246,75 @@ export default function DonationCampaigns({ config, onAddPendingDonation, onShow
 
         {/* Copy accounts from config */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 space-y-4">
-          <div className="border-b border-slate-50 pb-3">
-            <h3 className="font-display font-bold text-sm text-slate-900 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#fc9d41] font-bold">content_copy</span>
-              Cuentas Bancarias Institucionales
-            </h3>
-            <p className="text-xs text-slate-400">Transfiere de manera directa y segura. Copia los datos con un clic:</p>
+          <div className="border-b border-slate-50 pb-3 flex items-center justify-between">
+            <div>
+              <h3 className="font-display font-bold text-sm text-slate-900 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#fc9d41] font-bold">content_copy</span>
+                Cuentas Bancarias Institucionales
+              </h3>
+              <p className="text-xs text-slate-400">Transfiere de manera directa y segura. Copia los datos con un clic:</p>
+            </div>
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  const accounts = [...(config.accounts || []), { bank: '', number: '', CCI: '' }];
+                  if (onConfigChanged) onConfigChanged({ ...config, accounts });
+                }}
+                className="text-primary text-xs font-bold flex items-center gap-1"
+                title="Agregar cuenta"
+              >
+                <span className="material-symbols-outlined text-[14px]">add</span>
+                Agregar
+              </button>
+            )}
           </div>
 
           <div className="space-y-3">
             {(config.accounts || []).map((acc, idx) => (
-              <div key={idx} className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-[#00346f]">{acc.bank}</span>
-                  <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-sm text-[9px] font-semibold uppercase">Oficial</span>
-                </div>
-
-                <div className="flex justify-between items-center text-xs bg-white p-2 rounded-lg border border-slate-100">
-                  <span className="font-mono text-slate-700 select-all font-semibold">{acc.number}</span>
-                  <button
-                    onClick={() => handleCopy(acc.number, 'Número')}
-                    className="text-primary hover:text-[#002450] flex items-center gap-1 text-[11px] font-bold"
-                    title="Copiar número"
-                  >
-                    <span className="material-symbols-outlined text-[14px]">content_copy</span>
-                    Copiar
-                  </button>
-                </div>
-
-                {acc.CCI && acc.CCI.includes('-') && (
+              isAdmin ? (
+                <EditableAccountInline
+                  key={idx}
+                  account={acc}
+                  onChange={(updated) => {
+                    const accounts = [...(config.accounts || [])];
+                    accounts[idx] = updated;
+                    if (onConfigChanged) onConfigChanged({ ...config, accounts });
+                  }}
+                  onDelete={() => {
+                    const accounts = (config.accounts || []).filter((_, i) => i !== idx);
+                    if (onConfigChanged) onConfigChanged({ ...config, accounts });
+                  }}
+                />
+              ) : (
+                <div key={idx} className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-[#00346f]">{acc.bank}</span>
+                    <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-sm text-[9px] font-semibold uppercase">Oficial</span>
+                  </div>
                   <div className="flex justify-between items-center text-xs bg-white p-2 rounded-lg border border-slate-100">
-                    <span className="font-mono text-slate-500 text-[11px]">CCI: {acc.CCI}</span>
+                    <span className="font-mono text-slate-700 select-all font-semibold">{acc.number}</span>
                     <button
-                      onClick={() => handleCopy(acc.CCI, 'CCI')}
-                      className="text-slate-500 hover:text-slate-800 flex items-center gap-1 text-[10px] font-bold"
-                      title="Copiar CCI"
+                      onClick={() => handleCopy(acc.number, 'Número')}
+                      className="text-primary hover:text-[#002450] flex items-center gap-1 text-[11px] font-bold"
                     >
-                      <span className="material-symbols-outlined text-[12px]">content_copy</span>
-                      CCI
+                      <span className="material-symbols-outlined text-[14px]">content_copy</span>
+                      Copiar
                     </button>
                   </div>
-                )}
-              </div>
+                  {acc.CCI && acc.CCI.includes('-') && (
+                    <div className="flex justify-between items-center text-xs bg-white p-2 rounded-lg border border-slate-100">
+                      <span className="font-mono text-slate-500 text-[11px]">CCI: {acc.CCI}</span>
+                      <button
+                        onClick={() => handleCopy(acc.CCI, 'CCI')}
+                        className="text-slate-500 hover:text-slate-800 flex items-center gap-1 text-[10px] font-bold"
+                      >
+                        <span className="material-symbols-outlined text-[12px]">content_copy</span>
+                        CCI
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
             ))}
           </div>
         </div>
@@ -609,6 +651,88 @@ export default function DonationCampaigns({ config, onAddPendingDonation, onShow
         </div>
       )}
 
+      {/* Celebration Modal when a goal is reached */}
+      {celebrationCamp && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-fade-in">
+          {/* Confetti particles */}
+          <style>{`
+            @keyframes confetti-fall {
+              0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+              100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+            }
+            @keyframes confetti-shake {
+              0%, 100% { transform: translateX(0); }
+              50% { transform: translateX(30px); }
+            }
+            .confetti-particle {
+              position: absolute;
+              width: 10px;
+              height: 10px;
+              border-radius: 2px;
+              animation: confetti-fall linear forwards, confetti-shake ease-in-out infinite;
+            }
+          `}</style>
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {Array.from({ length: 50 }).map((_, i) => (
+              <div key={i} className="confetti-particle"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `-10%`,
+                  backgroundColor: ['#fc9d41','#00346f','#10b981','#ef4444','#8b5cf6','#f59e0b','#ec4899','#06b6d4'][i % 8],
+                  animationDuration: `${2.5 + Math.random() * 3}s`,
+                  animationDelay: `${Math.random() * 2}s`,
+                  width: `${5 + Math.random() * 8}px`,
+                  height: `${5 + Math.random() * 8}px`,
+                  borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+                }}
+              />
+            ))}
+          </div>
+          <div
+            className="bg-white rounded-3xl max-w-sm w-full p-8 text-center space-y-4 shadow-2xl z-10 animate-scale-up border-2 border-[#fc9d41] relative overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Sparkle background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-white to-emerald-50 pointer-events-none" />
+            <div className="relative">
+              <div className="text-6xl mb-2">🎉🐶🎉</div>
+              <h3 className="font-display font-extrabold text-2xl text-[#00346f]">¡SE LLEGÓ A LA META!</h3>
+              <p className="text-sm text-slate-600 font-medium">Los animalitos te lo agradecen ❤️</p>
+              <div className="bg-emerald-50 rounded-xl p-3 my-4 border border-emerald-100">
+                <p className="text-xs font-bold text-emerald-700">{celebrationCamp.title}</p>
+                <p className="text-[10px] text-emerald-600">Meta alcanzada: S/. {celebrationCamp.targetAmount.toLocaleString()}</p>
+              </div>
+              <button
+                onClick={() => setCelebrationCamp(null)}
+                className="bg-gradient-to-r from-[#fc9d41] to-[#fa8b23] text-[#6b3900] font-extrabold text-sm px-8 py-3 rounded-xl shadow-md transition-all hover:scale-105"
+              >
+                ¡Vamos por más metas!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+function EditableAccountInline({ account, onChange, onDelete }: { account: DonationAccount; onChange: (a: DonationAccount) => void; onDelete: () => void }) {
+  return (
+    <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2">
+      <div className="flex justify-between items-center gap-2 text-xs">
+        <input value={account.bank} onChange={e => onChange({ ...account, bank: e.target.value })} className="font-bold text-[#00346f] bg-white p-1.5 rounded-lg border border-slate-200 flex-1" placeholder="Nombre del banco" />
+        <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-sm text-[9px] font-semibold uppercase shrink-0">Editando</span>
+        <button onClick={onDelete} className="text-rose-500 hover:text-rose-700 shrink-0"><span className="material-symbols-outlined text-[16px]">remove_circle</span></button>
+      </div>
+      <div className="flex justify-between items-center text-xs bg-white p-2 rounded-lg border border-slate-100">
+        <input value={account.number} onChange={e => onChange({ ...account, number: e.target.value })} className="font-mono text-slate-700 bg-transparent flex-1 outline-hidden" placeholder="Número de cuenta" />
+        <button onClick={() => { navigator.clipboard.writeText(account.number); }} className="text-primary hover:text-[#002450] flex items-center gap-1 text-[11px] font-bold shrink-0">
+          <span className="material-symbols-outlined text-[14px]">content_copy</span>
+          Copiar
+        </button>
+      </div>
+      <input value={account.CCI} onChange={e => onChange({ ...account, CCI: e.target.value })} className="w-full text-xs font-mono text-slate-500 bg-white p-2 rounded-lg border border-slate-100" placeholder="CCI" />
     </div>
   );
 }

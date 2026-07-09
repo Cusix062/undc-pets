@@ -28,8 +28,9 @@ INSERT INTO pets (id, data) VALUES
   ('Gata Ingeniera', '{"id":"Gata Ingeniera","name":"Gata Ingeniera","species":"cat","gender":"female","age":"6 meses","status":"Alegre","statusType":"warning","tags":["Juguetona","Energética","Curiosa"],"description":"Es una gatita llena de energía y amor.","story":"Gata Ingeniera fue hallada a las afueras de la facultad. Inmediatamente el personal administrativo la acogió. Es sumamente juguetona y ágil. Se pasa el día en las aulas de la facultad, compartiendo con los estudiantes, radiando alegria y felicidad.","image":"/images/gata.jpeg","location":"Facultad de Ingenieria"}')
 ON CONFLICT (id) DO NOTHING;
 
--- Enable realtime for pets
+-- Enable realtime for pets AND donation_config (live donation bar updates)
 ALTER PUBLICATION supabase_realtime ADD TABLE pets;
+ALTER PUBLICATION supabase_realtime ADD TABLE donation_config;
 
 -- 3. Donation config table (single row with all config)
 CREATE TABLE IF NOT EXISTS donation_config (

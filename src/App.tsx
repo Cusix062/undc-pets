@@ -109,6 +109,23 @@ function AppContent() {
     load();
   }, []);
 
+  // Realtime: sync donation_config changes across tabs/devices
+  useEffect(() => {
+    const channel = supabase.channel('donation_config_realtime')
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'donation_config', filter: 'id=eq.main' },
+        (payload: any) => {
+          const cfg = payload.new?.data as DonationConfig;
+          if (cfg) {
+            setDonationConfig(cfg);
+            localStorage.setItem('undc_donation_config', JSON.stringify(cfg));
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   // Filters state (Directory)
   const [searchQuery, setSearchQuery] = useState('');
   const [speciesFilter, setSpeciesFilter] = useState<'all' | 'dog' | 'cat'>('all');
@@ -645,7 +662,9 @@ function AppContent() {
         {activeTab === 'donaciones' && (
           <DonationCampaigns
             config={donationConfig}
+            isAdmin={isAdmin}
             onAddPendingDonation={handleAddPendingDonation}
+            onConfigChanged={handleConfigChanged}
             onShowNotification={triggerNotification}
           />
         )}
