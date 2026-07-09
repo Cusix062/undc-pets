@@ -1,26 +1,15 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState, useEffect } from 'react';
-import { DonationCampana } from '../types';
+import { DonationCampana, DonationConfig, PendingDonation } from '../types';
 
 interface DonationCampaignsProps {
-  campaigns: DonationCampana[];
-  onUpdateCampaignAmount: (campaignId: string, amount: number) => void;
+  config: DonationConfig;
+  onAddPendingDonation: (pending: PendingDonation) => void;
   onShowNotification: (msg: string) => void;
 }
 
-const ACCOUNTS = [
-  { bank: 'Banco de la Nación (Cta. Corriente)', number: '00-068-123456', CCI: '018-068-000068123456-78' },
-  { bank: 'BCP (Cuenta Recaudadora - Bienestar)', number: '191-9876543-0-12', CCI: '002-191-009876543012-54' },
-  { bank: 'Yape / Plin (Celular Coordinador)', number: '987 654 321', CCI: 'Nombre: Asociación UNDC Pets' }
-];
-
-export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, onShowNotification }: DonationCampaignsProps) {
+export default function DonationCampaigns({ config, onAddPendingDonation, onShowNotification }: DonationCampaignsProps) {
   const [selectedCampaign, setSelectedCampaign] = useState<DonationCampana | null>(null);
-  
+
   // Payment gateway states
   const [donorName, setDonorName] = useState('');
   const [donorEmail, setDonorEmail] = useState('');
@@ -30,8 +19,6 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
   const [cardCVV, setCardCVV] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
-  const [lastDonatedCampaignId, setLastDonatedCampaignId] = useState<string | null>(null);
-  const [lastDonationAmount, setLastDonationAmount] = useState(0);
   const [donationReceipt, setDonationReceipt] = useState<{
     id: string;
     donor: string;
@@ -39,6 +26,14 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
     campaign: string;
     date: string;
   } | null>(null);
+
+  // Compute pending amounts per campaign
+  const pendingByCampaign: Record<string, number> = {};
+  for (const pd of config.pendingDonations || []) {
+    if (!pd.verified) {
+      pendingByCampaign[pd.campaignId] = (pendingByCampaign[pd.campaignId] || 0) + pd.amount;
+    }
+  }
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -66,14 +61,16 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
       setIsProcessing(false);
       setProcessingProgress(100);
       if (selectedCampaign) {
-        onUpdateCampaignAmount(selectedCampaign.id, amountVal);
-        
-        setLastDonatedCampaignId(selectedCampaign.id);
-        setLastDonationAmount(amountVal);
-        setTimeout(() => {
-          setLastDonatedCampaignId(null);
-          setLastDonationAmount(0);
-        }, 4000);
+        const pending: PendingDonation = {
+          id: `pd_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          campaignId: selectedCampaign.id,
+          donorName,
+          donorEmail,
+          amount: amountVal,
+          date: new Date().toISOString(),
+          verified: false,
+        };
+        onAddPendingDonation(pending);
 
         // Generate receipt
         setDonationReceipt({
@@ -84,7 +81,7 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
           date: new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         });
 
-        onShowNotification(`¡Gracias ${donorName}! Tu donación de S/. ${amountVal} fue procesada.`);
+        onShowNotification(`¡Gracias ${donorName}! Tu donación de S/. ${amountVal} está pendiente de verificación.`);
       }
     }, 1500);
   };
@@ -117,7 +114,7 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
 
   return (
     <div id="donation-campaigns-section" className="space-y-8 animate-fade-in">
-      
+
       {/* Intro Banner */}
       <div className="bg-gradient-to-r from-[#00346f] to-[#0050aa] rounded-3xl p-6 md:p-8 text-white shadow-md flex flex-col md:flex-row items-center gap-6">
         <div className="md:w-2/3 space-y-3">
@@ -140,21 +137,18 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
       <div className="space-y-4">
         <h3 className="font-display font-bold text-lg text-slate-900 flex items-center gap-2">
           <span className="material-symbols-outlined text-primary">analytics</span>
-          Campañas Activas (Termómetros de Progreso)
+          Metas y Objetivos
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {campaigns.map((camp) => {
+          {config.campaigns.map((camp) => {
             const percent = Math.min(Math.round((camp.currentAmount / camp.targetAmount) * 100), 100);
-            
+            const pendingAmt = pendingByCampaign[camp.id] || 0;
+
             return (
-              <div 
-                key={camp.id} 
-                className={`bg-white rounded-2xl border shadow-xs p-5 flex flex-col justify-between transition-all duration-500 ${
-                  lastDonatedCampaignId === camp.id
-                    ? 'border-emerald-300 shadow-emerald-100 ring-1 ring-emerald-200 scale-[1.02]'
-                    : 'border-slate-100'
-                }`}
+              <div
+                key={camp.id}
+                className="bg-white rounded-2xl border border-slate-100 shadow-xs p-5 flex flex-col justify-between transition-all duration-500"
               >
                 <div className="space-y-3">
                   <div className="flex justify-between items-start relative">
@@ -163,15 +157,7 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
                     }`}>
                       {camp.urgency} Prioridad
                     </span>
-                    <div className="flex items-center gap-1">
-                      {lastDonatedCampaignId === camp.id && (
-                        <span className="text-emerald-500 font-extrabold text-sm animate-bounce flex items-center gap-0.5">
-                          <span className="material-symbols-outlined text-[16px] font-bold">add_circle</span>
-                          +S/. {lastDonationAmount}
-                        </span>
-                      )}
-                      <span className="text-slate-400 material-symbols-outlined">heart_broken</span>
-                    </div>
+                    <span className="text-slate-400 material-symbols-outlined">heart_broken</span>
                   </div>
 
                   <h4 className="font-display font-bold text-sm text-slate-900 leading-tight">
@@ -189,11 +175,10 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
                     <span className="text-slate-400">Meta: S/. {camp.targetAmount.toLocaleString()}</span>
                   </div>
                   <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
-                    <div 
-                      key={camp.currentAmount}
+                    <div
                       className={`h-full rounded-full transition-all duration-[1500ms] ease-out ${
-                        percent >= 100 
-                          ? 'bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-400' 
+                        percent >= 100
+                          ? 'bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-400'
                           : 'bg-gradient-to-r from-[#fc9d41] via-[#fa8b23] to-[#fc9d41]'
                       }`}
                       style={{ width: `${percent}%` }}
@@ -208,7 +193,7 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
                       {percent >= 100 ? (
                         <span className="text-emerald-600 flex items-center gap-0.5">
                           <span className="material-symbols-outlined text-[12px]">check_circle</span>
-                          ¡Meta lograda! 🎉
+                          ¡Meta lograda!
                         </span>
                       ) : (
                         <>{percent}% Completado</>
@@ -220,6 +205,12 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
                       </span>
                     )}
                   </div>
+                  {pendingAmt > 0 && (
+                    <div className="text-[10px] text-amber-600 font-bold flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg">
+                      <span className="material-symbols-outlined text-[12px]">pending</span>
+                      S/. {pendingAmt} en verificación
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -235,10 +226,10 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
         </div>
       </div>
 
-      {/* Account number details and copyable cards */}
+      {/* Account number details and drop-off points */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-        
-        {/* Copy accounts */}
+
+        {/* Copy accounts from config */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 space-y-4">
           <div className="border-b border-slate-50 pb-3">
             <h3 className="font-display font-bold text-sm text-slate-900 flex items-center gap-2">
@@ -249,16 +240,16 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
           </div>
 
           <div className="space-y-3">
-            {ACCOUNTS.map((acc, idx) => (
+            {(config.accounts || []).map((acc, idx) => (
               <div key={idx} className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2">
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-bold text-[#00346f]">{acc.bank}</span>
                   <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-sm text-[9px] font-semibold uppercase">Oficial</span>
                 </div>
-                
+
                 <div className="flex justify-between items-center text-xs bg-white p-2 rounded-lg border border-slate-100">
                   <span className="font-mono text-slate-700 select-all font-semibold">{acc.number}</span>
-                  <button 
+                  <button
                     onClick={() => handleCopy(acc.number, 'Número')}
                     className="text-primary hover:text-[#002450] flex items-center gap-1 text-[11px] font-bold"
                     title="Copiar número"
@@ -268,10 +259,10 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
                   </button>
                 </div>
 
-                {acc.CCI.includes('-') && (
+                {acc.CCI && acc.CCI.includes('-') && (
                   <div className="flex justify-between items-center text-xs bg-white p-2 rounded-lg border border-slate-100">
                     <span className="font-mono text-slate-500 text-[11px]">CCI: {acc.CCI}</span>
-                    <button 
+                    <button
                       onClick={() => handleCopy(acc.CCI, 'CCI')}
                       className="text-slate-500 hover:text-slate-800 flex items-center gap-1 text-[10px] font-bold"
                       title="Copiar CCI"
@@ -300,7 +291,7 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
             <p className="font-medium leading-relaxed">
               Puedes dejar tus donaciones en cualquiera de los siguientes puntos autorizados dentro de la Universidad Nacional de Cañete:
             </p>
-            
+
             <div className="space-y-3 pt-2">
               <div className="flex items-start gap-3">
                 <span className="material-symbols-outlined text-primary mt-0.5">home_pin</span>
@@ -345,44 +336,44 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 text-center space-y-2 hover:shadow-md transition-shadow">
             <div className="bg-white rounded-lg p-2 mx-auto w-32 h-32 flex items-center justify-center border border-slate-100">
-              <img 
-                src="/images/yape.jpeg" 
+              <img
+                src={config.qrCodes?.yape || '/images/yape.jpeg'}
                 alt="QR Yape"
                 className="w-full h-full object-contain"
               />
             </div>
             <p className="font-bold text-xs text-slate-800">Yape</p>
-            <p className="text-[10px] text-slate-400">993 376 465</p>
+            <p className="text-[10px] text-slate-400">{config.yapeNumber}</p>
           </div>
 
           <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 text-center space-y-2 hover:shadow-md transition-shadow">
             <div className="bg-white rounded-lg p-2 mx-auto w-32 h-32 flex items-center justify-center border border-slate-100">
-              <img 
-                src="/images/plin.jpeg" 
+              <img
+                src={config.qrCodes?.plin || '/images/plin.jpeg'}
                 alt="QR Plin"
                 className="w-full h-full object-contain"
               />
             </div>
             <p className="font-bold text-xs text-slate-800">Plin</p>
-            <p className="text-[10px] text-slate-400">993 376 465</p>
+            <p className="text-[10px] text-slate-400">{config.plinNumber}</p>
           </div>
 
           <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 text-center space-y-2 hover:shadow-md transition-shadow">
             <div className="bg-white rounded-lg p-2 mx-auto w-32 h-32 flex items-center justify-center border border-slate-100">
-              <img 
-                src="/images/qr-bcp.svg" 
+              <img
+                src={config.qrCodes?.bcp || '/images/qr-bcp.svg'}
                 alt="QR BCP"
                 className="w-full h-full object-contain"
               />
             </div>
             <p className="font-bold text-xs text-slate-800">BCP</p>
-            <p className="text-[10px] text-slate-400">191-9876543-0-12</p>
+            <p className="text-[10px] text-slate-400">Ver cuenta bancaria</p>
           </div>
 
           <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 text-center space-y-2 hover:shadow-md transition-shadow">
             <div className="bg-white rounded-lg p-2 mx-auto w-32 h-32 flex items-center justify-center border border-slate-100">
-              <img 
-                src="/images/qr-tunqui.svg" 
+              <img
+                src={config.qrCodes?.tunqui || '/images/qr-tunqui.svg'}
                 alt="QR Tunqui"
                 className="w-full h-full object-contain"
               />
@@ -396,12 +387,12 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
       {/* Payment Gateway Modal */}
       {selectedCampaign && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in">
-          <div 
+          <div
             className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative animate-scale-up max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close */}
-            <button 
+            <button
               onClick={handleCloseGateway}
               className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full p-2 z-10 transition-colors"
               title="Cerrar pasarela"
@@ -410,7 +401,7 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
             </button>
 
             <div className="p-6 overflow-y-auto">
-              
+
               {!donationReceipt ? (
                 /* Payment form */
                 <form onSubmit={handleDonateSubmit} className="space-y-4">
@@ -423,15 +414,15 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
                   </div>
 
                   <div className="space-y-3 text-xs">
-                    
+
                     {/* Donor name */}
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Nombre del Donante</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={donorName}
                         onChange={(e) => setDonorName(e.target.value)}
-                        placeholder="Ej. Juan Carlos Ramos" 
+                        placeholder="Ej. Juan Carlos Ramos"
                         required
                         className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-primary bg-slate-50"
                       />
@@ -440,11 +431,11 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
                     {/* Donor email */}
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Correo Electrónico (Para envío de constancia)</label>
-                      <input 
-                        type="email" 
+                      <input
+                        type="email"
                         value={donorEmail}
                         onChange={(e) => setDonorEmail(e.target.value)}
-                        placeholder="Ej. jperez@undc.edu.pe" 
+                        placeholder="Ej. jperez@undc.edu.pe"
                         required
                         className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-primary bg-slate-50"
                       />
@@ -460,8 +451,8 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
                             type="button"
                             onClick={() => setDonationAmount(val)}
                             className={`py-1.5 rounded-lg border font-bold text-center transition-all ${
-                              donationAmount === val 
-                                ? 'bg-[#00346f] text-white border-primary' 
+                              donationAmount === val
+                                ? 'bg-[#00346f] text-white border-primary'
                                 : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
                             }`}
                           >
@@ -469,11 +460,11 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
                           </button>
                         ))}
                       </div>
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         value={donationAmount}
                         onChange={(e) => setDonationAmount(e.target.value)}
-                        placeholder="Otro monto diferente..." 
+                        placeholder="Otro monto diferente..."
                         min="1"
                         required
                         className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-primary bg-slate-50"
@@ -483,35 +474,35 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
                     {/* Card details */}
                     <div className="bg-[#eef4ff] p-3 rounded-xl border border-slate-200 space-y-2">
                       <p className="text-[10px] font-bold text-slate-500 uppercase">Tarjeta Simulada de Pruebas</p>
-                      
+
                       <div>
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           maxLength={16}
                           value={cardNumber}
                           onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ''))}
-                          placeholder="Número de Tarjeta (16 dígitos)" 
+                          placeholder="Número de Tarjeta (16 dígitos)"
                           required
                           className="w-full p-2 rounded-lg border border-slate-200 focus:outline-none focus:border-primary bg-white font-mono"
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-2">
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           maxLength={5}
                           value={cardExpiry}
                           onChange={(e) => setCardExpiry(e.target.value)}
-                          placeholder="MM/AA" 
+                          placeholder="MM/AA"
                           required
                           className="w-full p-2 rounded-lg border border-slate-200 focus:outline-none focus:border-primary bg-white text-center font-mono"
                         />
-                        <input 
-                          type="password" 
+                        <input
+                          type="password"
                           maxLength={3}
                           value={cardCVV}
                           onChange={(e) => setCardCVV(e.target.value.replace(/\D/g, ''))}
-                          placeholder="CVV" 
+                          placeholder="CVV"
                           required
                           className="w-full p-2 rounded-lg border border-slate-200 focus:outline-none focus:border-primary bg-white text-center font-mono"
                         />
@@ -528,7 +519,7 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
                           <span>{Math.round(processingProgress)}%</span>
                         </div>
                         <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-150 ease-out"
                             style={{ width: `${processingProgress}%` }}
                           ></div>
@@ -557,11 +548,11 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
               ) : (
                 /* Thank you receipt certificate */
                 <div className="space-y-5 py-4 text-center animate-scale-up">
-                  <span className="material-symbols-outlined text-[64px] text-emerald-500">check_circle</span>
-                  
+                  <span className="material-symbols-outlined text-[64px] text-amber-500">hourglass_bottom</span>
+
                   <div className="space-y-1">
                     <h3 className="font-display font-extrabold text-xl text-slate-900">¡Gracias por tu Solidaridad!</h3>
-                    <p className="text-xs text-slate-500">Tu aporte es fundamental para preservar el bienestar animal en la UNDC.</p>
+                    <p className="text-xs text-slate-500">Tu donación está pendiente de verificación por el administrador.</p>
                   </div>
 
                   {/* Receipt Box styled like official certificate */}
@@ -586,6 +577,14 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
                       <span className="col-span-2 font-medium text-slate-700">{donationReceipt.campaign}</span>
                     </div>
 
+                    <div className="grid grid-cols-3 gap-2">
+                      <span className="text-slate-400 font-medium">Estado:</span>
+                      <span className="col-span-2 font-medium text-amber-600 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px]">pending</span>
+                        Pendiente de verificación
+                      </span>
+                    </div>
+
                     <div className="grid grid-cols-3 gap-2 border-t border-slate-100 pt-2">
                       <span className="text-slate-400 font-medium">Fecha y Hora:</span>
                       <span className="col-span-2 text-slate-600 font-mono text-[10px]">{donationReceipt.date}</span>
@@ -593,7 +592,7 @@ export default function DonationCampaigns({ campaigns, onUpdateCampaignAmount, o
                   </div>
 
                   <div className="text-[11px] text-slate-400 leading-relaxed">
-                    Hemos enviado un correo a <strong>{donorEmail}</strong> con la constancia oficial emitida y el reporte de transparencia asociado. ¡Sigue el progreso en nuestro termómetro de recaudación!
+                    Hemos enviado un correo a <strong>{donorEmail}</strong> con la constancia oficial. Una vez que el administrador verifique el pago, el monto se reflejará en la barra de progreso de la campaña.
                   </div>
 
                   <button

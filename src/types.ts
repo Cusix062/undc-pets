@@ -65,6 +65,17 @@ export interface DonationAccount {
   CCI: string;
 }
 
+export interface PendingDonation {
+  id: string;
+  campaignId: string;
+  donorName: string;
+  donorEmail: string;
+  amount: number;
+  date: string;
+  verified: boolean;
+  verifiedAt?: string;
+}
+
 export interface DonationConfig {
   accounts: DonationAccount[];
   yapeNumber: string;
@@ -76,4 +87,5 @@ export interface DonationConfig {
     tunqui: string;
   };
   campaigns: DonationCampana[];
+  pendingDonations: PendingDonation[];
 }

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
-import { Pet, Post, DonationCampana, DonationConfig, DonationAccount } from '../types';
+import { Pet, Post, DonationCampana, DonationConfig, DonationAccount, PendingDonation } from '../types';
 
 type AdminTab = 'posts' | 'pets' | 'donaciones' | 'bloqueados';
 
-export default function AdminPanel({ onShowNotification, onPetsChanged, onCampaignsChanged }: { onShowNotification: (msg: string) => void; onPetsChanged?: (pet?: Pet, action?: string) => void; onCampaignsChanged?: (campaigns: DonationCampana[]) => void }) {
+export default function AdminPanel({ onShowNotification, onPetsChanged, onConfigChanged }: { onShowNotification: (msg: string) => void; onPetsChanged?: (pet?: Pet, action?: string) => void; onConfigChanged?: (config: DonationConfig) => void }) {
   const { user, isAdmin } = useAuth();
   const [tab, setTab] = useState<AdminTab>('posts');
 
@@ -46,7 +46,7 @@ export default function AdminPanel({ onShowNotification, onPetsChanged, onCampai
 
       {tab === 'posts' && <PostsPanel onShowNotification={onShowNotification} />}
       {tab === 'pets' && <PetsPanel onShowNotification={onShowNotification} onPetsChanged={onPetsChanged} />}
-      {tab === 'donaciones' && <DonacionesPanel onShowNotification={onShowNotification} onCampaignsChanged={onCampaignsChanged} />}
+      {tab === 'donaciones' && <DonacionesPanel onShowNotification={onShowNotification} onConfigChanged={onConfigChanged} />}
       {tab === 'bloqueados' && <BloqueadosPanel onShowNotification={onShowNotification} />}
     </div>
   );
@@ -321,8 +321,11 @@ function PetsPanel({ onShowNotification, onPetsChanged }: { onShowNotification: 
 }
 
 /* ===== Donaciones Panel ===== */
-function DonacionesPanel({ onShowNotification, onCampaignsChanged }: { onShowNotification: (msg: string) => void; onCampaignsChanged?: (campaigns: DonationCampana[]) => void }) {
+type DonacionSubTab = 'metas' | 'pendientes' | 'bancaria';
+
+function DonacionesPanel({ onShowNotification, onConfigChanged }: { onShowNotification: (msg: string) => void; onConfigChanged?: (config: DonationConfig) => void }) {
   const [config, setConfig] = useState<DonationConfig | null>(null);
+  const [subTab, setSubTab] = useState<DonacionSubTab>('metas');
   const [editCampaign, setEditCampaign] = useState<DonationCampana | null>(null);
   const [showCampaignForm, setShowCampaignForm] = useState(false);
   const [campForm, setCampForm] = useState<Partial<DonationCampana>>({});
@@ -352,6 +355,7 @@ function DonacionesPanel({ onShowNotification, onCampaignsChanged }: { onShowNot
         { id: 'camp_medical', title: 'Cirugía de Firulais', description: 'Tratamiento de cadera', currentAmount: 210, targetAmount: 800, urgency: 'Crítica' },
         { id: 'camp_spay', title: 'Esterilización', description: 'Esterilización preventiva', currentAmount: 950, targetAmount: 1200, urgency: 'Media' },
       ],
+      pendingDonations: [],
     });
   };
 
@@ -362,106 +366,223 @@ function DonacionesPanel({ onShowNotification, onCampaignsChanged }: { onShowNot
       await supabase.from('donation_config').upsert({ id: 'main', data: newConfig as any });
     } catch {}
     setConfig(newConfig);
-    if (newConfig.campaigns && onCampaignsChanged) onCampaignsChanged(newConfig.campaigns);
+    if (onConfigChanged) onConfigChanged(newConfig);
     onShowNotification('Configuración de donaciones actualizada');
   };
 
   if (!config) return null;
 
+  const pendingCount = (config.pendingDonations || []).filter(pd => !pd.verified).length;
+
   return (
-    <div className="space-y-6">
-      {/* Cuentas Bancarias */}
-      <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-3">
-        <h3 className="font-display font-bold text-sm text-slate-900 flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary">account_balance</span>
-          Cuentas Bancarias
-        </h3>
-        {config.accounts.map((acc, i) => (
-          <EditableAccountRow
-            key={i}
-            account={acc}
-            onChange={(updated) => {
-              const accounts = [...config.accounts];
-              accounts[i] = updated;
-              saveConfig({ ...config, accounts });
-            }}
-            onDelete={() => {
-              const accounts = config.accounts.filter((_, idx) => idx !== i);
-              saveConfig({ ...config, accounts });
-            }}
-          />
-        ))}
-        <button
-          onClick={() => {
-            const accounts = [...config.accounts, { bank: '', number: '', CCI: '' }];
-            saveConfig({ ...config, accounts });
-          }}
-          className="text-primary text-xs font-bold flex items-center gap-1"
-        >
-          <span className="material-symbols-outlined text-[14px]">add</span>
-          Agregar cuenta
-        </button>
-      </div>
-
-      {/* Yape / Plin */}
-      <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-3">
-        <h3 className="font-display font-bold text-sm text-slate-900">Yape / Plin</h3>
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <div>
-            <label className="block font-bold text-slate-600 mb-1">Número Yape</label>
-            <input value={config.yapeNumber} onChange={e => saveConfig({ ...config, yapeNumber: e.target.value })} className="w-full p-2 rounded-xl border border-slate-200" />
-          </div>
-          <div>
-            <label className="block font-bold text-slate-600 mb-1">Número Plin</label>
-            <input value={config.plinNumber} onChange={e => saveConfig({ ...config, plinNumber: e.target.value })} className="w-full p-2 rounded-xl border border-slate-200" />
-          </div>
-        </div>
-      </div>
-
-      {/* QR Codes paths */}
-      <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-3">
-        <h3 className="font-display font-bold text-sm text-slate-900">Rutas de Códigos QR</h3>
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          {(['yape', 'plin', 'bcp', 'tunqui'] as const).map(key => (
-            <div key={key}>
-              <label className="block font-bold text-slate-600 mb-1 capitalize">{key}</label>
-              <input value={config.qrCodes[key]} onChange={e => saveConfig({ ...config, qrCodes: { ...config.qrCodes, [key]: e.target.value } })} className="w-full p-2 rounded-xl border border-slate-200" />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Campaigns */}
-      <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-3">
-        <div className="flex justify-between items-center">
-          <h3 className="font-display font-bold text-sm text-slate-900">Campañas</h3>
-          <button onClick={() => { setEditCampaign(null); setCampForm({ urgency: 'Media', currentAmount: 0, targetAmount: 100 }); setShowCampaignForm(true); }} className="bg-[#00346f] text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
-            <span className="material-symbols-outlined text-[14px]">add</span>
-            Nueva
+    <div className="space-y-4">
+      {/* Sub-tabs within Donaciones */}
+      <div className="flex gap-2 border-b border-slate-100 pb-2 overflow-x-auto">
+        {([
+          { id: 'metas' as DonacionSubTab, icon: 'track_changes', label: 'Metas y Objetivos' },
+          { id: 'pendientes' as DonacionSubTab, icon: 'pending_actions', label: `Pendientes${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
+          { id: 'bancaria' as DonacionSubTab, icon: 'account_balance', label: 'Bancaria' },
+        ]).map(t => (
+          <button
+            key={t.id}
+            onClick={() => setSubTab(t.id)}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              subTab === t.id ? 'bg-[#eef4ff] text-[#00346f]' : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[16px]">{t.icon}</span>
+            {t.label}
           </button>
-        </div>
-        {config.campaigns.map((camp, i) => (
-          <div key={camp.id} className="bg-slate-50 rounded-xl p-3 flex items-center justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <p className="font-bold text-xs text-slate-800 truncate">{camp.title}</p>
-              <p className="text-[10px] text-slate-400">S/.{camp.currentAmount} / S/.{camp.targetAmount} · {camp.urgency}</p>
-            </div>
-            <div className="flex gap-1 shrink-0">
-              <button onClick={() => { setEditCampaign(camp); setCampForm(camp); setShowCampaignForm(true); }} className="text-primary text-[10px] font-bold px-2 py-1 rounded-lg bg-[#eef4ff]">Editar</button>
-              <button onClick={() => {
-                const campaigns = config.campaigns.filter((_, idx) => idx !== i);
-                saveConfig({ ...config, campaigns });
-              }} className="text-rose-600 text-[10px] font-bold px-2 py-1 rounded-lg bg-rose-50">Eliminar</button>
-            </div>
-          </div>
         ))}
       </div>
+
+      {/* ===== Metas y Objetivos ===== */}
+      {subTab === 'metas' && (
+        <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-display font-bold text-sm text-slate-900">Metas y Objetivos</h3>
+              <p className="text-[10px] text-slate-400">Crea metas de recaudación con barra de progreso</p>
+            </div>
+            <button onClick={() => { setEditCampaign(null); setCampForm({ urgency: 'Media', currentAmount: 0, targetAmount: 100 }); setShowCampaignForm(true); }} className="bg-[#00346f] text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px]">add</span>
+              Nueva Meta
+            </button>
+          </div>
+          {config.campaigns.map((camp) => {
+            const percent = camp.targetAmount > 0 ? Math.min(Math.round((camp.currentAmount / camp.targetAmount) * 100), 100) : 0;
+            return (
+              <div key={camp.id} className="bg-slate-50 rounded-xl p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-sm text-slate-800 truncate">{camp.title}</p>
+                    <p className="text-[10px] text-slate-400">{camp.description}</p>
+                  </div>
+                  <div className="flex gap-1 shrink-0 ml-3">
+                    <button onClick={() => { setEditCampaign(camp); setCampForm(camp); setShowCampaignForm(true); }} className="text-primary text-[10px] font-bold px-2 py-1 rounded-lg bg-[#eef4ff]">Editar</button>
+                    <button onClick={() => {
+                      const campaigns = config.campaigns.filter(c => c.id !== camp.id);
+                      saveConfig({ ...config, campaigns });
+                    }} className="text-rose-600 text-[10px] font-bold px-2 py-1 rounded-lg bg-rose-50">Eliminar</button>
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span className="font-bold text-[#00346f]">S/.{camp.currentAmount}</span>
+                  <span>Meta: S/.{camp.targetAmount}</span>
+                </div>
+                <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full transition-all ${percent >= 100 ? 'bg-emerald-500' : 'bg-[#fc9d41]'}`} style={{ width: `${percent}%` }}></div>
+                </div>
+                <div className="flex justify-between text-[10px] text-slate-400">
+                  <span>{percent}% completado</span>
+                  <span className={`font-bold ${camp.urgency === 'Crítica' ? 'text-rose-600' : camp.urgency === 'Alta' ? 'text-amber-600' : 'text-slate-500'}`}>{camp.urgency}</span>
+                </div>
+              </div>
+            );
+          })}
+          {config.campaigns.length === 0 && (
+            <p className="text-xs text-slate-400 text-center py-6">No hay metas creadas. ¡Crea la primera!</p>
+          )}
+        </div>
+      )}
+
+      {/* ===== Pendientes ===== */}
+      {subTab === 'pendientes' && (
+        <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-4">
+          <h3 className="font-display font-bold text-sm text-slate-900">Donaciones Pendientes de Verificación</h3>
+          <p className="text-[10px] text-slate-400">Revisa las donaciones recibidas y verifícalas para que se reflejen en la barra de progreso.</p>
+          {(config.pendingDonations || []).filter(pd => !pd.verified).length === 0 ? (
+            <p className="text-xs text-slate-400 text-center py-6">No hay donaciones pendientes.</p>
+          ) : (
+            <div className="space-y-3">
+              {(config.pendingDonations || []).filter(pd => !pd.verified).map(pd => {
+                const camp = config.campaigns.find(c => c.id === pd.campaignId);
+                return (
+                  <div key={pd.id} className="bg-slate-50 rounded-xl p-4 flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-sm text-slate-800">{pd.donorName}</p>
+                      <p className="text-[10px] text-slate-400">
+                        S/.{pd.amount} · {camp?.title || 'Campaña desconocida'} · {new Date(pd.date).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const pendingDonations = (config.pendingDonations || []).map(d =>
+                          d.id === pd.id ? { ...d, verified: true, verifiedAt: new Date().toISOString() } : d
+                        );
+                        const campaigns = config.campaigns.map(c =>
+                          c.id === pd.campaignId ? { ...c, currentAmount: c.currentAmount + pd.amount } : c
+                        );
+                        saveConfig({ ...config, pendingDonations, campaigns });
+                        onShowNotification(`Donación de S/.${pd.amount} de ${pd.donorName} verificada`);
+                      }}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">check</span>
+                      Verificar
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Verified history (collapsed) */}
+          {(config.pendingDonations || []).filter(pd => pd.verified).length > 0 && (
+            <details className="mt-4">
+              <summary className="text-xs text-slate-500 cursor-pointer font-bold">
+                Ver historial ({config.pendingDonations.filter(pd => pd.verified).length} verificadas)
+              </summary>
+              <div className="mt-3 space-y-2">
+                {config.pendingDonations.filter(pd => pd.verified).map(pd => (
+                  <div key={pd.id} className="bg-emerald-50 rounded-lg p-3 flex justify-between items-center">
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">{pd.donorName} · S/.{pd.amount}</p>
+                      <p className="text-[10px] text-slate-400">{new Date(pd.date).toLocaleDateString('es-PE')} → verificada {pd.verifiedAt ? new Date(pd.verifiedAt).toLocaleDateString('es-PE') : ''}</p>
+                    </div>
+                    <span className="text-emerald-600 text-[10px] font-bold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[12px]">verified</span>
+                      Verificada
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+      )}
+
+      {/* ===== Bancaria ===== */}
+      {subTab === 'bancaria' && (
+        <div className="space-y-6">
+          {/* Cuentas Bancarias */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-3">
+            <h3 className="font-display font-bold text-sm text-slate-900 flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary">account_balance</span>
+              Cuentas Bancarias
+            </h3>
+            {config.accounts.map((acc, i) => (
+              <EditableAccountRow
+                key={i}
+                account={acc}
+                onChange={(updated) => {
+                  const accounts = [...config.accounts];
+                  accounts[i] = updated;
+                  saveConfig({ ...config, accounts });
+                }}
+                onDelete={() => {
+                  const accounts = config.accounts.filter((_, idx) => idx !== i);
+                  saveConfig({ ...config, accounts });
+                }}
+              />
+            ))}
+            <button
+              onClick={() => {
+                const accounts = [...config.accounts, { bank: '', number: '', CCI: '' }];
+                saveConfig({ ...config, accounts });
+              }}
+              className="text-primary text-xs font-bold flex items-center gap-1"
+            >
+              <span className="material-symbols-outlined text-[14px]">add</span>
+              Agregar cuenta
+            </button>
+          </div>
+
+          {/* Yape / Plin */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-3">
+            <h3 className="font-display font-bold text-sm text-slate-900">Yape / Plin</h3>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <label className="block font-bold text-slate-600 mb-1">Número Yape</label>
+                <input value={config.yapeNumber} onChange={e => saveConfig({ ...config, yapeNumber: e.target.value })} className="w-full p-2 rounded-xl border border-slate-200" />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-600 mb-1">Número Plin</label>
+                <input value={config.plinNumber} onChange={e => saveConfig({ ...config, plinNumber: e.target.value })} className="w-full p-2 rounded-xl border border-slate-200" />
+              </div>
+            </div>
+          </div>
+
+          {/* QR Codes paths */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-3">
+            <h3 className="font-display font-bold text-sm text-slate-900">Rutas de Códigos QR</h3>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              {(['yape', 'plin', 'bcp', 'tunqui'] as const).map(key => (
+                <div key={key}>
+                  <label className="block font-bold text-slate-600 mb-1 capitalize">{key}</label>
+                  <input value={config.qrCodes[key]} onChange={e => saveConfig({ ...config, qrCodes: { ...config.qrCodes, [key]: e.target.value } })} className="w-full p-2 rounded-xl border border-slate-200" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Campaign Form Modal */}
       {showCampaignForm && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50" onClick={() => setShowCampaignForm(false)}>
           <div className="bg-white rounded-3xl w-full max-w-md p-6 space-y-4" onClick={e => e.stopPropagation()}>
-            <h3 className="font-display font-bold text-lg">{editCampaign ? 'Editar' : 'Nueva'} Campaña</h3>
+            <h3 className="font-display font-bold text-lg">{editCampaign ? 'Editar' : 'Nueva'} Meta</h3>
             <div className="space-y-3 text-xs">
               <div>
                 <label className="block font-bold text-slate-600 mb-1">Título</label>

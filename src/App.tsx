@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Pet, DonationCampana, DonationConfig } from './types';
+import { Pet, DonationConfig, PendingDonation } from './types';
 import { INITIAL_PETS, FAQS } from './data';
 import { supabase } from './lib/supabase';
 import { AuthProvider, useAuth } from './lib/AuthContext';
@@ -17,34 +17,6 @@ import PhotoAlbum from './components/PhotoAlbum';
 import GoogleSignIn from './components/GoogleSignIn';
 import UserProfile from './components/UserProfile';
 import AdminPanel from './components/AdminPanel';
-
-// Initial campaigns
-const INITIAL_CAMPAIGNS: DonationCampana[] = [
-  {
-    id: 'camp_food',
-    title: 'Alimento Mensual para el Campus',
-    description: 'Compra de bolsas de croquetas de 15kg para perros y gatos. Asegura su ración diaria de comida.',
-    currentAmount: 340,
-    targetAmount: 500,
-    urgency: 'Alta'
-  },
-  {
-    id: 'camp_medical',
-    title: 'Cirugía y Terapia de Firulais',
-    description: 'Tratamiento especializado de cadera, medicamentos antiinflamatorios y radiografías de control.',
-    currentAmount: 210,
-    targetAmount: 800,
-    urgency: 'Crítica'
-  },
-  {
-    id: 'camp_spay',
-    title: 'Campaña de Esterilización Integral',
-    description: 'Esterilización preventiva de nuevas mascotas que ingresan o rondan las inmediaciones del campus.',
-    currentAmount: 950,
-    targetAmount: 1200,
-    urgency: 'Media'
-  }
-];
 
 export default function App() {
   return (
@@ -64,7 +36,14 @@ function AppContent() {
   
   // Data States
   const [pets, setPets] = useState<Pet[]>([]);
-  const [campaigns, setCampaigns] = useState<DonationCampana[]>([]);
+  const [donationConfig, setDonationConfig] = useState<DonationConfig>({
+    accounts: [],
+    yapeNumber: '',
+    plinNumber: '',
+    qrCodes: { yape: '', plin: '', bcp: '', tunqui: '' },
+    campaigns: [],
+    pendingDonations: [],
+  });
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [editingPet, setEditingPet] = useState<Pet | null>(null);
@@ -108,7 +87,6 @@ function AppContent() {
         setPets(loaded);
         localStorage.setItem('undc_pets', JSON.stringify(loaded));
       } else {
-        // Fallback: localStorage → INITIAL_PETS
         const cached = localStorage.getItem('undc_pets');
         if (cached) {
           try { setPets(JSON.parse(cached)); } catch { setPets(INITIAL_PETS); }
@@ -118,14 +96,12 @@ function AppContent() {
       }
       if (configRes.data) {
         const cfg = configRes.data.data as DonationConfig;
-        if (cfg.campaigns) {
-          setCampaigns(cfg.campaigns);
-          localStorage.setItem('undc_campaigns', JSON.stringify(cfg.campaigns));
-        }
+        setDonationConfig(cfg);
+        localStorage.setItem('undc_donation_config', JSON.stringify(cfg));
       } else {
-        const cached = localStorage.getItem('undc_campaigns');
+        const cached = localStorage.getItem('undc_donation_config');
         if (cached) {
-          try { setCampaigns(JSON.parse(cached)); } catch {}
+          try { setDonationConfig(JSON.parse(cached)); } catch {}
         }
       }
       setDataLoaded(true);
@@ -163,21 +139,21 @@ function AppContent() {
     triggerNotification('Mascota reportada y guardada');
   };
 
-  // Process donation updates
-  const handleUpdateCampaignAmount = async (campaignId: string, amount: number) => {
-    const updated = campaigns.map(c => {
-      if (c.id === campaignId) return { ...c, currentAmount: c.currentAmount + amount };
-      return c;
-    });
-    setCampaigns(updated);
-    localStorage.setItem('undc_campaigns', JSON.stringify(updated));
-    // Sync back to donation_config
-    const { data } = await supabase.from('donation_config').select('*').eq('id', 'main').single();
-    if (data) {
-      const cfg = data.data as DonationConfig;
-      cfg.campaigns = updated;
-      await supabase.from('donation_config').upsert({ id: 'main', data: cfg as any });
-    }
+  // Add a pending donation (user donated, admin must verify)
+  const handleAddPendingDonation = async (pending: PendingDonation) => {
+    const updatedConfig = {
+      ...donationConfig,
+      pendingDonations: [...(donationConfig.pendingDonations || []), pending],
+    };
+    setDonationConfig(updatedConfig);
+    localStorage.setItem('undc_donation_config', JSON.stringify(updatedConfig));
+    await supabase.from('donation_config').upsert({ id: 'main', data: updatedConfig as any }).catch(() => {});
+  };
+
+  // Handle full config updates from AdminPanel
+  const handleConfigChanged = (newConfig: DonationConfig) => {
+    setDonationConfig(newConfig);
+    localStorage.setItem('undc_donation_config', JSON.stringify(newConfig));
   };
 
   // Process adoption request trigger
@@ -667,9 +643,9 @@ function AppContent() {
 
         {/* DONATION VIEW */}
         {activeTab === 'donaciones' && (
-          <DonationCampaigns 
-            campaigns={campaigns}
-            onUpdateCampaignAmount={handleUpdateCampaignAmount}
+          <DonationCampaigns
+            config={donationConfig}
+            onAddPendingDonation={handleAddPendingDonation}
             onShowNotification={triggerNotification}
           />
         )}
@@ -739,7 +715,7 @@ function AppContent() {
 
         {/* ADMIN VIEW */}
         {activeTab === 'admin' && isAdmin && (
-          <AdminPanel onShowNotification={triggerNotification} onPetsChanged={handlePetsChanged} onCampaignsChanged={(camps) => { setCampaigns(camps); localStorage.setItem('undc_campaigns', JSON.stringify(camps)); }} />
+          <AdminPanel onShowNotification={triggerNotification} onPetsChanged={handlePetsChanged} onConfigChanged={handleConfigChanged} />
         )}
 
       </main>
