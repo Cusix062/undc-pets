@@ -34,11 +34,11 @@ export default function PetCard({ pet, onSelect }: PetCardProps) {
       className="group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col h-full transform hover:-translate-y-1"
     >
       {/* Pet Image Container */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-b from-slate-100 to-slate-200">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
         <img 
           src={pet.image} 
           alt={pet.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           referrerPolicy="no-referrer"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>

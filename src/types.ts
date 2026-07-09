@@ -46,6 +46,7 @@ export interface Post {
   isCampusFavorite?: boolean;
   tag?: string;
   likedByUser?: boolean;
+  sharedBy?: string[];
 }
 
 export interface DonationCampana {
@@ -56,4 +57,23 @@ export interface DonationCampana {
   targetAmount: number;
   urgency: string;
   image?: string;
+}
+
+export interface DonationAccount {
+  bank: string;
+  number: string;
+  CCI: string;
+}
+
+export interface DonationConfig {
+  accounts: DonationAccount[];
+  yapeNumber: string;
+  plinNumber: string;
+  qrCodes: {
+    yape: string;
+    plin: string;
+    bcp: string;
+    tunqui: string;
+  };
+  campaigns: DonationCampana[];
 }

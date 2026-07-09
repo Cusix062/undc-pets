@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Post, Pet } from '../types';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../lib/AuthContext';
 import GoogleSignIn from './GoogleSignIn';
-import type { User } from '@supabase/supabase-js';
 
 interface CommunityFeedProps {
   onAddPetToDirectory: (newPet: Pet) => void;
   onShowNotification: (msg: string) => void;
+  onViewProfile?: (userId: string) => void;
 }
 
 const REPORT_IMAGE_PRESETS = [
@@ -16,7 +17,8 @@ const REPORT_IMAGE_PRESETS = [
   { name: 'Gatito Pequeño', url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB5hU-Itt0ePmS68Rlw3j_hiG6UceKzWLfxKGnpSx1ZRO9cl3Uh97bYjERjO5AOP4eUHcqfqXMS1za5zgrh9toAOMtBsf6mzchv5ylEaxBaJ5VSblu_b3BU2mT7qTxls6kT6mOHg81kBL6wRyBcWKG-UGiJns_DgTD8bH8mIpOTTQ9f9LogYXF39ky-Zn4m9VWACp9NAL7xtqrl8vreo2uYgoiYyJdCqAttFw5Z11BT4iathr8jZ3Od0v6MQWjSra7A74RDb2jldQ' }
 ];
 
-export default function CommunityFeed({ onAddPetToDirectory, onShowNotification }: CommunityFeedProps) {
+export default function CommunityFeed({ onAddPetToDirectory, onShowNotification, onViewProfile }: CommunityFeedProps) {
+  const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSubTab, setActiveSubTab] = useState<' muro' | 'reporte'>(' muro');
@@ -36,15 +38,10 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
   const [reporterEmail, setReporterEmail] = useState('');
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
-    const { unsubscribe } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-    return unsubscribe;
-  }, []);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
 
   const loadPosts = useCallback(async () => {
     try {
@@ -59,16 +56,40 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
 
   useEffect(() => { loadPosts(); }, [loadPosts]);
 
+  useEffect(() => {
+    const channel = supabase.channel('posts-changes')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, (payload: any) => {
+        const updated = payload.new.data as Post;
+        setPosts(prev => prev.map(p => p.id === updated.id ? updated : p));
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, (payload: any) => {
+        const inserted = payload.new.data as Post;
+        setPosts(prev => [inserted, ...prev]);
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, (payload: any) => {
+        setPosts(prev => prev.filter(p => p.id !== payload.old.id));
+      })
+      .subscribe();
+    return () => { channel.unsubscribe(); };
+  }, []);
+
+  const updatePost = async (postId: string, newData: Partial<Post>) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    const updatedPost = { ...post, ...newData };
+    const updated = posts.map(p => p.id === postId ? updatedPost : p);
+    setPosts(updated);
+    await supabase.from('posts').update({ data: updatedPost }).eq('id', postId);
+  };
+
   const handleLike = async (postId: string) => {
     if (!user) { onShowNotification('Debes iniciar sesión'); return; }
     const isLiked = likedPosts[postId];
     const post = posts.find(p => p.id === postId);
     if (!post) return;
     const newLikes = post.likes + (isLiked ? -1 : 1);
-    const updated = posts.map(p => p.id === postId ? { ...p, likes: newLikes } : p);
-    setPosts(updated);
     setLikedPosts(prev => ({ ...prev, [postId]: !isLiked }));
-    await supabase.from('posts').update({ data: { ...post, likes: newLikes } }).eq('id', postId);
+    await updatePost(postId, { likes: newLikes });
     onShowNotification(isLiked ? 'Quitaste tu Me gusta' : '¡Le diste Me gusta!');
   };
 
@@ -88,10 +109,8 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
       timeAgo: 'Ahora',
     };
     const updatedComments = [...post.comments, newComment];
-    const updated = posts.map(p => p.id === postId ? { ...p, comments: updatedComments, commentsCount: updatedComments.length } : p);
-    setPosts(updated);
     setCommentInputs(prev => ({ ...prev, [postId]: '' }));
-    await supabase.from('posts').update({ data: { ...post, comments: updatedComments, commentsCount: updatedComments.length } }).eq('id', postId);
+    await updatePost(postId, { comments: updatedComments, commentsCount: updatedComments.length });
     onShowNotification('¡Comentario publicado!');
   };
 
@@ -125,6 +144,11 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
     e.preventDefault();
     if (!newPostContent.trim()) return;
     if (!user) { onShowNotification('Debes iniciar sesión para publicar'); return; }
+
+    // Check if user is blocked
+    const { data: blocked } = await supabase.from('blocked_users').select('user_id').eq('user_id', user.id).maybeSingle();
+    if (blocked) { onShowNotification('Tu cuenta ha sido bloqueada para publicar. Contacta al administrador.'); return; }
+
     const meta = user.user_metadata;
     const name = meta.full_name || user.email || 'Anónimo';
     const initials = name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
@@ -155,6 +179,38 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
       console.error('Error al publicar:', e);
       onShowNotification('Error al publicar: ' + (e.message || 'desconocido'));
     }
+  };
+
+  const handleEditSubmit = async (postId: string) => {
+    if (!editContent.trim()) return;
+    await updatePost(postId, { content: editContent.trim() });
+    setEditingPostId(null);
+    setEditContent('');
+    onShowNotification('Publicación actualizada');
+  };
+
+  const handleDelete = async (postId: string) => {
+    setDeletingPostId(postId);
+  };
+
+  const confirmDelete = async (postId: string) => {
+    setPosts(posts.filter(p => p.id !== postId));
+    await supabase.from('posts').delete().eq('id', postId);
+    setDeletingPostId(null);
+    onShowNotification('Publicación eliminada');
+  };
+
+  const handleShare = async (postId: string) => {
+    if (!user) { onShowNotification('Debes iniciar sesión'); return; }
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    const sharedBy = post.sharedBy || [];
+    if (sharedBy.includes(user.id)) {
+      onShowNotification('Ya compartiste esta publicación');
+      return;
+    }
+    await updatePost(postId, { sharedBy: [...sharedBy, user.id] });
+    onShowNotification('Publicación compartida en tu perfil');
   };
 
   const handleReportMascotSubmit = async (e: React.FormEvent) => {
@@ -213,6 +269,31 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
 
   return (
     <div id="community-feed-container" className="space-y-6">
+      {/* Image Viewer Modal */}
+      {viewingImage && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" onClick={() => setViewingImage(null)}>
+          <button onClick={() => setViewingImage(null)} className="absolute top-4 right-4 text-white/80 hover:text-white z-10">
+            <span className="material-symbols-outlined text-[32px]">close</span>
+          </button>
+          <img src={viewingImage} alt="" className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl" onClick={e => e.stopPropagation()} referrerPolicy="no-referrer" />
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingPostId && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDeletingPostId(null)}>
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl" onClick={e => e.stopPropagation()}>
+            <span className="material-symbols-outlined text-[40px] text-rose-600 block mb-2">warning</span>
+            <h3 className="font-display font-bold text-lg text-slate-900 mb-2">Eliminar publicación</h3>
+            <p className="text-xs text-slate-600 mb-5">Esta acción no se puede deshacer. ¿Estás seguro?</p>
+            <div className="flex gap-3">
+              <button onClick={() => setDeletingPostId(null)} className="flex-1 border border-slate-200 text-slate-600 text-xs font-bold py-2.5 rounded-xl hover:bg-slate-50 transition-all">Cancelar</button>
+              <button onClick={() => confirmDelete(deletingPostId)} className="flex-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-xs">Eliminar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-slate-100 shadow-xs">
         <div className="flex">
           <button
@@ -236,56 +317,60 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
       {activeSubTab === ' muro' ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-5">
-              <div className="flex gap-3 mb-4">
-                {user?.user_metadata?.avatar_url ? (
-                  <img src={user.user_metadata.avatar_url} alt="" className="h-10 w-10 rounded-full border border-slate-200" referrerPolicy="no-referrer" />
-                ) : (
-                  <div className="bg-[#00346f] text-white font-bold h-10 w-10 rounded-full flex items-center justify-center text-sm">
-                    {user ? user.user_metadata?.full_name?.charAt(0) || '?' : '?'}
+
+            {/* Create Post Card */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+              <div className="bg-gradient-to-r from-[#00346f]/5 to-transparent px-5 pt-5 pb-3">
+                <div className="flex gap-3">
+                  {user?.user_metadata?.avatar_url ? (
+                    <img src={user.user_metadata.avatar_url} alt="" className="h-10 w-10 rounded-full border-2 border-white shadow-xs" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="bg-[#00346f] text-white font-bold h-10 w-10 rounded-full flex items-center justify-center text-sm shadow-xs">
+                      {user ? user.user_metadata?.full_name?.charAt(0) || '?' : '?'}
+                    </div>
+                  )}
+                  <div className="flex-grow">
+                    <p className="text-sm font-bold text-slate-800">Comparte con la comunidad</p>
+                    <p className="text-[11px] text-slate-400">Fotos, anécdotas o novedades del campus</p>
                   </div>
-                )}
-                <div className="flex-grow">
-                  <p className="text-xs font-bold text-slate-800">¿Qué está pasando con los amigos peludos hoy?</p>
-                  <p className="text-[11px] text-slate-400">Comparte fotos, anécdotas o actualizaciones del campus</p>
                 </div>
               </div>
               {user ? (
-                <form onSubmit={handleCreatePostSubmit} className="space-y-3">
-                  <textarea rows={3} value={newPostContent} onChange={(e) => setNewPostContent(e.target.value)} placeholder="Bobby está durmiendo plácidamente en el patio..." required className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] focus:ring-1 focus:ring-[#00346f] bg-slate-50 resize-none"></textarea>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tu Nombre</label>
-                      <input type="text" value={user.user_metadata?.full_name || user.email || ''} disabled className="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-500" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Subir Foto (Opcional)</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
-                        className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#00346f] bg-slate-50 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-[#00346f] file:text-white hover:file:bg-[#002450"
-                      />
-                      {uploadingImage && <span className="text-[10px] text-slate-400 mt-1 block">Procesando imagen...</span>}
-                      {newPostImage && !uploadingImage && (
-                        <div className="mt-1 flex items-center gap-2">
-                          <img src={newPostImage} alt="Preview" className="h-8 w-8 rounded object-cover border" />
-                          <button type="button" onClick={() => { setNewPostFile(null); setNewPostImage(''); }} className="text-[10px] text-rose-600 font-bold">Quitar</button>
-                        </div>
-                      )}
-                    </div>
+                <form onSubmit={handleCreatePostSubmit} className="p-5 space-y-4">
+                  <div className="relative">
+                    <textarea rows={3} value={newPostContent} onChange={(e) => setNewPostContent(e.target.value)} placeholder="¿Qué está pasando con los amigos peludos hoy?" required className="w-full text-sm p-4 rounded-2xl border border-slate-200 focus:outline-none focus:border-[#00346f] focus:ring-2 focus:ring-[#00346f]/10 bg-white resize-none shadow-xs transition-all" />
+                    <span className="absolute bottom-3 right-3 text-[10px] text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-200">{newPostContent.length} caracteres</span>
                   </div>
-                  <div className="flex justify-end pt-2">
-                    <button type="submit" className="bg-[#00346f] hover:bg-[#002450] text-white text-xs font-bold px-5 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[15px]">send</span>
-                      Publicar
-                    </button>
+                  {newPostImage && (
+                    <div className="relative rounded-2xl overflow-hidden border border-slate-200 max-w-sm">
+                      <img src={newPostImage} alt="Preview" className="w-full max-h-48 object-contain bg-white" />
+                      <button type="button" onClick={() => { setNewPostFile(null); setNewPostImage(''); }} className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full h-7 w-7 flex items-center justify-center transition-all">
+                        <span className="material-symbols-outlined text-[14px]">close</span>
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between gap-3">
+                    <label className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 hover:border-[#00346f] cursor-pointer transition-all text-xs font-bold text-slate-600 hover:text-[#00346f]">
+                      <span className="material-symbols-outlined text-[18px]">photo_camera</span>
+                      {uploadingImage ? 'Procesando...' : 'Agregar Foto'}
+                      <input type="file" accept="image/*" onChange={(e) => handleFileSelect(e.target.files?.[0] || null)} className="hidden" />
+                    </label>
+                    <div className="flex items-center gap-2">
+                      {user?.user_metadata?.full_name && (
+                        <span className="text-[11px] text-slate-400 font-medium truncate max-w-[120px]">{user.user_metadata.full_name.split(' ')[0]}</span>
+                      )}
+                      <button type="submit" disabled={!newPostContent.trim()} className="bg-[#00346f] hover:bg-[#002450] disabled:bg-slate-300 text-white text-xs font-bold px-6 py-2.5 rounded-xl transition-all shadow-xs flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[16px]">send</span>
+                        Publicar
+                      </button>
+                    </div>
                   </div>
                 </form>
               ) : (
-                <div className="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                  <span className="material-symbols-outlined text-[32px] text-slate-300">login</span>
-                  <p className="text-xs text-slate-500 mt-2">Inicia sesión con Google para compartir fotos y anécdotas</p>
+                <div className="text-center py-8 mx-5 mb-5 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                  <span className="material-symbols-outlined text-[40px] text-slate-300">login</span>
+                  <p className="text-sm text-slate-500 mt-2 font-medium">Inicia sesión con Google para compartir</p>
+                  <p className="text-xs text-slate-400 mt-1">Fotos, anécdotas y reportes de mascotas</p>
                 </div>
               )}
             </div>
@@ -298,31 +383,54 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
               <div className="space-y-6">
                 {posts.map((post) => {
                   const isLiked = likedPosts[post.id];
-                  const displayLikes = post.likes + (isLiked ? 1 : 0);
+                  const displayLikes = post.likes;
+                  const isOwner = user && post.userId === user.id;
                   return (
                     <div key={post.id} className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
                       <div className="p-4 flex justify-between items-center border-b border-slate-50">
                         <div className="flex items-center gap-3">
                           {post.userAvatar ? (
-                            <img src={post.userAvatar} alt="" className="h-10 w-10 rounded-full border border-slate-200" referrerPolicy="no-referrer" />
+                            <img src={post.userAvatar} alt="" className="h-10 w-10 rounded-full border border-slate-200 cursor-pointer hover:ring-2 hover:ring-[#00346f] transition-all" referrerPolicy="no-referrer" onClick={() => post.userId && onViewProfile?.(post.userId)} />
                           ) : (
-                            <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold font-display ${post.avatarColor}`}>{post.authorInitials}</div>
+                            <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold font-display ${post.avatarColor} cursor-pointer hover:ring-2 hover:ring-[#00346f] transition-all`} onClick={() => post.userId && onViewProfile?.(post.userId)}>{post.authorInitials}</div>
                           )}
                           <div>
                             <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                              {post.authorName}
+                              <span className="cursor-pointer hover:text-[#00346f] transition-colors" onClick={() => post.userId && onViewProfile?.(post.userId)}>{post.authorName}</span>
                               {post.isCampusFavorite && <span className="bg-amber-100 text-amber-800 text-[9px] font-bold px-1.5 py-0.5 rounded-full">⭐ Favorito del Campus</span>}
                             </p>
                             <p className="text-[10px] text-slate-400 font-medium">{post.authorRole} • {post.timeAgo}</p>
                           </div>
                         </div>
-                        {post.tag && <span className="bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold px-2 py-0.5 rounded-md">{post.tag}</span>}
+                        <div className="flex items-center gap-2">
+                          {post.tag && <span className="bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold px-2 py-0.5 rounded-md">{post.tag}</span>}
+                          {isOwner && (
+                            <div className="flex gap-1">
+                              <button onClick={() => { setEditingPostId(post.id); setEditContent(post.content); }} className="text-slate-400 hover:text-[#00346f] p-1 rounded-lg hover:bg-slate-50 transition-all" title="Editar">
+                                <span className="material-symbols-outlined text-[16px]">edit</span>
+                              </button>
+                              <button onClick={() => handleDelete(post.id)} className="text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition-all" title="Eliminar">
+                                <span className="material-symbols-outlined text-[16px]">delete</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <div className="p-4 space-y-3">
-                        <p className="text-slate-700 text-xs leading-relaxed whitespace-pre-line">{post.content}</p>
-                        {post.image && (
-                          <div className="rounded-xl overflow-hidden bg-slate-100 border border-slate-100">
-                            <img src={post.image} alt="Publicación" className="w-full aspect-[16/9] object-cover hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
+                        {editingPostId === post.id ? (
+                          <div className="space-y-3">
+                            <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={3} className="w-full text-sm p-3 rounded-2xl border border-[#00346f] focus:outline-none focus:ring-2 focus:ring-[#00346f]/10 bg-white resize-none" />
+                            <div className="flex gap-2">
+                              <button onClick={() => handleEditSubmit(post.id)} className="bg-[#00346f] hover:bg-[#002450] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs">Guardar</button>
+                              <button onClick={() => { setEditingPostId(null); setEditContent(''); }} className="border border-slate-200 text-slate-600 text-xs font-bold px-4 py-2 rounded-xl hover:bg-slate-50 transition-all">Cancelar</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-slate-700 text-xs leading-relaxed whitespace-pre-line">{post.content}</p>
+                        )}
+                        {post.image && !editingPostId && (
+                          <div className="rounded-2xl overflow-hidden cursor-pointer" onClick={() => setViewingImage(post.image!)}>
+                            <img src={post.image} alt="Publicación" className="w-full object-cover" referrerPolicy="no-referrer" />
                           </div>
                         )}
                       </div>
@@ -334,6 +442,10 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
                         <button onClick={() => handleLike(post.id)} className={`flex-1 py-1 px-3 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${isLiked ? 'text-rose-600 bg-rose-50' : 'text-slate-600 hover:bg-slate-50'}`}>
                           <span className="material-symbols-outlined text-[16px] font-bold">{isLiked ? 'favorite' : 'favorite'}</span>
                           {isLiked ? 'Te gusta' : 'Me gusta'}
+                        </button>
+                        <button onClick={() => handleShare(post.id)} className="flex-1 py-1 px-3 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 text-slate-600 hover:bg-slate-50">
+                          <span className="material-symbols-outlined text-[16px]">share</span>
+                          Compartir
                         </button>
                         <div className="flex-1 text-center py-1 text-xs font-bold text-slate-600 flex items-center justify-center gap-1.5">
                           <span className="material-symbols-outlined text-[16px]">chat_bubble</span>Comentar
@@ -391,8 +503,8 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification 
               <span className="material-symbols-outlined text-[36px] text-[#00346f]">volunteer_activism</span>
               <h4 className="font-display font-bold text-sm text-slate-900">¿Quieres ser Voluntario?</h4>
               <p className="text-xs text-slate-500 leading-relaxed">Coordinamos paseos, baños, jornadas de vacunación y alimentación.</p>
-              <a href="https://wa.me/51987654321" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 bg-[#25D366] hover:bg-[#1ebd57] text-white font-bold text-xs px-4 py-2 rounded-xl shadow-xs transition-all">
-                <span className="material-symbols-outlined text-[15px] font-bold">chat</span>Escribir al WhatsApp
+              <a href="https://chat.whatsapp.com/CGE6Aw6FJP01wCHElUuSv0" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 bg-[#25D366] hover:bg-[#1ebd57] text-white font-bold text-xs px-4 py-2 rounded-xl shadow-xs transition-all">
+                <span className="material-symbols-outlined text-[15px] font-bold">chat</span>Unirse al Grupo WhatsApp
               </a>
             </div>
           </div>

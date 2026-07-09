@@ -30,19 +30,17 @@ export default function PetCarousel({ pets, onSelectPet }: PetCarouselProps) {
   const pet = featured[current];
 
   return (
-    <div
-      className="relative w-full overflow-hidden rounded-2xl bg-slate-900 group"
+      <div className="relative w-full overflow-hidden rounded-2xl bg-slate-100 group"
       onMouseEnter={() => setIsAutoPlaying(false)}
       onMouseLeave={() => setIsAutoPlaying(true)}
     >
-      <div className="relative h-[400px] md:h-[520px] w-full">
+      <div className="relative h-[280px] md:h-[520px] w-full">
         {featured.map((p, idx) => (
           <div
             key={p.id}
-            className="absolute inset-0 transition-all duration-700 ease-in-out cursor-pointer"
+            className="absolute inset-0 transition-all duration-700 ease-in-out cursor-pointer flex items-center justify-center bg-slate-100"
             style={{
               opacity: idx === current ? 1 : 0,
-              transform: `scale(${idx === current ? 1 : 1.05})`,
               zIndex: idx === current ? 1 : 0,
             }}
             onClick={() => onSelectPet(p)}
@@ -50,10 +48,10 @@ export default function PetCarousel({ pets, onSelectPet }: PetCarouselProps) {
             <img
               src={p.image}
               alt={p.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain max-h-[280px] md:max-h-[520px]"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent pointer-events-none"></div>
           </div>
         ))}
 

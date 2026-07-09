@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../lib/AuthContext';
 import type { User } from '@supabase/supabase-js';
 
 export default function GoogleSignIn() {
   const [user, setUser] = useState<User | null>(null);
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
@@ -38,7 +40,12 @@ export default function GoogleSignIn() {
               {fullName.charAt(0).toUpperCase()}
             </div>
           )}
-          <span className="text-xs font-bold text-slate-700 truncate max-w-[120px]">{fullName.split(' ')[0]}</span>
+          <span className="text-xs font-bold text-slate-700 truncate max-w-[80px] md:max-w-[120px] flex items-center gap-1">
+            {fullName.split(' ')[0]}
+            {isAdmin && (
+              <span className="bg-[#fc9d41] text-[#6b3900] text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">Admin</span>
+            )}
+          </span>
           <button onClick={handleSignOut} className="text-[10px] text-rose-600 font-bold hover:underline">Salir</button>
         </>
       ) : (
