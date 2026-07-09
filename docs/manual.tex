@@ -18,11 +18,9 @@
     colorlinks=true,
     linkcolor=blue!70!black,
     urlcolor=blue!70!black,
-    citecolor=blue!70!black
 }
 
 \definecolor{codebg}{rgb}{0.95,0.95,0.95}
-\definecolor{codeblue}{rgb}{0.0,0.2,0.6}
 
 \lstset{
     backgroundcolor=\color{codebg},
@@ -31,8 +29,6 @@
     frame=single,
     numbers=left,
     numberstyle=\tiny\color{gray},
-    keywordstyle=\color{codeblue},
-    language=TeX
 }
 
 \titleformat{\section}{\Large\bfseries\color{blue!70!black}}{}{0em}{}[\titlerule]
@@ -49,9 +45,9 @@
 
 \begin{titlepage}
     \centering
-    \vspace*{4cm}
+    \vspace*{3cm}
     {\Huge\bfseries UNDC Pets}\\[0.5cm]
-    {\Large Bienestar Animal - Universidad Nacional de Cañete}\\[1.5cm]
+    {\Large Bienestar Animal --- Universidad Nacional de Cañete}\\[1.5cm]
     {\LARGE\bfseries Documentación Completa del Proyecto}\\[0.8cm]
     {\large Manual de Usuario, Administrador y Documentación Técnica}\\[3cm]
     \vfill
@@ -67,160 +63,115 @@
 % ======================================================================
 \part{Manual de Usuario}
 
-\section{Introducción}
+\section{Introducción al Proyecto}
 
-UNDC Pets es una plataforma web de la Universidad Nacional de Cañete diseñada para la comunidad universitaria. Su objetivo es centralizar la información sobre las mascotas comunitarias del campus, permitir la interacción entre estudiantes, docentes y voluntarios, y facilitar las donaciones para el bienestar animal.
+UNDC Pets es una aplicación web desarrollada para la Universidad Nacional de Cañete, pensada como una herramienta centralizada que permite a toda la comunidad universitaria --- estudiantes, docentes, personal administrativo y vecinos de Cañete --- involucrarse activamente en el cuidado y bienestar de las mascotas que habitan dentro del campus universitario.
 
-\subsection{Propósito del sistema}
+La idea nace de la necesidad de coordinar los esfuerzos de bienestar animal que ya existían de manera dispersa: grupos de estudiantes que alimentaban a los perros y gatos del campus, voluntarios que organizaban campañas de esterilización, y donaciones que se canalizaban de manera informal. UNDC Pets unifica todo esto en una sola plataforma accesible desde cualquier navegador web.
 
-\begin{itemize}
-    \item Visibilizar a las mascotas que habitan en el campus universitario.
-    \item Permitir a la comunidad compartir publicaciones, fotos y experiencias.
-    \item Facilitar donaciones económicas y en especie para el cuidado animal.
-    \item Reportar mascotas perdidas o en situación de riesgo.
-    \item Fomentar la adopción responsable.
-\end{itemize}
+El sistema permite cuatro grandes funcionalidades. En primer lugar, funciona como un directorio interactivo de las mascotas del campus, donde cualquier persona puede conocer a Curly, Princesa, RunRun y la Gata Ingeniera, con sus historias, estado de salud y ubicación. En segundo lugar, ofrece una red social interna donde los usuarios autenticados pueden publicar fotos, comentar, dar me gusta y compartir publicaciones relacionadas con las mascotas. En tercer lugar, integra un módulo de donaciones que permite realizar aportes económicos simulados a campañas específicas, y consultar las cuentas bancarias oficiales y códigos QR para transferencias. En cuarto lugar, proporciona un panel de administración para que los encargados del proyecto puedan gestionar todo el contenido de manera centralizada.
 
-\subsection{Requisitos técnicos}
+La aplicación está construida con tecnologías web modernas como React 19, Vite 6, TypeScript y Tailwind CSS, y utiliza Supabase como backend, lo que garantiza que los datos se sincronicen en tiempo real entre todos los dispositivos. El despliegue se realiza en Cloudflare Pages, asegurando un acceso rápido y confiable desde cualquier lugar.
 
-\begin{itemize}
-    \item Navegador web moderno (Chrome, Firefox, Edge, Safari última versión).
-    \item Conexión a internet.
-    \item Cuenta de Google para funciones interactivas (publicar, comentar, donar).
-\end{itemize}
+\section{Requisitos para usar la plataforma}
 
-\section{Inicio de Sesión}
+Para poder utilizar UNDC Pets en su totalidad, solo necesita tres cosas: un dispositivo con acceso a internet, un navegador web moderno como Google Chrome, Mozilla Firefox, Microsoft Edge o Safari en sus versiones más recientes, y una cuenta de Google. La cuenta de Google es necesaria únicamente para las funciones interactivas como publicar en el muro, dar me gusta, comentar, compartir publicaciones o realizar donaciones. Si no tiene una cuenta de Google o prefiere no iniciar sesión, puede navegar sin problemas por el directorio de mascotas, el álbum de fotos y las secciones informativas, aunque no podrá interactuar con la comunidad.
 
-Para acceder a las funciones interactivas de la plataforma es necesario iniciar sesión con una cuenta de Google.
+La aplicación está diseñada para funcionar tanto en computadoras de escritorio como en teléfonos móviles y tabletas. La interfaz se adapta automáticamente al tamaño de la pantalla, ofreciendo una experiencia de uso cómoda en cualquier dispositivo. En dispositivos móviles, la navegación se realiza a través de un menú desplegable que se activa con un botón de tres líneas en la esquina superior derecha.
 
-\subsection{Paso a paso}
+\section{Cómo iniciar sesión}
 
-\begin{enumerate}
-    \item En la esquina superior derecha de la página, haga clic en el botón \textbf{Ingresar con Google}.
-    \item Seleccione la cuenta de Google que desea utilizar.
-    \item Autorice los permisos solicitados.
-    \item Una vez autenticado, verá su foto de perfil y nombre en la barra superior.
-\end{enumerate}
+El proceso de inicio de sesión es sencillo y está diseñado para ser familiar para cualquier persona que haya usado servicios de Google. En la esquina superior derecha de la página, justo al lado del botón naranja que dice ``Apadrinar Mascota'', se encuentra el botón ``Ingresar con Google''. Este botón muestra el conocido logo de Google de cuatro colores. Al hacer clic en él, el navegador lo redirigirá a la página de autenticación de Google, donde deberá seleccionar la cuenta que desea utilizar y otorgar los permisos necesarios. Una vez completado este proceso, será redirigido de vuelta a la aplicación.
 
-\subsection{Funciones disponibles al iniciar sesión}
+Cuando el inicio de sesión sea exitoso, notará varios cambios en la interfaz. En el lugar donde antes estaba el botón de ``Ingresar con Google'', ahora aparecerá su foto de perfil (o sus iniciales si no tiene foto), su nombre de pila y un botón rojo con la palabra ``Salir''. La aplicación recordará su sesión incluso si cierra el navegador y vuelve a entrar, gracias a que Supabase mantiene la sesión activa. Para cerrar sesión, simplemente haga clic en ``Salir''.
 
-\begin{itemize}
-    \item Publicar en el muro de la comunidad.
-    \item Dar ``Me gusta'' a publicaciones.
-    \item Comentar en publicaciones.
-    \item Compartir publicaciones en su perfil.
-    \item Editar y eliminar sus propias publicaciones.
-    \item Donar a campañas activas.
-\end{itemize}
+Es importante mencionar que la sesión se mantiene activa en el navegador que utilizó para iniciar sesión. Si ingresa desde otro dispositivo o navegador, deberá volver a autenticarse.
 
-\section{Navegación Principal}
+\section{La barra de navegación}
 
-La barra de navegación superior contiene las siguientes secciones:
+La barra de navegación es el elemento principal para moverse por la aplicación. Está ubicada en la parte superior de la página y permanece fija mientras usted se desplaza hacia abajo. En computadoras de escritorio, la barra muestra los enlaces horizontalmente. En dispositivos móviles, los enlaces se ocultan detrás de un botón de menú que se despliega al hacer clic.
 
-\begin{description}
-    \item[Mascotas del Campus] Directorio de todas las mascotas registradas.
-    \item[Comunidad] Muro de publicaciones y formulario de reporte.
-    \item[Álbum] Galería de fotos combinada.
-    \item[Donaciones] Campañas activas, cuentas bancarias y QR.
-    \item[Usuario] Perfil personal con fotos y publicaciones compartidas.
-    \item[FAQs] Preguntas frecuentes.
-\end{description}
+Los enlaces disponibles en la barra de navegación son los siguientes. El primero es ``Mascotas del Campus'', que lo lleva al directorio principal donde puede ver todas las mascotas registradas. El segundo es ``Comunidad'', que abre el muro de publicaciones y el formulario para reportar mascotas. El tercero es ``Álbum'', que muestra una galería de fotos combinadas de las mascotas y la comunidad. El cuarto es ``Donaciones'', donde se encuentran las campañas activas, las cuentas bancarias y los códigos QR para aportar. El quinto es ``Usuario'', que muestra su perfil personal. El sexto es ``FAQs'', con respuestas a preguntas frecuentes. Si usted es administrador del sistema, verá un séptimo enlace llamado ``Admin'' que solo es visible para usted.
 
-\section{Mascotas del Campus}
+Además de los enlaces de navegación, la barra contiene el logo de UNDC Pets a la izquierda, que consiste en un ícono de huella dentro de un círculo azul oscuro acompañado del nombre del proyecto. Haciendo clic en el logo regresa al directorio de mascotas desde cualquier sección.
 
-\subsection{Explorar mascotas}
-Al ingresar a \textbf{Mascotas del Campus} se muestra un directorio con tarjetas de cada mascota. Cada tarjeta incluye:
-\begin{itemize}
-    \item Foto de la mascota.
-    \item Nombre, especie, género y edad.
-    \item Estado de salud (Sano, En tratamiento, Buscando hogar, etc.).
-    \item Ubicación dentro del campus.
-    \item Descripción breve y etiquetas.
-\end{itemize}
+\section{Explorando el directorio de mascotas}
 
-\subsection{Buscar y filtrar}
-\begin{itemize}
-    \item \textbf{Búsqueda}: escriba nombre, ubicación o etiqueta en el campo de búsqueda.
-    \item \textbf{Filtro por especie}: seleccione ``Todos'', ``Perros'' o ``Gatos''.
-    \item \textbf{Filtro por estado}: elija entre ``Buscando hogar'', ``Saludable'', ``En tratamiento''.
-    \item \textbf{Etiquetas rápidas}: haga clic en \#Juguetón, \#Vacunado, etc.
-\end{itemize}
+La sección ``Mascotas del Campus'' es el corazón de la aplicación. Al ingresar, lo primero que verá es un héroe visual con un mensaje de bienvenida y un carrusel automático que muestra las fotos de las mascotas más destacadas. El carrusel cambia de imagen cada pocos segundos y puede pausarlo pasando el mouse sobre él.
 
-\subsection{Ver detalle de mascota}
-Haga clic en cualquier tarjeta para abrir el modal con información completa: imagen, historia completa, ficha médica y ubicación.
+Debajo del héroe se encuentra el directorio propiamente dicho, con un buscador y filtros en la parte superior, seguido de una cuadrícula de tarjetas, una por cada mascota registrada. Cada tarjeta contiene una foto de la mascota, su nombre, un indicador de estado de salud con un color distintivo, su especie y género, su edad, la ubicación dentro del campus, una breve descripción y hasta tres etiquetas que la describen, como Juguetón, Vacunado o Sociable.
 
-\section{Comunidad}
+El buscador le permite encontrar mascotas escribiendo su nombre, la ubicación donde suele encontrarse o alguna etiqueta. Por ejemplo, si escribe ``biblioteca'', aparecerá Princesa, que es la perrita que prefiere la tranquilidad de la biblioteca. Los filtros le permiten mostrar solo perros o solo gatos, o filtrar por estado de salud como ``Buscando hogar'', ``Saludable'' o ``En tratamiento''. También hay etiquetas rápidas debajo del buscador que, al hacer clic, aplican automáticamente ese término de búsqueda.
 
-\subsection{Muro de publicaciones}
-El muro muestra las publicaciones de toda la comunidad ordenadas por fecha.
+Cuando hace clic en cualquier tarjeta de mascota, se abre un modal (una ventana emergente) con la información completa. En computadoras de escritorio, el modal muestra la foto de la mascota en el lado izquierdo ocupando aproximadamente la mitad del ancho, y toda la información en el lado derecho. En dispositivos móviles, la foto aparece arriba y la información abajo. La información incluye una ficha con especie, género y edad; la historia completa de la mascota contada en detalle; una ficha médica que indica si está vacunada, desparasitada, esterilizada y con evaluación veterinaria regular; y la ubicación exacta dentro del campus con un mapa ilustrativo.
 
-\subsubsection{Crear una publicación}
-\begin{enumerate}
-    \item Haga clic en el campo ``¿Qué quieres compartir sobre nuestras mascotas?''.
-    \item Escriba su mensaje.
-    \item Opcional: agregue una imagen (URL).
-    \item Haga clic en \textbf{Publicar}.
-\end{enumerate}
+\section{La comunidad: publicaciones e interacciones}
 
-\subsubsection{Interactuar con publicaciones}
-\begin{itemize}
-    \item \textbf{Me gusta}: haga clic en el ícono de corazón.
-    \item \textbf{Comentar}: escriba en el campo de comentarios y presione Enter.
-    \item \textbf{Compartir}: haga clic en el botón de compartir para guardar la publicación en su perfil.
-\end{itemize}
+La sección ``Comunidad'' es el espacio donde los usuarios interactúan entre sí. Al ingresar, verá dos sub-pestañas: ``Muro'' y ``Reportar''.
 
-\subsubsection{Editar y eliminar}
-Solo puede editar o eliminar sus propias publicaciones. Los botones aparecen al pasar el mouse sobre su publicación.
+\subsection{El muro de publicaciones}
 
-\subsection{Reportar mascota}
-En la sub-pestaña \textbf{Reportar} puede reportar una mascota perdida o en situación de riesgo. Complete el formulario con nombre, especie, ubicación y descripción.
+El muro muestra todas las publicaciones que los usuarios han creado, ordenadas de la más reciente a la más antigua. Cada publicación muestra el nombre del autor, su foto de perfil o iniciales, el rol que se asignó (como ``Estudiante de Agronomía'' o ``Comunidad UNDC''), el contenido del mensaje, una imagen opcional, la cantidad de me gusta, comentarios y compartidos, y el tiempo transcurrido desde que se publicó.
 
-\section{Álbum}
+Para crear una publicación, debe haber iniciado sesión con su cuenta de Google. En la parte superior del muro hay un campo de texto que dice ``¿Qué quieres compartir sobre nuestras mascotas?''. Escriba su mensaje allí. Si desea agregar una imagen, puede pegar una URL en el campo que aparece al hacer clic en el ícono de imagen. Una vez listo, haga clic en el botón ``Publicar''. Su publicación aparecerá inmediatamente en el muro, y si otro usuario está viendo la página en ese momento, la verá aparecer en tiempo real gracias a la funcionalidad de Supabase Realtime.
 
-Galería que combina fotos de las mascotas del campus con imágenes de la comunidad.
+Puede interactuar con las publicaciones de tres maneras. Para dar me gusta, haga clic en el ícono de corazón debajo de la publicación. El corazón se llenará de color y el contador aumentará. Para comentar, escriba su mensaje en el campo de comentarios y presione la tecla Enter. Su comentario aparecerá inmediatamente. Para compartir una publicación en su perfil, haga clic en el botón de compartir. La publicación aparecerá luego en la pestaña ``Compartidos'' de su perfil de usuario.
 
-\section{Donaciones}
+Si una publicación es suya, verá botones adicionales para editarla o eliminarla cuando pase el mouse sobre ella. Al hacer clic en editar, el contenido de la publicación se vuelve editable. Al hacer clic en eliminar, se le pedirá confirmación antes de borrarla definitivamente.
 
-\subsection{Campañas activas}
-Muestra el progreso de recaudación con barras de progreso. Cada campaña tiene:
-\begin{itemize}
-    \item Nombre y descripción.
-    \item Monto recaudado vs. meta.
-    \item Nivel de urgencia.
-\end{itemize}
+\subsection{Reportar una mascota}
 
-\subsection{Cómo donar}
-\begin{enumerate}
-    \item Seleccione una campaña y haga clic en \textbf{Donar con Tarjeta}.
-    \item Complete sus datos y monto.
-    \item Ingrese los datos de tarjeta (simulados).
-    \item Confirme la donación.
-\end{enumerate}
+La sub-pestaña ``Reportar'' está diseñada para situaciones en las que alguien encuentra una mascota perdida, herida o en situación de riesgo dentro del campus. El formulario solicita el nombre de la mascota (si se conoce), la especie, el género, la edad aproximada, el estado en que se encuentra, la ubicación donde fue vista, una descripción detallada de la situación y una foto si está disponible. Al enviar el reporte, la mascota se agrega automáticamente al directorio principal para que otros usuarios puedan verla y ayudar.
 
-\subsection{Transferencia bancaria}
-Puede copiar los números de cuenta del Banco de la Nación, BCP o Yape/Plin haciendo clic en \textbf{Copiar}.
+\section{El álbum de fotos}
 
-\subsection{Pago con QR}
-Escane los códigos QR de Yape, Plin, BCP o Tunqui desde su aplicación bancaria.
+La sección ``Álbum'' combina en una sola galería todas las fotos disponibles de las mascotas del campus junto con las imágenes que los usuarios han compartido en sus publicaciones de la comunidad. La galería se presenta en una cuadrícula de tamaño uniforme, y al hacer clic en cualquier foto se abre una vista ampliada donde se puede apreciar en detalle. Esta sección no requiere autenticación, por lo que cualquier visitante puede disfrutar de las fotos.
 
-\section{Perfil de Usuario}
+\section{Donaciones: cómo contribuir}
 
-\subsection{Perfil propio}
-En la sección \textbf{Usuario} puede ver:
-\begin{itemize}
-    \item Su foto y nombre.
-    \item Descripción personal (editable).
-    \item Estadísticas: fotos publicadas, me gusta recibidos.
-    \item Sub-pestaña \textbf{Fotos}: publicaciones con imagen que ha creado.
-    \item Sub-pestaña \textbf{Compartidos}: publicaciones que ha compartido de otros usuarios.
-\end{itemize}
+La sección ``Donaciones'' está diseñada para facilitar el apoyo económico al proyecto. Se divide en varias partes que se explican a continuación.
+
+\subsection{Las campañas activas}
+
+Al ingresar a la sección de donaciones, lo primero que verá son las campañas activas representadas como tarjetas con barras de progreso. Cada campaña tiene un título que indica su propósito, como ``Alimento Mensual para el Campus'' o ``Cirugía y Terapia de Firulais'', una descripción que explica en qué consiste, el monto recaudado hasta el momento, la meta que se necesita alcanzar y un indicador de urgencia que puede ser Alta, Crítica o Media. La barra de progreso se llena proporcionalmente al avance de la recaudación y cambia de color cuando se alcanza la meta.
+
+\subsection{Cómo donar con tarjeta}
+
+Para realizar una donación simulada, haga clic en el botón ``Donar con Tarjeta'' en la campaña de su elección. Se abrirá un formulario donde debe ingresar su nombre, su correo electrónico, el monto que desea donar (puede elegir entre montos predefinidos de 10, 20, 50 o 100 soles, o ingresar un monto personalizado) y los datos de una tarjeta de prueba. Es importante aclarar que la pasarela de pago es completamente simulada: no se realizan cobros reales ni se almacenan datos financieros. Los datos de la tarjeta son solo para fines de demostración. Al confirmar, verá una animación de procesamiento y luego un comprobante de donación con un código único, que puede tomar como constancia.
+
+\subsection{Transferencia bancaria y códigos QR}
+
+Debajo de las campañas activas, encontrará las cuentas bancarias oficiales del proyecto. Cada cuenta muestra el nombre del banco, el número de cuenta y el CCI correspondiente. Puede copiar cualquiera de estos datos al portapapeles haciendo clic en el botón ``Copiar'' que aparece junto a cada campo. Las cuentas disponibles incluyen el Banco de la Nación, el BCP y Yape/Plin.
+
+Más abajo se encuentran los códigos QR para Yape, Plin, BCP y Tunqui. Estos códigos pueden ser escaneados con su aplicación bancaria para realizar transferencias rápidas desde su teléfono. Cada código QR está etiquetado con el nombre del servicio y el número asociado.
+
+\subsection{Puntos de acopio físicos}
+
+Además de las donaciones económicas, la sección muestra los puntos de acopio donde se pueden entregar alimentos, medicinas y otros insumos para las mascotas. Los puntos disponibles son la Puerta Principal del Campus y la Oficina de Bienestar Universitario, con sus respectivos horarios de atención.
+
+\section{El perfil de usuario}
+
+La sección ``Usuario'' muestra su perfil personal cuando está autenticado. Si aún no ha iniciado sesión, la sección le invitará a hacerlo.
+
+\subsection{Su perfil}
+
+Cuando inicia sesión y va a ``Usuario'', verá su foto de perfil de Google (o sus iniciales), su nombre completo, una descripción que puede editar haciendo clic en el ícono de lápiz, y estadísticas que incluyen la cantidad de fotos que ha publicado y los me gusta que ha recibido en total.
+
+\subsection{La pestaña Fotos}
+
+En la sub-pestaña ``Fotos'' se muestran todas las publicaciones que usted ha creado y que incluyen una imagen. Cada foto se presenta en una cuadrícula. Al hacer clic en una foto, se abre un modal que muestra la imagen en grande a la izquierda y los detalles de la publicación a la derecha, incluyendo el contenido, los me gusta y los comentarios. Desde este modal también puede agregar comentarios y dar me gusta.
+
+\subsection{La pestaña Compartidos}
+
+En la sub-pestaña ``Compartidos'' aparecen las publicaciones de otros usuarios que usted ha compartido desde el muro de la comunidad. Esto le permite guardar y tener acceso rápido a las publicaciones que le parecieron interesantes o importantes.
 
 \subsection{Ver perfil de otro usuario}
-Haga clic en el nombre o avatar de un autor en el muro de comunidad para ver su perfil y sus publicaciones.
 
-\section{FAQs}
+Si en el muro de la comunidad hace clic en el nombre o la foto de otro usuario, será redirigido al perfil de esa persona, donde podrá ver su nombre, su foto y las publicaciones que ha creado. Desde allí puede regresar al muro usando el botón ``Volver a Comunidad''.
 
-Sección de preguntas frecuentes con respuestas expandibles. Incluye temas como donaciones, voluntariado y adopción.
+\section{Preguntas frecuentes}
+
+La sección ``FAQs'' contiene respuestas a las preguntas más comunes sobre el proyecto. Las preguntas están organizadas en acordeones: haga clic en una pregunta para expandir su respuesta y haga clic nuevamente para contraerla. Los temas incluyen cómo funciona la donación, si personas externas a la UNDC pueden donar, si se pueden donar medicinas, y los horarios de los paseos de las mascotas.
 
 % ======================================================================
 % PARTE II: MANUAL DE ADMINISTRADOR
@@ -228,81 +179,61 @@ Sección de preguntas frecuentes con respuestas expandibles. Incluye temas como 
 \newpage
 \part{Manual de Administrador}
 
-\section{Rol de Administrador}
+\section{¿Qué significa ser administrador?}
 
-El administrador tiene acceso a un panel de control exclusivo para gestionar el contenido de la plataforma. Para ser administrador, su correo electrónico debe estar registrado en la tabla \texttt{admins} de Supabase.
+El administrador de UNDC Pets es la persona encargada de supervisar y gestionar el contenido de la plataforma. A diferencia de un usuario normal, que solo puede crear, editar y eliminar sus propias publicaciones, el administrador tiene la capacidad de moderar todo el contenido generado por la comunidad y de gestionar la información estructural del sitio, como el directorio de mascotas y la configuración de donaciones.
 
-\subsection{Identificación visual}
-Cuando un administrador inicia sesión:
-\begin{itemize}
-    item Aparece una etiqueta \textbf{Admin} de color naranja junto a su nombre en la barra superior.
-    item Aparece la pestaña \textbf{Admin} en la barra de navegación.
-\end{itemize}
+Para que una persona sea reconocida como administrador, su correo electrónico debe estar registrado en la tabla \texttt{admins} de la base de datos Supabase. Esto se hace ejecutando un comando SQL o insertando manualmente el correo en la tabla. Actualmente, el administrador identificado es \texttt{2301010130@undc.edu.pe}.
 
-\section{Panel de Administración}
+\subsection{¿Cómo saber si soy administrador?}
 
-Haga clic en la pestaña \textbf{Admin} para acceder al panel. Contiene cuatro sub-secciones:
+Cuando un administrador inicia sesión, ocurren dos cambios visibles en la interfaz. El primero es que aparece una etiqueta de color naranja con el texto ``Admin'' al lado de su nombre en la barra superior, justo al lado de su foto de perfil. El segundo es que aparece una pestaña adicional en la barra de navegación llamada ``Admin'', representada con un ícono de escudo. Esta pestaña solo es visible para el administrador; ningún otro usuario puede verla.
+
+\section{El panel de administración}
+
+Al hacer clic en la pestaña ``Admin'', se abre el panel de administración. Este panel está dividido en cuatro secciones que se pueden alternar mediante pestañas secundarias: Posts, Mascotas, Donaciones y Bloqueados.
 
 \subsection{Gestión de Posts}
 
-En la sub-pestaña \textbf{Posts} se listan todas las publicaciones de la comunidad. Acciones disponibles:
+La sección de Posts muestra todas las publicaciones que existen en la comunidad, ordenadas de la más reciente a la más antigua. Cada publicación se presenta en una tarjeta compacta que muestra el nombre del autor, su rol, el contenido, la cantidad de me gusta y comentarios.
 
-\begin{itemize}
-    \item \textbf{Eliminar post}: haga clic en el ícono de papelera para eliminar una publicación que no cumpla con las normas.
-    \item \textbf{Bloquear usuario}: haga clic en el ícono de bloqueo para impedir que un usuario vuelva a publicar.
-\end{itemize}
+Como administrador, tiene dos acciones disponibles para cada publicación. Puede eliminar cualquier publicación haciendo clic en el ícono de papelera, sin importar quién sea el autor. Esto es útil para retirar contenido inapropiado, spam o publicaciones que no cumplen con las normas de la comunidad. También puede bloquear al usuario que creó la publicación haciendo clic en el ícono de bloqueo. Al hacerlo, el sistema le pedirá que ingrese un motivo para el bloqueo. Una vez confirmado, ese usuario no podrá crear nuevas publicaciones en el futuro, aunque sus publicaciones existentes permanecerán visibles a menos que las elimine manualmente.
 
 \subsection{Gestión de Mascotas}
 
-En la sub-pestaña \textbf{Mascotas} puede administrar el directorio completo de mascotas.
+La sección de Mascotas es probablemente la más utilizada del panel de administración. Aquí puede ver una lista de todas las mascotas registradas en el directorio, con su foto, nombre, especie, edad y ubicación.
 
-\subsubsection{Agregar nueva mascota}
-\begin{enumerate}
-    \item Haga clic en \textbf{Nueva Mascota}.
-    \item Complete los campos: nombre, especie, género, edad, estado, ubicación.
-    \item Suba una foto desde su computadora usando el selector de archivos.
-    \item Escriba la descripción corta y la historia.
-    \item Haga clic en \textbf{Guardar}.
-\end{enumerate}
+Para agregar una nueva mascota, haga clic en el botón ``Nueva Mascota''. Se abrirá un formulario completo con todos los campos necesarios. Debe ingresar el nombre de la mascota, seleccionar su especie entre perro o gato, indicar su género, edad, estado de salud (como ``Sano'', ``En tratamiento'' o ``Buscando hogar''), la ubicación dentro del campus donde suele encontrarse, las etiquetas que la describen separadas por coma, una descripción corta que aparecerá en la tarjeta del directorio, y la historia completa de la mascota que se mostrará en el modal de detalle. Para la foto, puede seleccionar un archivo de imagen desde su computadora usando el selector de archivos. El sistema mostrará una vista previa de la imagen antes de guardar.
 
-\subsubsection{Editar mascota}
-Haga clic en \textbf{Editar} sobre cualquier mascota de la lista. Modifique los campos necesarios y guarde.
+Para editar una mascota existente, haga clic en el botón ``Editar'' que aparece junto a cada mascota en la lista. El formulario se abrirá con los datos actuales precargados para que pueda modificarlos. Para eliminar una mascota, haga clic en ``Eliminar''. La mascota se borrará inmediatamente del directorio.
 
-\subsubsection{Eliminar mascota}
-Haga clic en \textbf{Eliminar} para quitar una mascota del directorio.
-
-\subsubsection{Editar desde el directorio principal}
-Como administrador, al pasar el mouse sobre cualquier tarjeta del directorio aparecen botones de editar y eliminar. Esto permite una gestión rápida sin entrar al panel.
+Además de gestionar las mascotas desde el panel, como administrador también puede editarlas o eliminarlas directamente desde el directorio principal de ``Mascotas del Campus''. Cuando pasa el mouse sobre cualquier tarjeta de mascota en el directorio, aparecen dos íconos flotantes en la esquina superior derecha: un lápiz para editar y un tacho de basura para eliminar. Esto permite una gestión rápida sin tener que ir al panel de administración. Al hacer clic en editar, se abre un formulario similar al del panel. Al hacer clic en eliminar, se muestra una confirmación antes de borrar.
 
 \subsection{Gestión de Donaciones}
 
-En la sub-pestaña \textbf{Donaciones} puede configurar:
+La sección de Donaciones del panel de administración le permite modificar toda la configuración relacionada con las donaciones. Esta sección está dividida en cuatro bloques.
 
-\begin{itemize}
-    \item \textbf{Cuentas bancarias}: agregar, editar o eliminar cuentas (nombre del banco, número, CCI).
-    \item \textbf{Números Yape/Plin}: actualizar los números de contacto.
-    \item \textbf{Códigos QR}: modificar las rutas de las imágenes QR.
-    \item \textbf{Campañas}: crear, editar o eliminar campañas de recaudación (título, descripción, montos, urgencia).
-\end{itemize}
+El primer bloque corresponde a las cuentas bancarias. Aquí puede ver las cuentas registradas con su nombre de banco, número y CCI. Cada campo es editable directamente, por lo que puede modificar el nombre del banco, el número de cuenta o el CCI haciendo clic sobre el texto. También puede eliminar una cuenta haciendo clic en el ícono de menos, o agregar una nueva cuenta haciendo clic en ``Agregar cuenta''.
 
-\subsection{Bloqueo de Usuarios}
+El segundo bloque corresponde a los números de Yape y Plin. Hay dos campos de texto donde puede actualizar estos números según sea necesario.
 
-En la sub-pestaña \textbf{Bloqueados} puede:
+El tercer bloque corresponde a las rutas de los códigos QR. Cada servicio (Yape, Plin, BCP, Tunqui) tiene un campo donde se especifica la ruta de la imagen del código QR. Esto le permite cambiar las imágenes si es necesario.
 
-\begin{itemize}
-    \item Ver la lista de usuarios bloqueados con su motivo y fecha.
-    \item Bloquear un usuario manualmente ingresando su ID y motivo.
-    \item Desbloquear un usuario haciendo clic en \textbf{Desbloquear}.
-\end{itemize}
+El cuarto bloque corresponde a las campañas de recaudación. Puede ver la lista de campañas activas, cada una con su título, montos y nivel de urgencia. Para agregar una nueva campaña, haga clic en ``Nueva'' y complete el formulario con título, descripción, monto actual, monto meta y nivel de urgencia. Para editar una campaña existente, haga clic en ``Editar''. Para eliminar una campaña, haga clic en ``Eliminar''.
 
-\section{Buenas prácticas}
+\subsection{Gestión de Usuarios Bloqueados}
 
-\begin{itemize}
-    \item Revise periódicamente el muro de comunidad para eliminar contenido inapropiado.
-    \item Mantenga actualizada la información de las mascotas (estado de salud, ubicación).
-    \item Verifique que los números de cuenta y QR sean correctos antes de guardar.
-    \item Bloquee usuarios solo cuando sea necesario y con un motivo claro.
-\end{itemize}
+La sección de Bloqueados muestra una lista de todos los usuarios que han sido bloqueados para publicar en la comunidad. Cada entrada muestra el ID del usuario (que corresponde al ID de su cuenta de Google), el motivo del bloqueo y la fecha en que fue bloqueado.
+
+Desde esta sección puede desbloquear a un usuario haciendo clic en ``Desbloquear'', lo que le permitirá volver a publicar en el muro. También puede bloquear a un usuario manualmente, si conoce su ID de Google, ingresándolo en el campo correspondiente junto con el motivo del bloqueo.
+
+\section{Recomendaciones para el administrador}
+
+Se recomienda revisar el muro de la comunidad periódicamente para asegurarse de que el contenido sea apropiado y esté relacionado con el bienestar animal. Las publicaciones que contengan spam, lenguaje inapropiado o contenido no relacionado deben ser eliminadas. Antes de bloquear a un usuario, considere si una advertencia sería suficiente. El bloqueo debe reservarse para casos reincidentes o de falta grave.
+
+En cuanto a las mascotas, es importante mantener su información actualizada, especialmente el estado de salud y la ubicación. Si una mascota es adoptada o deja de frecuentar el campus, debe actualizar o eliminar su registro. Las fotos de las mascotas deben ser claras y recientes.
+
+Respecto a las donaciones, verifique periódicamente que los números de cuenta y los códigos QR sean correctos. Si cambia el coordinador del proyecto, actualice el número de Yape y Plin. Las campañas de recaudación deben reflejar las necesidades reales del momento.
 
 % ======================================================================
 % PARTE III: DOCUMENTACIÓN TÉCNICA
@@ -310,236 +241,144 @@ En la sub-pestaña \textbf{Bloqueados} puede:
 \newpage
 \part{Documentación Técnica}
 
-\section{Tecnologías Utilizadas}
+\section{Visión general de la arquitectura}
 
-\begin{longtable}{lp{8cm}}
-    \toprule
-    \textbf{Tecnología} & \textbf{Propósito} \\
-    \midrule
-    React 19 & Framework frontend para la interfaz de usuario \\
-    Vite 6 & Bundler y servidor de desarrollo \\
-    TypeScript & Tipado estático para JavaScript \\
-    Tailwind CSS v4 & Framework de estilos utilitario \\
-    Supabase & Backend como servicio (base de datos, autenticación, almacenamiento) \\
-    Google OAuth & Proveedor de autenticación \\
-    Cloudflare Pages & Despliegue y hosting \\
-    Gemini AI & Asistente virtual (opcional) \\
-    \bottomrule
-\end{longtable}
+UNDC Pets es una aplicación de una sola página (SPA, por sus siglas en inglés) construida con React 19. Esto significa que toda la interfaz de usuario se carga una sola vez en el navegador, y las interacciones posteriores no requieren recargar la página completa, sino que solo se actualizan las partes necesarias. Esto proporciona una experiencia de usuario fluida y rápida, similar a la de una aplicación de escritorio.
 
-\section{Estructura del Proyecto}
+La aplicación se comunica con Supabase, que actúa como backend y proporciona tres servicios fundamentales: autenticación mediante Google OAuth, una base de datos PostgreSQL para almacenar toda la información, y un sistema de tiempo real (Realtime) que permite que los cambios se reflejen instantáneamente en todos los dispositivos conectados.
 
-\begin{lstlisting}
-undc-pets/
-|-- public/
-|   |-- images/            # Imagenes estaticas
-|   |-- _redirects         # (eliminado)
-|-- src/
-|   |-- components/
-|   |   |-- AdminPanel.tsx         # Panel de administracion
-|   |   |-- CommunityFeed.tsx      # Muro de comunidad
-|   |   |-- DonationCampaigns.tsx  # Campanas y pagos
-|   |   |-- GoogleSignIn.tsx       # Boton de inicio de sesion
-|   |   |-- PetCard.tsx            # Tarjeta de mascota
-|   |   |-- PetCarousel.tsx        # Carrusel del hero
-|   |   |-- PetModal.tsx           # Modal detalle de mascota
-|   |   |-- PhotoAlbum.tsx         # Galeria de fotos
-|   |   |-- UserProfile.tsx        # Perfil de usuario
-|   |-- lib/
-|   |   |-- AuthContext.tsx         # Contexto de autenticacion
-|   |   |-- supabase.ts            # Cliente de Supabase
-|   |-- App.tsx                     # Componente principal
-|   |-- main.tsx                    # Punto de entrada
-|   |-- types.ts                    # Interfaces TypeScript
-|   |-- data.ts                     # Datos estaticos iniciales
-|-- docs/
-|   |-- manual.tex                  # Este documento
-|-- supabase-migration.sql          # Migracion SQL
-|-- package.json
-|-- vite.config.ts
-\end{lstlisting}
+El frontend está escrito en TypeScript, un superconjunto de JavaScript que añade tipos estáticos. Esto significa que muchos errores se detectan durante el desarrollo, antes de que la aplicación llegue al usuario, lo que resulta en un código más robusto y fácil de mantener.
 
-\section{Arquitectura}
+Los estilos se manejan con Tailwind CSS, un framework que en lugar de escribir CSS personalizado, permite aplicar clases directamente en el HTML para definir colores, tamaños, márgenes y otros aspectos visuales. Esto acelera el desarrollo y mantiene la consistencia visual en toda la aplicación.
 
-\subsection{Diagrama de flujo}
+El empaquetado del código se realiza con Vite, una herramienta moderna que reemplaza a Webpack. Vite es significativamente más rápido porque aprovecha los módulos nativos de JavaScript del navegador durante el desarrollo y produce archivos optimizados para producción.
 
-\begin{verbatim}
-  Usuario (Navegador)
-      |
-      v
-  React App (Cloudflare Pages)
-      |
-      +---> Supabase Auth (Google OAuth)
-      |
-      +---> Supabase Database (PostgreSQL)
-      |       |-- posts table (JSONB)
-      |       |-- pets table (JSONB)
-      |       |-- admins table
-      |       |-- blocked_users table
-      |       |-- donation_config table
-      |
-      +---> Gemini AI (API externa)
-\end{verbatim}
+El despliegue se realiza en Cloudflare Pages, una plataforma de alojamiento que distribuye la aplicación en una red global de servidores (CDN), lo que garantiza tiempos de carga rápidos independientemente de la ubicación geográfica del usuario.
 
-\subsection{Flujo de autenticación}
+\section{Explicación detallada de cada tecnología}
 
-\begin{enumerate}
-    \item El usuario hace clic en ``Ingresar con Google''.
-    \item Se redirige al flujo OAuth de Google.
-    \item Al regresar, Supabase crea una sesión.
-    \item \texttt{AuthContext} detecta el cambio de sesión.
-    \item Se consulta la tabla \texttt{admins} para verificar si el usuario es administrador.
-    \item La interfaz se actualiza mostrando opciones según el rol.
-\end{enumerate}
+\subsection{React 19}
 
-\section{Base de Datos (Supabase)}
+React es una biblioteca de JavaScript para construir interfaces de usuario. Su idea fundamental es que la interfaz se describe en función del estado de la aplicación: cuando el estado cambia, React automáticamente actualiza las partes de la pantalla que dependen de ese estado. Esto elimina la necesidad de manipular manualmente el DOM (el árbol de elementos HTML), lo que simplifica enormemente el desarrollo.
 
-\subsection{Tabla: posts}
-\begin{lstlisting}
-CREATE TABLE posts (
-    id TEXT PRIMARY KEY,
-    data JSONB NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-\end{lstlisting}
-Almacena las publicaciones de la comunidad. El campo \texttt{data} contiene todo el objeto Post (autor, contenido, imagen, likes, comentarios).
+En UNDC Pets, React se utiliza para cada elemento visual: las tarjetas de mascotas, las publicaciones, los modales, los formularios y la barra de navegación. Cada uno de estos elementos es un componente de React, una pieza de código reutilizable que puede recibir datos (props) y mantener su propio estado interno.
 
-\subsection{Tabla: pets}
-\begin{lstlisting}
-CREATE TABLE pets (
-    id TEXT PRIMARY KEY,
-    data JSONB NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-\end{lstlisting}
-Almacena las mascotas del campus. Cada fila contiene toda la información de una mascota en formato JSON.
+La versión 19 de React introduce mejoras en el manejo de formularios, la concurrencia y la hidratación, aunque para este proyecto las características más utilizadas son las que ya estaban disponibles en versiones anteriores: hooks como \texttt{useState} para manejar estado local, \texttt{useEffect} para efectos secundarios como llamadas a la API, y \texttt{useCallback} para optimizar el rendimiento.
 
-\subsection{Tabla: admins}
-\begin{lstlisting}
-CREATE TABLE admins (
-    email TEXT PRIMARY KEY,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-\end{lstlisting}
-Lista de correos electrónicos con permisos de administrador.
+\subsection{Vite 6}
 
-\subsection{Tabla: blocked\_users}
-\begin{lstlisting}
-CREATE TABLE blocked_users (
-    user_id TEXT PRIMARY KEY,
-    reason TEXT,
-    blocked_by TEXT,
-    blocked_at TIMESTAMPTZ DEFAULT NOW()
-);
-\end{lstlisting}
-Usuarios bloqueados para publicar en la comunidad.
+Vite es la herramienta que se encarga de preparar el código para el navegador. Durante el desarrollo, Vite inicia un servidor local que sirve los archivos de manera eficiente, aplicando reemplazo de módulos en caliente (HMR). Esto significa que cuando usted modifica un archivo y lo guarda, los cambios se reflejan en el navegador al instante, sin necesidad de recargar la página manualmente.
 
-\subsection{Tabla: donation\_config}
-\begin{lstlisting}
-CREATE TABLE donation_config (
-    id TEXT PRIMARY KEY DEFAULT 'main',
-    data JSONB NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-\end{lstlisting}
-Configuración de donaciones: cuentas bancarias, números Yape/Plin, rutas QR y campañas activas.
+Para producción, Vite empaqueta todo el código: combina los archivos JavaScript, optimiza las imágenes, minimiza el CSS y genera los archivos finales en una carpeta llamada \texttt{dist}. El resultado son archivos pequeños y eficientes que se cargan rápidamente en el navegador.
 
-\section{Interfaces TypeScript}
+\subsection{TypeScript}
 
-\subsection{Pet}
-\begin{lstlisting}
-interface Pet {
-    id: string;
-    name: string;
-    species: 'dog' | 'cat';
-    gender: 'male' | 'female' | 'group';
-    age: string;
-    status: string;
-    statusType: 'success' | 'warning' | 'error' | 'info' | 'primary';
-    tags: string[];
-    description: string;
-    image: string;
-    story: string;
-    reportedBy?: string;
-    contactEmail?: string;
-    location?: string;
-}
-\end{lstlisting}
+TypeScript añade tipos a JavaScript. Esto permite especificar, por ejemplo, que una variable llamada \texttt{pet} debe cumplir con la interfaz \texttt{Pet} que define que debe tener \texttt{name}, \texttt{species}, \texttt{age}, etc. Si en alguna parte del código se intenta acceder a una propiedad que no existe o asignar un valor de tipo incorrecto, TypeScript mostrará un error durante el desarrollo.
 
-\subsection{Post}
-\begin{lstlisting}
-interface Post {
-    id: string;
-    userId?: string;
-    userAvatar?: string;
-    authorName: string;
-    authorRole: string;
-    authorInitials: string;
-    avatarColor: string;
-    content: string;
-    image?: string;
-    likes: number;
-    commentsCount: number;
-    comments: Comment[];
-    timeAgo: string;
-    isCampusFavorite?: boolean;
-    tag?: string;
-    likedByUser?: boolean;
-    sharedBy?: string[];
-}
-\end{lstlisting}
+En UNDC Pets, TypeScript se utiliza para definir todas las estructuras de datos: \texttt{Pet}, \texttt{Post}, \texttt{Comment}, \texttt{DonationConfig}, etc. Esto hace que el código sea más fácil de entender y modificar, porque siempre está claro qué forma tienen los datos.
 
-\section{Despliegue}
+\subsection{Tailwind CSS}
+
+Tailwind CSS es un framework de estilos que proporciona cientos de clases predefinidas. Por ejemplo, en lugar de escribir un archivo CSS con \texttt{.boton \{ background-color: \#00346f; color: white; font-weight: bold; \}}, se aplican las clases \texttt{bg-[\%2300346f] text-white font-bold} directamente en el HTML.
+
+Una ventaja importante de Tailwind es que, como las clases se usan directamente en el HTML, no hay riesgo de que los estilos de una parte de la página afecten accidentalmente a otra. Además, Tailwind incluye un sistema de diseño responsivo que permite especificar estilos diferentes para distintos tamaños de pantalla usando prefijos como \texttt{md:} para tabletas o \texttt{lg:} para escritorio.
+
+\subsection{Supabase}
+
+Supabase es el backend de UNDC Pets. Se describe a sí mismo como una alternativa de código abierto a Firebase. Proporciona tres servicios que la aplicación utiliza extensivamente.
+
+El servicio de autenticación maneja todo el flujo de inicio de sesión con Google. Cuando un usuario hace clic en ``Ingresar con Google'', Supabase genera una URL de redirección a Google, recibe el código de autorización cuando el usuario regresa, intercambia ese código por un token de sesión, y almacena la sesión en el navegador. La aplicación puede consultar el estado de la sesión en cualquier momento usando \texttt{supabase.auth.getSession()}.
+
+La base de datos es PostgreSQL, un sistema de bases de datos relacional de alto rendimiento. UNDC Pets utiliza cinco tablas, que se describen en detalle en la siguiente sección. La comunicación con la base de datos se realiza mediante la biblioteca \texttt{supabase-js}, que permite ejecutar consultas directamente desde el navegador utilizando las políticas de seguridad a nivel de fila (RLS) para controlar el acceso.
+
+El servicio Realtime permite que los cambios en la base de datos se propaguen instantáneamente a todos los clientes conectados. UNDC Pets lo utiliza para que cuando un usuario crea, modifica o elimina una publicación, todos los demás usuarios que están viendo el muro vean el cambio sin necesidad de recargar la página.
 
 \subsection{Cloudflare Pages}
-El proyecto se despliega en Cloudflare Pages usando Wrangler:
 
-\begin{lstlisting}
-npx wrangler pages deploy dist --project-name=undc-pets
-\end{lstlisting}
+Cloudflare Pages es la plataforma de alojamiento. Cuando se ejecuta \texttt{npx wrangler pages deploy dist}, Wrangler (la herramienta de línea de comandos de Cloudflare) sube los archivos de la carpeta \texttt{dist} a la red de Cloudflare, que los distribuye en servidores de todo el mundo. Cuando un usuario visita \texttt{https://undc-pets.pages.dev}, es redirigido al servidor más cercano geográficamente, lo que minimiza el tiempo de carga.
 
-\subsection{Variables de entorno}
-Configurar en el panel de Cloudflare Pages:
-\begin{itemize}
-    \item \texttt{VITE\_SUPABASE\_URL}
-    \item \texttt{VITE\_SUPABASE\_ANON\_KEY}
-    \item \texttt{VITE\_GEMINI\_API\_KEY} (opcional)
-\end{itemize}
+Cloudflare Pages también maneja el enrutamiento de la SPA: como React maneja las rutas del lado del cliente, cualquier ruta que el usuario intente acceder directamente (como \texttt{/comunidad}) debe redirigirse a \texttt{index.html} para que React pueda interpretarla. Cloudflare Pages hace esto automáticamente.
 
-\subsection{Build local}
-\begin{lstlisting}
-npm install
-npm run build
-npx wrangler pages deploy dist --project-name=undc-pets
-\end{lstlisting}
+\section{La base de datos en detalle}
 
-\section{Componentes Principales}
+UNDC Pets utiliza cinco tablas en Supabase. A continuación se explica cada una, su estructura y su propósito.
 
-\begin{longtable}{lp{8cm}}
-    \toprule
-    \textbf{Componente} & \textbf{Función} \\
-    \midrule
-    \texttt{App.tsx} & Orquestador principal, manejo de pestañas y estado global \\
-    \texttt{AuthContext.tsx} & Proveedor de autenticación y rol admin \\
-    \texttt{AdminPanel.tsx} & Panel de administración con 4 sub-módulos \\
-    \texttt{CommunityFeed.tsx} & Muro de comunidad con CRUD y tiempo real \\
-    \texttt{PetCard.tsx} & Tarjeta de mascota en el directorio \\
-    \texttt{PetModal.tsx} & Modal de detalle de mascota \\
-    \texttt{UserProfile.tsx} & Perfil de usuario con fotos y compartidos \\
-    \texttt{DonationCampaigns.tsx} & Campañas, pasarela de pago simulada y cuentas \\
-    \texttt{GoogleSignIn.tsx} & Botón de autenticación con Google \\
-    \bottomrule
-\end{longtable}
+\subsection{Tabla: posts}
 
-\section{Consideraciones de Seguridad}
+Esta tabla almacena todas las publicaciones del muro de comunidad. Tiene tres columnas: \texttt{id} es un texto que funciona como identificador único, generado en el cliente con el formato \texttt{post\_} seguido de la marca de tiempo actual. \texttt{data} es una columna de tipo JSONB (JSON binario) que contiene toda la información de la publicación como un objeto: autor, contenido, imagen, likes, comentarios, compartidos, etc. \texttt{created\_at} es una marca de tiempo que se asigna automáticamente cuando se inserta la fila y se utiliza para ordenar las publicaciones por fecha.
 
-\begin{itemize}
-    \item La autenticación se maneja mediante Google OAuth con Supabase.
-    \item No se almacenan contraseñas en la aplicación.
-    \item Las claves de Supabase utilizan el modo anónimo (RLS).
-    \item Las operaciones de administrador se validan del lado del cliente consultando la tabla \texttt{admins}.
-    \item Los usuarios bloqueados no pueden crear nuevas publicaciones.
-    \item Los códigos QR e imágenes se sirven desde el directorio público o como data URIs.
-\end{itemize}
+La razón para usar JSONB en lugar de columnas separadas es que la estructura de las publicaciones es compleja y puede variar. Por ejemplo, algunas publicaciones tienen imagen y otras no, algunas tienen etiquetas y otras no. Con JSONB, cada publicación puede tener exactamente los campos que necesita sin requerir cambios en el esquema de la base de datos.
+
+\subsection{Tabla: pets}
+
+Similar a la tabla de publicaciones, \texttt{pets} utiliza el mismo patrón de una columna \texttt{id} y una columna \texttt{data} JSONB. Cada fila representa una mascota del campus con toda su información: nombre, especie, género, edad, estado, ubicación, historia, foto y etiquetas.
+
+Originalmente, las mascotas estaban definidas en un archivo JavaScript (src/data.ts) y se cargaban directamente en la aplicación. Para darle al administrador la capacidad de agregar, editar y eliminar mascotas sin necesidad de modificar el código, se migraron a Supabase. Como mecanismo de respaldo, si la tabla no existe o está vacía, la aplicación utiliza los datos del archivo \texttt{data.ts} y también mantiene una copia en el \texttt{localStorage} del navegador para que los cambios persistan incluso si la base de datos no está disponible.
+
+\subsection{Tabla: admins}
+
+Esta tabla es muy simple: solo contiene una columna \texttt{email} que es también la clave primaria. Cada fila representa un correo electrónico autorizado como administrador. Cuando un usuario inicia sesión, la aplicación consulta esta tabla para determinar si el correo del usuario está registrado. Si lo está, se activan las funcionalidades de administrador. Para añadir un nuevo administrador, solo es necesario insertar su correo en esta tabla.
+
+\subsection{Tabla: donation\_config}
+
+Esta tabla almacena toda la configuración relacionada con las donaciones en una sola fila. La columna \texttt{id} tiene el valor fijo \texttt{main} para identificar la fila única. La columna \texttt{data} es un objeto JSONB que contiene las cuentas bancarias (un arreglo con banco, número y CCI), los números de Yape y Plin, las rutas de los códigos QR para cada servicio, y las campañas activas con sus montos y niveles de urgencia.
+
+\subsection{Tabla: blocked\_users}
+
+Cada fila en esta tabla representa un usuario que ha sido bloqueado para publicar en la comunidad. La columna \texttt{user\_id} es el identificador único del usuario (proporcionado por Google al autenticarse), \texttt{reason} es el motivo del bloqueo, \texttt{blocked\_by} indica quién realizó el bloqueo (actualmente siempre \texttt{admin}), y \texttt{blocked\_at} es la fecha y hora del bloqueo. Cuando un usuario intenta crear una publicación, la aplicación verifica si su ID está en esta tabla antes de permitir la operación.
+
+\section{El flujo de autenticación explicado}
+
+Cuando el usuario hace clic en ``Ingresar con Google'', ocurre la siguiente secuencia de eventos.
+
+El navegador redirige al usuario a la página de autenticación de Google. Google muestra la pantalla de selección de cuenta y solicita los permisos necesarios. Si el usuario acepta, Google genera un código de autorización y redirige al usuario de vuelta a la aplicación, específicamente a la URL que se configuró al iniciar el flujo (\texttt{window.location.origin}).
+
+Supabase intercepta esta redirección, intercambia el código de autorización por un token de sesión, y almacena este token en el navegador. Luego, notifica a la aplicación que la sesión ha cambiado mediante el evento \texttt{onAuthStateChange}.
+
+El componente \texttt{AuthProvider} en \texttt{AuthContext.tsx} escucha estos eventos. Cuando detecta que hay una sesión activa, consulta la tabla \texttt{admins} para verificar si el correo del usuario está registrado como administrador. Esta información (\texttt{user} y \texttt{isAdmin}) se pone a disposición de todos los componentes de la aplicación a través del contexto de React.
+
+Cada componente que necesita saber quién es el usuario actual (como \texttt{CommunityFeed}, \texttt{UserProfile} y \texttt{AdminPanel}) utiliza el hook \texttt{useAuth()} para obtener esta información. De esta manera, todos los componentes comparten la misma sesión sin necesidad de llamar individualmente a Supabase.
+
+\section{La estructura del código fuente}
+
+El código fuente de la aplicación se encuentra en la carpeta \texttt{src}, organizado de la siguiente manera.
+
+La carpeta \texttt{src/lib} contiene los módulos de infraestructura. \texttt{supabase.ts} crea y exporta el cliente de Supabase que se utiliza en toda la aplicación. \texttt{AuthContext.tsx} implementa el contexto de autenticación descrito en la sección anterior.
+
+La carpeta \texttt{src/components} contiene todos los componentes de la interfaz de usuario. \texttt{App.tsx} es el componente raíz que orquesta toda la aplicación: maneja las pestañas de navegación, los estados globales como la lista de mascotas y campañas, los filtros de búsqueda y la visualización de modales.
+
+El archivo \texttt{types.ts} define todas las interfaces de TypeScript que se utilizan en el proyecto. Estas interfaces actúan como contratos que especifican la forma exacta de los datos. Por ejemplo, la interfaz \texttt{Pet} define que un objeto mascota debe tener las propiedades \texttt{id}, \texttt{name}, \texttt{species}, \texttt{gender}, \texttt{age}, \texttt{status}, \texttt{statusType}, \texttt{tags}, \texttt{description}, \texttt{image}, \texttt{story} y opcionalmente \texttt{reportedBy}, \texttt{contactEmail} y \texttt{location}.
+
+El archivo \texttt{data.ts} contiene los datos estáticos iniciales: las cuatro mascotas originales (Curly, Princesa, RunRun y Gata Ingeniera), las publicaciones de ejemplo, las preguntas frecuentes y los puntos de acopio. Estos datos se utilizan como respaldo cuando la base de datos no está disponible.
+
+\section{Cómo desplegar la aplicación}
+
+El despliegue se realiza mediante Cloudflare Pages utilizando la herramienta Wrangler. El proceso consta de dos pasos: construir la aplicación y subir los archivos generados.
+
+Para construir la aplicación, se ejecuta \texttt{npm run build}. Este comando le indica a Vite que empaquete todo el código fuente, optimice los recursos y genere los archivos finales en la carpeta \texttt{dist}. Durante este proceso, Vite reemplaza las variables de entorno como \texttt{VITE\_SUPABASE\_URL} con sus valores reales, minimiza el JavaScript y el CSS, y aplica transformaciones para asegurar la compatibilidad con navegadores antiguos.
+
+Para subir la aplicación a Cloudflare, se ejecuta \texttt{npx wrangler pages deploy dist --project-name=undc-pets}. Wrangler sube la carpeta \texttt{dist} a Cloudflare, que la distribuye en su red global de servidores. El proyecto queda disponible en la URL \texttt{https://undc-pets.pages.dev} y también en la URL personalizada \texttt{https://main.undc-pets.pages.dev}.
+
+Es importante configurar las variables de entorno en el panel de Cloudflare Pages. Las variables necesarias son \texttt{VITE\_SUPABASE\_URL} y \texttt{VITE\_SUPABASE\_ANON\_KEY}. Sin estas variables, la aplicación no podrá conectarse a Supabase. También se puede configurar \texttt{VITE\_GEMINI\_API\_KEY} para habilitar el asistente de inteligencia artificial.
+
+\section{Consideraciones de seguridad}
+
+La seguridad en UNDC Pets se maneja en múltiples niveles. En el nivel de autenticación, Google OAuth garantiza que solo usuarios con cuentas de Google válidas puedan acceder a las funciones interactivas. Supabase maneja la sesión de manera segura, almacenando los tokens en el navegador y renovándolos automáticamente cuando expiran.
+
+En el nivel de autorización, la verificación de administrador se realiza consultando la tabla \texttt{admins}. Aunque esta verificación se hace del lado del cliente por simplicidad, las operaciones críticas como la eliminación de publicaciones deberían idealmente estar protegidas por políticas de seguridad a nivel de fila (RLS) en Supabase para evitar que un usuario malintencionado modifique el código del cliente.
+
+En el nivel de datos, la aplicación nunca almacena contraseñas ni información financiera sensible. Los datos de tarjeta ingresados en el formulario de donación son puramente simulados y no se envían a ningún servidor. Las claves de API de Supabase que se incluyen en el código son claves anónimas (públicas) que están diseñadas para ser utilizadas desde el navegador, y las políticas de RLS controlan qué operaciones puede realizar cada usuario.
+
+En el nivel de contenido, el sistema de bloqueo de usuarios permite al administrador impedir que usuarios problemáticos sigan publicando. Cuando un usuario bloqueado intenta crear una publicación, la aplicación detecta su ID en la tabla \texttt{blocked\_users} y rechaza la operación mostrando un mensaje de error.
+
+\section{El sistema de tiempo real}
+
+Una de las características más interesantes de UNDC Pets es la sincronización en tiempo real. Cuando un usuario crea, modifica o elimina una publicación, el cambio se refleja inmediatamente en todos los dispositivos que están viendo la página en ese momento, sin necesidad de recargar el navegador.
+
+Esto se logra mediante Supabase Realtime, que utiliza la replicación lógica de PostgreSQL. Cuando se realiza un cambio en la tabla \texttt{posts}, PostgreSQL genera un evento que Supabase captura y reenvía a todos los clientes conectados. Los clientes reciben el evento a través de una conexión WebSocket persistente.
+
+En el código, esto se implementa en \texttt{CommunityFeed.tsx} y \texttt{UserProfile.tsx} mediante el método \texttt{supabase.channel()}. Se crea un canal llamado \texttt{posts-changes} que escucha los eventos \texttt{INSERT}, \texttt{UPDATE} y \texttt{DELETE} en la tabla \texttt{posts}. Cuando llega un evento, el componente actualiza su estado local para reflejar el cambio. Por ejemplo, si llega un evento \texttt{INSERT} con los datos de una nueva publicación, se agrega al inicio de la lista de publicaciones.
+
+Para que esto funcione, es necesario habilitar la replicación en la tabla \texttt{posts} mediante el comando SQL \texttt{ALTER PUBLICATION supabase\_realtime ADD TABLE posts}. Este comando se debe ejecutar una sola vez en el editor SQL de Supabase.
 
 \end{document}
