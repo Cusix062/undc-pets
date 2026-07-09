@@ -5,7 +5,7 @@ import { Pet, Post, DonationCampana, DonationConfig, DonationAccount } from '../
 
 type AdminTab = 'posts' | 'pets' | 'donaciones' | 'bloqueados';
 
-export default function AdminPanel({ onShowNotification }: { onShowNotification: (msg: string) => void }) {
+export default function AdminPanel({ onShowNotification, onPetsChanged, onCampaignsChanged }: { onShowNotification: (msg: string) => void; onPetsChanged?: (pet?: Pet, action?: string) => void; onCampaignsChanged?: (campaigns: DonationCampana[]) => void }) {
   const { user, isAdmin } = useAuth();
   const [tab, setTab] = useState<AdminTab>('posts');
 
@@ -45,8 +45,8 @@ export default function AdminPanel({ onShowNotification }: { onShowNotification:
       </div>
 
       {tab === 'posts' && <PostsPanel onShowNotification={onShowNotification} />}
-      {tab === 'pets' && <PetsPanel onShowNotification={onShowNotification} />}
-      {tab === 'donaciones' && <DonacionesPanel onShowNotification={onShowNotification} />}
+      {tab === 'pets' && <PetsPanel onShowNotification={onShowNotification} onPetsChanged={onPetsChanged} />}
+      {tab === 'donaciones' && <DonacionesPanel onShowNotification={onShowNotification} onCampaignsChanged={onCampaignsChanged} />}
       {tab === 'bloqueados' && <BloqueadosPanel onShowNotification={onShowNotification} />}
     </div>
   );
@@ -120,20 +120,42 @@ function PostsPanel({ onShowNotification }: { onShowNotification: (msg: string) 
 }
 
 /* ===== Pets Panel ===== */
-function PetsPanel({ onShowNotification }: { onShowNotification: (msg: string) => void }) {
+function PetsPanel({ onShowNotification, onPetsChanged }: { onShowNotification: (msg: string) => void; onPetsChanged?: (pet?: Pet, action?: string) => void }) {
   const [pets, setPets] = useState<Pet[]>([]);
   const [editing, setEditing] = useState<Pet | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<Partial<Pet>>({});
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    const { data } = await supabase.from('pets').select('*');
-    setPets((data || []).map((r: any) => r.data as Pet));
+    try {
+      const { data } = await supabase.from('pets').select('*');
+      if (data) setPets(data.map((r: any) => r.data as Pet));
+    } catch {
+      // table might not exist yet
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   const savePet = async () => {
+    if (!form.name) { onShowNotification('El nombre es obligatorio'); return; }
+    setSaving(true);
+    let image = form.image || '';
+    if (imageFile && imagePreview) {
+      image = imagePreview;
+    }
     const pet: Pet = {
       id: form.id || `pet_${Date.now()}`,
       name: form.name || '',
@@ -144,32 +166,55 @@ function PetsPanel({ onShowNotification }: { onShowNotification: (msg: string) =
       statusType: form.statusType || 'info',
       tags: form.tags || [],
       description: form.description || '',
-      image: form.image || '',
+      image,
       story: form.story || '',
       location: form.location || '',
     };
-    if (!pet.name) { onShowNotification('El nombre es obligatorio'); return; }
-    await supabase.from('pets').upsert({ id: pet.id, data: pet });
+    try {
+      await supabase.from('pets').upsert({ id: pet.id, data: pet });
+    } catch {
+      // if table doesn't exist, save is best-effort
+    }
+    setPets(prev => {
+      const filtered = prev.filter(p => p.id !== pet.id);
+      return [pet, ...filtered];
+    });
     onShowNotification(`Mascota ${editing ? 'actualizada' : 'creada'}`);
     setEditing(null); setShowForm(false); setForm({});
-    load();
+    setImageFile(null); setImagePreview('');
+    setSaving(false);
+    if (onPetsChanged) onPetsChanged(pet, editing ? 'update' : 'create');
   };
 
-  const deletePet = async (id: string) => {
-    await supabase.from('pets').delete().eq('id', id);
+  const deletePet = async (id: string, deletedPet?: Pet) => {
+    setPets(prev => prev.filter(p => p.id !== id));
+    try {
+      await supabase.from('pets').delete().eq('id', id);
+    } catch {}
     onShowNotification('Mascota eliminada');
-    load();
+    if (onPetsChanged && deletedPet) onPetsChanged(deletedPet, 'delete');
+  };
+
+  const openNewForm = () => {
+    setEditing(null);
+    setForm({ species: 'dog', gender: 'male', statusType: 'info', tags: [] });
+    setImageFile(null); setImagePreview('');
+    setShowForm(true);
   };
 
   const startEdit = (pet: Pet) => {
-    setEditing(pet); setForm(pet); setShowForm(true);
+    setEditing(pet);
+    setForm(pet);
+    setImageFile(null);
+    setImagePreview(pet.image || '');
+    setShowForm(true);
   };
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-xs text-slate-500">{pets.length} mascotas registradas</p>
-        <button onClick={() => { setEditing(null); setForm({ species: 'dog', gender: 'male', statusType: 'info', tags: [] }); setShowForm(true); }} className="bg-[#00346f] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5">
+        <button onClick={openNewForm} className="bg-[#00346f] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5">
           <span className="material-symbols-outlined text-[16px]">add</span>
           Nueva Mascota
         </button>
@@ -223,8 +268,14 @@ function PetsPanel({ onShowNotification }: { onShowNotification: (msg: string) =
                 <input value={(form.tags || []).join(', ')} onChange={e => setForm({...form, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean)})} className="w-full p-2 rounded-xl border border-slate-200" />
               </div>
               <div className="col-span-2">
-                <label className="block font-bold text-slate-600 mb-1">Ruta de imagen</label>
-                <input value={form.image || ''} onChange={e => setForm({...form, image: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200" />
+                <label className="block font-bold text-slate-600 mb-1">Foto de la mascota</label>
+                <input type="file" accept="image/*" onChange={handleImageSelect} className="w-full text-xs p-2 rounded-xl border border-slate-200 bg-white file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#00346f] file:text-white file:text-xs file:font-bold" />
+                {(imagePreview || form.image) && (
+                  <div className="mt-2 flex items-center gap-3">
+                    <img src={imagePreview || form.image} alt="Preview" className="w-16 h-16 rounded-xl object-cover bg-slate-100 border" referrerPolicy="no-referrer" />
+                    <span className="text-[10px] text-slate-400">Vista previa</span>
+                  </div>
+                )}
               </div>
               <div className="col-span-2">
                 <label className="block font-bold text-slate-600 mb-1">Ubicación</label>
@@ -240,8 +291,10 @@ function PetsPanel({ onShowNotification }: { onShowNotification: (msg: string) =
               </div>
             </div>
             <div className="flex gap-2 pt-2">
-              <button onClick={() => { setShowForm(false); setEditing(null); }} className="flex-1 bg-slate-100 text-slate-700 text-xs font-bold py-2.5 rounded-xl">Cancelar</button>
-              <button onClick={savePet} className="flex-1 bg-[#00346f] text-white text-xs font-bold py-2.5 rounded-xl">Guardar</button>
+              <button onClick={() => { setShowForm(false); setEditing(null); setImageFile(null); setImagePreview(''); }} className="flex-1 bg-slate-100 text-slate-700 text-xs font-bold py-2.5 rounded-xl">Cancelar</button>
+              <button onClick={savePet} disabled={saving} className="flex-1 bg-[#00346f] text-white text-xs font-bold py-2.5 rounded-xl disabled:opacity-50">
+                {saving ? 'Guardando...' : 'Guardar'}
+              </button>
             </div>
           </div>
         </div>
@@ -258,7 +311,7 @@ function PetsPanel({ onShowNotification }: { onShowNotification: (msg: string) =
             </div>
             <div className="flex gap-1 shrink-0">
               <button onClick={() => startEdit(pet)} className="bg-[#eef4ff] text-primary text-[10px] font-bold px-2 py-1 rounded-lg">Editar</button>
-              <button onClick={() => deletePet(pet.id)} className="bg-rose-50 text-rose-600 text-[10px] font-bold px-2 py-1 rounded-lg">Eliminar</button>
+              <button onClick={() => deletePet(pet.id, pet)} className="bg-rose-50 text-rose-600 text-[10px] font-bold px-2 py-1 rounded-lg">Eliminar</button>
             </div>
           </div>
         ))}
@@ -268,26 +321,52 @@ function PetsPanel({ onShowNotification }: { onShowNotification: (msg: string) =
 }
 
 /* ===== Donaciones Panel ===== */
-function DonacionesPanel({ onShowNotification }: { onShowNotification: (msg: string) => void }) {
+function DonacionesPanel({ onShowNotification, onCampaignsChanged }: { onShowNotification: (msg: string) => void; onCampaignsChanged?: (campaigns: DonationCampana[]) => void }) {
   const [config, setConfig] = useState<DonationConfig | null>(null);
   const [editCampaign, setEditCampaign] = useState<DonationCampana | null>(null);
   const [showCampaignForm, setShowCampaignForm] = useState(false);
   const [campForm, setCampForm] = useState<Partial<DonationCampana>>({});
 
   const load = useCallback(async () => {
-    const { data } = await supabase.from('donation_config').select('*').eq('id', 'main').single();
-    if (data) setConfig(data.data as DonationConfig);
+    try {
+      const { data } = await supabase.from('donation_config').select('*').eq('id', 'main').single();
+      if (data) setConfig(data.data as DonationConfig);
+      else setDefaultConfig();
+    } catch {
+      setDefaultConfig();
+    }
   }, []);
+
+  const setDefaultConfig = () => {
+    setConfig({
+      accounts: [
+        { bank: 'Banco de la Nación (Cta. Corriente)', number: '00-068-123456', CCI: '018-068-000068123456-78' },
+        { bank: 'BCP (Cuenta Recaudadora - Bienestar)', number: '191-9876543-0-12', CCI: '002-191-009876543012-54' },
+        { bank: 'Yape / Plin (Celular Coordinador)', number: '987 654 321', CCI: 'Nombre: Asociación UNDC Pets' },
+      ],
+      yapeNumber: '993 376 465',
+      plinNumber: '993 376 465',
+      qrCodes: { yape: '/images/yape.jpeg', plin: '/images/plin.jpeg', bcp: '/images/qr-bcp.svg', tunqui: '/images/qr-tunqui.svg' },
+      campaigns: [
+        { id: 'camp_food', title: 'Alimento Mensual', description: 'Compra de croquetas', currentAmount: 340, targetAmount: 500, urgency: 'Alta' },
+        { id: 'camp_medical', title: 'Cirugía de Firulais', description: 'Tratamiento de cadera', currentAmount: 210, targetAmount: 800, urgency: 'Crítica' },
+        { id: 'camp_spay', title: 'Esterilización', description: 'Esterilización preventiva', currentAmount: 950, targetAmount: 1200, urgency: 'Media' },
+      ],
+    });
+  };
 
   useEffect(() => { load(); }, [load]);
 
   const saveConfig = async (newConfig: DonationConfig) => {
-    await supabase.from('donation_config').upsert({ id: 'main', data: newConfig as any });
+    try {
+      await supabase.from('donation_config').upsert({ id: 'main', data: newConfig as any });
+    } catch {}
     setConfig(newConfig);
+    if (newConfig.campaigns && onCampaignsChanged) onCampaignsChanged(newConfig.campaigns);
     onShowNotification('Configuración de donaciones actualizada');
   };
 
-  if (!config) return <div className="text-xs text-slate-500 py-8 text-center">Cargando...</div>;
+  if (!config) return null;
 
   return (
     <div className="space-y-6">

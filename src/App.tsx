@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Pet, DonationCampana, DonationConfig } from './types';
 import { INITIAL_PETS, FAQS } from './data';
 import { supabase } from './lib/supabase';
@@ -68,6 +68,31 @@ function AppContent() {
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
 
+  const handlePetsChanged = useCallback((pet?: Pet, action?: string) => {
+    if (action === 'delete' && pet) {
+      setPets(prev => {
+        const updated = prev.filter(p => p.id !== pet.id);
+        localStorage.setItem('undc_pets', JSON.stringify(updated));
+        return updated;
+      });
+    } else if (pet) {
+      setPets(prev => {
+        const filtered = prev.filter(p => p.id !== pet.id);
+        const updated = [pet, ...filtered];
+        localStorage.setItem('undc_pets', JSON.stringify(updated));
+        return updated;
+      });
+    }
+    // Sync to Supabase in background
+    supabase.from('pets').select('*').then(({ data }) => {
+      if (data && data.length > 0) {
+        const synced = data.map((r: any) => r.data as Pet);
+        setPets(synced);
+        localStorage.setItem('undc_pets', JSON.stringify(synced));
+      }
+    });
+  }, []);
+
   // Load pets and donation config from Supabase on mount
   useEffect(() => {
     const load = async () => {
@@ -76,13 +101,29 @@ function AppContent() {
         supabase.from('donation_config').select('*').eq('id', 'main').single(),
       ]);
       if (petsRes.data && petsRes.data.length > 0) {
-        setPets(petsRes.data.map((r: any) => r.data as Pet));
+        const loaded = petsRes.data.map((r: any) => r.data as Pet);
+        setPets(loaded);
+        localStorage.setItem('undc_pets', JSON.stringify(loaded));
       } else {
-        setPets(INITIAL_PETS);
+        // Fallback: localStorage → INITIAL_PETS
+        const cached = localStorage.getItem('undc_pets');
+        if (cached) {
+          try { setPets(JSON.parse(cached)); } catch { setPets(INITIAL_PETS); }
+        } else {
+          setPets(INITIAL_PETS);
+        }
       }
       if (configRes.data) {
         const cfg = configRes.data.data as DonationConfig;
-        if (cfg.campaigns) setCampaigns(cfg.campaigns);
+        if (cfg.campaigns) {
+          setCampaigns(cfg.campaigns);
+          localStorage.setItem('undc_campaigns', JSON.stringify(cfg.campaigns));
+        }
+      } else {
+        const cached = localStorage.getItem('undc_campaigns');
+        if (cached) {
+          try { setCampaigns(JSON.parse(cached)); } catch {}
+        }
       }
       setDataLoaded(true);
     };
@@ -110,7 +151,11 @@ function AppContent() {
 
   // Add pet from report form
   const handleAddPetToDirectory = async (newPet: Pet) => {
-    setPets(prev => [newPet, ...prev]);
+    setPets(prev => {
+      const updated = [newPet, ...prev];
+      localStorage.setItem('undc_pets', JSON.stringify(updated));
+      return updated;
+    });
     await supabase.from('pets').upsert({ id: newPet.id, data: newPet as any });
     triggerNotification('Mascota reportada y guardada');
   };
@@ -122,6 +167,7 @@ function AppContent() {
       return c;
     });
     setCampaigns(updated);
+    localStorage.setItem('undc_campaigns', JSON.stringify(updated));
     // Sync back to donation_config
     const { data } = await supabase.from('donation_config').select('*').eq('id', 'main').single();
     if (data) {
@@ -591,7 +637,7 @@ function AppContent() {
 
         {/* ADMIN VIEW */}
         {activeTab === 'admin' && isAdmin && (
-          <AdminPanel onShowNotification={triggerNotification} />
+          <AdminPanel onShowNotification={triggerNotification} onPetsChanged={handlePetsChanged} onCampaignsChanged={(camps) => { setCampaigns(camps); localStorage.setItem('undc_campaigns', JSON.stringify(camps)); }} />
         )}
 
       </main>

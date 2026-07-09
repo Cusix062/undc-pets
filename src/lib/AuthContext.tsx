@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from './supabase';
 import type { User } from '@supabase/supabase-js';
 
+const ADMIN_EMAILS = ['2301010130@undc.edu.pe'];
+
 interface AuthContextType {
   user: User | null;
   isAdmin: boolean;
@@ -20,8 +22,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAdmin(false);
       return;
     }
-    const { data } = await supabase.from('admins').select('email').eq('email', u.email).maybeSingle();
-    setIsAdmin(!!data);
+    // Check hardcoded admin emails first (works without SQL)
+    if (ADMIN_EMAILS.includes(u.email)) {
+      setIsAdmin(true);
+      return;
+    }
+    // Fallback: check admins table in Supabase (requires SQL migration)
+    try {
+      const { data } = await supabase.from('admins').select('email').eq('email', u.email).maybeSingle();
+      setIsAdmin(!!data);
+    } catch {
+      setIsAdmin(false);
+    }
   };
 
   useEffect(() => {
