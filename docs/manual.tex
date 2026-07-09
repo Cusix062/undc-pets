@@ -1,0 +1,545 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{longtable}
+\usepackage{booktabs}
+
+\geometry{margin=2.5cm}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!70!black,
+    urlcolor=blue!70!black,
+    citecolor=blue!70!black
+}
+
+\definecolor{codebg}{rgb}{0.95,0.95,0.95}
+\definecolor{codeblue}{rgb}{0.0,0.2,0.6}
+
+\lstset{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    keywordstyle=\color{codeblue},
+    language=TeX
+}
+
+\titleformat{\section}{\Large\bfseries\color{blue!70!black}}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\large\bfseries\color{blue!50!black}}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{blue!30!black}}{}{0em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small UNDC Pets}
+\fancyhead[R]{\small Documentación del Proyecto}
+\fancyfoot[C]{\thepage}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{4cm}
+    {\Huge\bfseries UNDC Pets}\\[0.5cm]
+    {\Large Bienestar Animal - Universidad Nacional de Cañete}\\[1.5cm]
+    {\LARGE\bfseries Documentación Completa del Proyecto}\\[0.8cm]
+    {\large Manual de Usuario, Administrador y Documentación Técnica}\\[3cm]
+    \vfill
+    {\large Versión 1.0}\\
+    {\large \today}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ======================================================================
+% PARTE I: MANUAL DE USUARIO
+% ======================================================================
+\part{Manual de Usuario}
+
+\section{Introducción}
+
+UNDC Pets es una plataforma web de la Universidad Nacional de Cañete diseñada para la comunidad universitaria. Su objetivo es centralizar la información sobre las mascotas comunitarias del campus, permitir la interacción entre estudiantes, docentes y voluntarios, y facilitar las donaciones para el bienestar animal.
+
+\subsection{Propósito del sistema}
+
+\begin{itemize}
+    \item Visibilizar a las mascotas que habitan en el campus universitario.
+    \item Permitir a la comunidad compartir publicaciones, fotos y experiencias.
+    \item Facilitar donaciones económicas y en especie para el cuidado animal.
+    \item Reportar mascotas perdidas o en situación de riesgo.
+    \item Fomentar la adopción responsable.
+\end{itemize}
+
+\subsection{Requisitos técnicos}
+
+\begin{itemize}
+    \item Navegador web moderno (Chrome, Firefox, Edge, Safari última versión).
+    \item Conexión a internet.
+    \item Cuenta de Google para funciones interactivas (publicar, comentar, donar).
+\end{itemize}
+
+\section{Inicio de Sesión}
+
+Para acceder a las funciones interactivas de la plataforma es necesario iniciar sesión con una cuenta de Google.
+
+\subsection{Paso a paso}
+
+\begin{enumerate}
+    \item En la esquina superior derecha de la página, haga clic en el botón \textbf{Ingresar con Google}.
+    \item Seleccione la cuenta de Google que desea utilizar.
+    \item Autorice los permisos solicitados.
+    \item Una vez autenticado, verá su foto de perfil y nombre en la barra superior.
+\end{enumerate}
+
+\subsection{Funciones disponibles al iniciar sesión}
+
+\begin{itemize}
+    \item Publicar en el muro de la comunidad.
+    \item Dar ``Me gusta'' a publicaciones.
+    \item Comentar en publicaciones.
+    \item Compartir publicaciones en su perfil.
+    \item Editar y eliminar sus propias publicaciones.
+    \item Donar a campañas activas.
+\end{itemize}
+
+\section{Navegación Principal}
+
+La barra de navegación superior contiene las siguientes secciones:
+
+\begin{description}
+    \item[Mascotas del Campus] Directorio de todas las mascotas registradas.
+    \item[Comunidad] Muro de publicaciones y formulario de reporte.
+    \item[Álbum] Galería de fotos combinada.
+    \item[Donaciones] Campañas activas, cuentas bancarias y QR.
+    \item[Usuario] Perfil personal con fotos y publicaciones compartidas.
+    \item[FAQs] Preguntas frecuentes.
+\end{description}
+
+\section{Mascotas del Campus}
+
+\subsection{Explorar mascotas}
+Al ingresar a \textbf{Mascotas del Campus} se muestra un directorio con tarjetas de cada mascota. Cada tarjeta incluye:
+\begin{itemize}
+    \item Foto de la mascota.
+    \item Nombre, especie, género y edad.
+    \item Estado de salud (Sano, En tratamiento, Buscando hogar, etc.).
+    \item Ubicación dentro del campus.
+    \item Descripción breve y etiquetas.
+\end{itemize}
+
+\subsection{Buscar y filtrar}
+\begin{itemize}
+    \item \textbf{Búsqueda}: escriba nombre, ubicación o etiqueta en el campo de búsqueda.
+    \item \textbf{Filtro por especie}: seleccione ``Todos'', ``Perros'' o ``Gatos''.
+    \item \textbf{Filtro por estado}: elija entre ``Buscando hogar'', ``Saludable'', ``En tratamiento''.
+    \item \textbf{Etiquetas rápidas}: haga clic en \#Juguetón, \#Vacunado, etc.
+\end{itemize}
+
+\subsection{Ver detalle de mascota}
+Haga clic en cualquier tarjeta para abrir el modal con información completa: imagen, historia completa, ficha médica y ubicación.
+
+\section{Comunidad}
+
+\subsection{Muro de publicaciones}
+El muro muestra las publicaciones de toda la comunidad ordenadas por fecha.
+
+\subsubsection{Crear una publicación}
+\begin{enumerate}
+    \item Haga clic en el campo ``¿Qué quieres compartir sobre nuestras mascotas?''.
+    \item Escriba su mensaje.
+    \item Opcional: agregue una imagen (URL).
+    \item Haga clic en \textbf{Publicar}.
+\end{enumerate}
+
+\subsubsection{Interactuar con publicaciones}
+\begin{itemize}
+    \item \textbf{Me gusta}: haga clic en el ícono de corazón.
+    \item \textbf{Comentar}: escriba en el campo de comentarios y presione Enter.
+    \item \textbf{Compartir}: haga clic en el botón de compartir para guardar la publicación en su perfil.
+\end{itemize}
+
+\subsubsection{Editar y eliminar}
+Solo puede editar o eliminar sus propias publicaciones. Los botones aparecen al pasar el mouse sobre su publicación.
+
+\subsection{Reportar mascota}
+En la sub-pestaña \textbf{Reportar} puede reportar una mascota perdida o en situación de riesgo. Complete el formulario con nombre, especie, ubicación y descripción.
+
+\section{Álbum}
+
+Galería que combina fotos de las mascotas del campus con imágenes de la comunidad.
+
+\section{Donaciones}
+
+\subsection{Campañas activas}
+Muestra el progreso de recaudación con barras de progreso. Cada campaña tiene:
+\begin{itemize}
+    \item Nombre y descripción.
+    \item Monto recaudado vs. meta.
+    \item Nivel de urgencia.
+\end{itemize}
+
+\subsection{Cómo donar}
+\begin{enumerate}
+    \item Seleccione una campaña y haga clic en \textbf{Donar con Tarjeta}.
+    \item Complete sus datos y monto.
+    \item Ingrese los datos de tarjeta (simulados).
+    \item Confirme la donación.
+\end{enumerate}
+
+\subsection{Transferencia bancaria}
+Puede copiar los números de cuenta del Banco de la Nación, BCP o Yape/Plin haciendo clic en \textbf{Copiar}.
+
+\subsection{Pago con QR}
+Escane los códigos QR de Yape, Plin, BCP o Tunqui desde su aplicación bancaria.
+
+\section{Perfil de Usuario}
+
+\subsection{Perfil propio}
+En la sección \textbf{Usuario} puede ver:
+\begin{itemize}
+    \item Su foto y nombre.
+    \item Descripción personal (editable).
+    \item Estadísticas: fotos publicadas, me gusta recibidos.
+    \item Sub-pestaña \textbf{Fotos}: publicaciones con imagen que ha creado.
+    \item Sub-pestaña \textbf{Compartidos}: publicaciones que ha compartido de otros usuarios.
+\end{itemize}
+
+\subsection{Ver perfil de otro usuario}
+Haga clic en el nombre o avatar de un autor en el muro de comunidad para ver su perfil y sus publicaciones.
+
+\section{FAQs}
+
+Sección de preguntas frecuentes con respuestas expandibles. Incluye temas como donaciones, voluntariado y adopción.
+
+% ======================================================================
+% PARTE II: MANUAL DE ADMINISTRADOR
+% ======================================================================
+\newpage
+\part{Manual de Administrador}
+
+\section{Rol de Administrador}
+
+El administrador tiene acceso a un panel de control exclusivo para gestionar el contenido de la plataforma. Para ser administrador, su correo electrónico debe estar registrado en la tabla \texttt{admins} de Supabase.
+
+\subsection{Identificación visual}
+Cuando un administrador inicia sesión:
+\begin{itemize}
+    item Aparece una etiqueta \textbf{Admin} de color naranja junto a su nombre en la barra superior.
+    item Aparece la pestaña \textbf{Admin} en la barra de navegación.
+\end{itemize}
+
+\section{Panel de Administración}
+
+Haga clic en la pestaña \textbf{Admin} para acceder al panel. Contiene cuatro sub-secciones:
+
+\subsection{Gestión de Posts}
+
+En la sub-pestaña \textbf{Posts} se listan todas las publicaciones de la comunidad. Acciones disponibles:
+
+\begin{itemize}
+    \item \textbf{Eliminar post}: haga clic en el ícono de papelera para eliminar una publicación que no cumpla con las normas.
+    \item \textbf{Bloquear usuario}: haga clic en el ícono de bloqueo para impedir que un usuario vuelva a publicar.
+\end{itemize}
+
+\subsection{Gestión de Mascotas}
+
+En la sub-pestaña \textbf{Mascotas} puede administrar el directorio completo de mascotas.
+
+\subsubsection{Agregar nueva mascota}
+\begin{enumerate}
+    \item Haga clic en \textbf{Nueva Mascota}.
+    \item Complete los campos: nombre, especie, género, edad, estado, ubicación.
+    \item Suba una foto desde su computadora usando el selector de archivos.
+    \item Escriba la descripción corta y la historia.
+    \item Haga clic en \textbf{Guardar}.
+\end{enumerate}
+
+\subsubsection{Editar mascota}
+Haga clic en \textbf{Editar} sobre cualquier mascota de la lista. Modifique los campos necesarios y guarde.
+
+\subsubsection{Eliminar mascota}
+Haga clic en \textbf{Eliminar} para quitar una mascota del directorio.
+
+\subsubsection{Editar desde el directorio principal}
+Como administrador, al pasar el mouse sobre cualquier tarjeta del directorio aparecen botones de editar y eliminar. Esto permite una gestión rápida sin entrar al panel.
+
+\subsection{Gestión de Donaciones}
+
+En la sub-pestaña \textbf{Donaciones} puede configurar:
+
+\begin{itemize}
+    \item \textbf{Cuentas bancarias}: agregar, editar o eliminar cuentas (nombre del banco, número, CCI).
+    \item \textbf{Números Yape/Plin}: actualizar los números de contacto.
+    \item \textbf{Códigos QR}: modificar las rutas de las imágenes QR.
+    \item \textbf{Campañas}: crear, editar o eliminar campañas de recaudación (título, descripción, montos, urgencia).
+\end{itemize}
+
+\subsection{Bloqueo de Usuarios}
+
+En la sub-pestaña \textbf{Bloqueados} puede:
+
+\begin{itemize}
+    \item Ver la lista de usuarios bloqueados con su motivo y fecha.
+    \item Bloquear un usuario manualmente ingresando su ID y motivo.
+    \item Desbloquear un usuario haciendo clic en \textbf{Desbloquear}.
+\end{itemize}
+
+\section{Buenas prácticas}
+
+\begin{itemize}
+    \item Revise periódicamente el muro de comunidad para eliminar contenido inapropiado.
+    \item Mantenga actualizada la información de las mascotas (estado de salud, ubicación).
+    \item Verifique que los números de cuenta y QR sean correctos antes de guardar.
+    \item Bloquee usuarios solo cuando sea necesario y con un motivo claro.
+\end{itemize}
+
+% ======================================================================
+% PARTE III: DOCUMENTACIÓN TÉCNICA
+% ======================================================================
+\newpage
+\part{Documentación Técnica}
+
+\section{Tecnologías Utilizadas}
+
+\begin{longtable}{lp{8cm}}
+    \toprule
+    \textbf{Tecnología} & \textbf{Propósito} \\
+    \midrule
+    React 19 & Framework frontend para la interfaz de usuario \\
+    Vite 6 & Bundler y servidor de desarrollo \\
+    TypeScript & Tipado estático para JavaScript \\
+    Tailwind CSS v4 & Framework de estilos utilitario \\
+    Supabase & Backend como servicio (base de datos, autenticación, almacenamiento) \\
+    Google OAuth & Proveedor de autenticación \\
+    Cloudflare Pages & Despliegue y hosting \\
+    Gemini AI & Asistente virtual (opcional) \\
+    \bottomrule
+\end{longtable}
+
+\section{Estructura del Proyecto}
+
+\begin{lstlisting}
+undc-pets/
+|-- public/
+|   |-- images/            # Imagenes estaticas
+|   |-- _redirects         # (eliminado)
+|-- src/
+|   |-- components/
+|   |   |-- AdminPanel.tsx         # Panel de administracion
+|   |   |-- CommunityFeed.tsx      # Muro de comunidad
+|   |   |-- DonationCampaigns.tsx  # Campanas y pagos
+|   |   |-- GoogleSignIn.tsx       # Boton de inicio de sesion
+|   |   |-- PetCard.tsx            # Tarjeta de mascota
+|   |   |-- PetCarousel.tsx        # Carrusel del hero
+|   |   |-- PetModal.tsx           # Modal detalle de mascota
+|   |   |-- PhotoAlbum.tsx         # Galeria de fotos
+|   |   |-- UserProfile.tsx        # Perfil de usuario
+|   |-- lib/
+|   |   |-- AuthContext.tsx         # Contexto de autenticacion
+|   |   |-- supabase.ts            # Cliente de Supabase
+|   |-- App.tsx                     # Componente principal
+|   |-- main.tsx                    # Punto de entrada
+|   |-- types.ts                    # Interfaces TypeScript
+|   |-- data.ts                     # Datos estaticos iniciales
+|-- docs/
+|   |-- manual.tex                  # Este documento
+|-- supabase-migration.sql          # Migracion SQL
+|-- package.json
+|-- vite.config.ts
+\end{lstlisting}
+
+\section{Arquitectura}
+
+\subsection{Diagrama de flujo}
+
+\begin{verbatim}
+  Usuario (Navegador)
+      |
+      v
+  React App (Cloudflare Pages)
+      |
+      +---> Supabase Auth (Google OAuth)
+      |
+      +---> Supabase Database (PostgreSQL)
+      |       |-- posts table (JSONB)
+      |       |-- pets table (JSONB)
+      |       |-- admins table
+      |       |-- blocked_users table
+      |       |-- donation_config table
+      |
+      +---> Gemini AI (API externa)
+\end{verbatim}
+
+\subsection{Flujo de autenticación}
+
+\begin{enumerate}
+    \item El usuario hace clic en ``Ingresar con Google''.
+    \item Se redirige al flujo OAuth de Google.
+    \item Al regresar, Supabase crea una sesión.
+    \item \texttt{AuthContext} detecta el cambio de sesión.
+    \item Se consulta la tabla \texttt{admins} para verificar si el usuario es administrador.
+    \item La interfaz se actualiza mostrando opciones según el rol.
+\end{enumerate}
+
+\section{Base de Datos (Supabase)}
+
+\subsection{Tabla: posts}
+\begin{lstlisting}
+CREATE TABLE posts (
+    id TEXT PRIMARY KEY,
+    data JSONB NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+\end{lstlisting}
+Almacena las publicaciones de la comunidad. El campo \texttt{data} contiene todo el objeto Post (autor, contenido, imagen, likes, comentarios).
+
+\subsection{Tabla: pets}
+\begin{lstlisting}
+CREATE TABLE pets (
+    id TEXT PRIMARY KEY,
+    data JSONB NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+\end{lstlisting}
+Almacena las mascotas del campus. Cada fila contiene toda la información de una mascota en formato JSON.
+
+\subsection{Tabla: admins}
+\begin{lstlisting}
+CREATE TABLE admins (
+    email TEXT PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+\end{lstlisting}
+Lista de correos electrónicos con permisos de administrador.
+
+\subsection{Tabla: blocked\_users}
+\begin{lstlisting}
+CREATE TABLE blocked_users (
+    user_id TEXT PRIMARY KEY,
+    reason TEXT,
+    blocked_by TEXT,
+    blocked_at TIMESTAMPTZ DEFAULT NOW()
+);
+\end{lstlisting}
+Usuarios bloqueados para publicar en la comunidad.
+
+\subsection{Tabla: donation\_config}
+\begin{lstlisting}
+CREATE TABLE donation_config (
+    id TEXT PRIMARY KEY DEFAULT 'main',
+    data JSONB NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+\end{lstlisting}
+Configuración de donaciones: cuentas bancarias, números Yape/Plin, rutas QR y campañas activas.
+
+\section{Interfaces TypeScript}
+
+\subsection{Pet}
+\begin{lstlisting}
+interface Pet {
+    id: string;
+    name: string;
+    species: 'dog' | 'cat';
+    gender: 'male' | 'female' | 'group';
+    age: string;
+    status: string;
+    statusType: 'success' | 'warning' | 'error' | 'info' | 'primary';
+    tags: string[];
+    description: string;
+    image: string;
+    story: string;
+    reportedBy?: string;
+    contactEmail?: string;
+    location?: string;
+}
+\end{lstlisting}
+
+\subsection{Post}
+\begin{lstlisting}
+interface Post {
+    id: string;
+    userId?: string;
+    userAvatar?: string;
+    authorName: string;
+    authorRole: string;
+    authorInitials: string;
+    avatarColor: string;
+    content: string;
+    image?: string;
+    likes: number;
+    commentsCount: number;
+    comments: Comment[];
+    timeAgo: string;
+    isCampusFavorite?: boolean;
+    tag?: string;
+    likedByUser?: boolean;
+    sharedBy?: string[];
+}
+\end{lstlisting}
+
+\section{Despliegue}
+
+\subsection{Cloudflare Pages}
+El proyecto se despliega en Cloudflare Pages usando Wrangler:
+
+\begin{lstlisting}
+npx wrangler pages deploy dist --project-name=undc-pets
+\end{lstlisting}
+
+\subsection{Variables de entorno}
+Configurar en el panel de Cloudflare Pages:
+\begin{itemize}
+    \item \texttt{VITE\_SUPABASE\_URL}
+    \item \texttt{VITE\_SUPABASE\_ANON\_KEY}
+    \item \texttt{VITE\_GEMINI\_API\_KEY} (opcional)
+\end{itemize}
+
+\subsection{Build local}
+\begin{lstlisting}
+npm install
+npm run build
+npx wrangler pages deploy dist --project-name=undc-pets
+\end{lstlisting}
+
+\section{Componentes Principales}
+
+\begin{longtable}{lp{8cm}}
+    \toprule
+    \textbf{Componente} & \textbf{Función} \\
+    \midrule
+    \texttt{App.tsx} & Orquestador principal, manejo de pestañas y estado global \\
+    \texttt{AuthContext.tsx} & Proveedor de autenticación y rol admin \\
+    \texttt{AdminPanel.tsx} & Panel de administración con 4 sub-módulos \\
+    \texttt{CommunityFeed.tsx} & Muro de comunidad con CRUD y tiempo real \\
+    \texttt{PetCard.tsx} & Tarjeta de mascota en el directorio \\
+    \texttt{PetModal.tsx} & Modal de detalle de mascota \\
+    \texttt{UserProfile.tsx} & Perfil de usuario con fotos y compartidos \\
+    \texttt{DonationCampaigns.tsx} & Campañas, pasarela de pago simulada y cuentas \\
+    \texttt{GoogleSignIn.tsx} & Botón de autenticación con Google \\
+    \bottomrule
+\end{longtable}
+
+\section{Consideraciones de Seguridad}
+
+\begin{itemize}
+    \item La autenticación se maneja mediante Google OAuth con Supabase.
+    \item No se almacenan contraseñas en la aplicación.
+    \item Las claves de Supabase utilizan el modo anónimo (RLS).
+    \item Las operaciones de administrador se validan del lado del cliente consultando la tabla \texttt{admins}.
+    \item Los usuarios bloqueados no pueden crear nuevas publicaciones.
+    \item Los códigos QR e imágenes se sirven desde el directorio público o como data URIs.
+\end{itemize}
+
+\end{document}
