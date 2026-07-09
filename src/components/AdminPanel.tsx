@@ -398,50 +398,83 @@ function DonacionesPanel({ onShowNotification, onConfigChanged }: { onShowNotifi
 
       {/* ===== Metas y Objetivos ===== */}
       {subTab === 'metas' && (
-        <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="font-display font-bold text-sm text-slate-900">Metas y Objetivos</h3>
-              <p className="text-[10px] text-slate-400">Crea metas de recaudación con barra de progreso</p>
-            </div>
-            <button onClick={() => { setEditCampaign(null); setCampForm({ urgency: 'Media', currentAmount: 0, targetAmount: 100 }); setShowCampaignForm(true); }} className="bg-[#00346f] text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">add</span>
-              Nueva Meta
-            </button>
-          </div>
-          {config.campaigns.map((camp) => {
-            const percent = camp.targetAmount > 0 ? Math.min(Math.round((camp.currentAmount / camp.targetAmount) * 100), 100) : 0;
-            return (
-              <div key={camp.id} className="bg-slate-50 rounded-xl p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-sm text-slate-800 truncate">{camp.title}</p>
-                    <p className="text-[10px] text-slate-400">{camp.description}</p>
-                  </div>
-                  <div className="flex gap-1 shrink-0 ml-3">
-                    <button onClick={() => { setEditCampaign(camp); setCampForm(camp); setShowCampaignForm(true); }} className="text-primary text-[10px] font-bold px-2 py-1 rounded-lg bg-[#eef4ff]">Editar</button>
-                    <button onClick={() => {
-                      const campaigns = config.campaigns.filter(c => c.id !== camp.id);
-                      saveConfig({ ...config, campaigns });
-                    }} className="text-rose-600 text-[10px] font-bold px-2 py-1 rounded-lg bg-rose-50">Eliminar</button>
-                  </div>
-                </div>
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span className="font-bold text-[#00346f]">S/.{camp.currentAmount}</span>
-                  <span>Meta: S/.{camp.targetAmount}</span>
-                </div>
-                <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all ${percent >= 100 ? 'bg-emerald-500' : 'bg-[#fc9d41]'}`} style={{ width: `${percent}%` }}></div>
-                </div>
-                <div className="flex justify-between text-[10px] text-slate-400">
-                  <span>{percent}% completado</span>
-                  <span className={`font-bold ${camp.urgency === 'Crítica' ? 'text-rose-600' : camp.urgency === 'Alta' ? 'text-amber-600' : 'text-slate-500'}`}>{camp.urgency}</span>
-                </div>
+        <div className="space-y-4">
+          <div className="bg-white border border-slate-100 rounded-2xl p-5">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="font-display font-bold text-sm text-slate-900">Metas y Objetivos</h3>
+                <p className="text-[10px] text-slate-400">Crea y administra metas de recaudación</p>
               </div>
-            );
-          })}
-          {config.campaigns.length === 0 && (
-            <p className="text-xs text-slate-400 text-center py-6">No hay metas creadas. ¡Crea la primera!</p>
+              <button onClick={() => { setEditCampaign(null); setCampForm({ urgency: 'Media', currentAmount: 0, targetAmount: 100 }); setShowCampaignForm(true); }} className="bg-[#00346f] text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">add</span>
+                Nueva Meta
+              </button>
+            </div>
+          </div>
+          {config.campaigns.length === 0 ? (
+            <div className="bg-white border border-slate-100 rounded-2xl p-12 text-center space-y-3">
+              <span className="material-symbols-outlined text-[48px] text-slate-300">track_changes</span>
+              <p className="font-display font-bold text-slate-800 text-sm">No hay metas creadas</p>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">Crea tu primera meta de recaudación para empezar a recibir donaciones.</p>
+              <button onClick={() => { setEditCampaign(null); setCampForm({ urgency: 'Media', currentAmount: 0, targetAmount: 100 }); setShowCampaignForm(true); }} className="bg-[#00346f] text-white text-xs font-bold px-4 py-2 rounded-xl">Crear Primera Meta</button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {config.campaigns.map((camp) => {
+                const percent = camp.targetAmount > 0 ? Math.min(Math.round((camp.currentAmount / camp.targetAmount) * 100), 100) : 0;
+                return (
+                  <div key={camp.id} className="bg-white border border-slate-100 rounded-2xl p-5 flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                            camp.urgency === 'Crítica' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                            camp.urgency === 'Alta' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                            'bg-[#eef4ff] text-primary border border-[#dfe9fa]'
+                          }`}>
+                            {camp.urgency}
+                          </span>
+                        </div>
+                        <div className="flex gap-1">
+                          <button onClick={() => { setEditCampaign(camp); setCampForm(camp); setShowCampaignForm(true); }} className="bg-[#eef4ff] hover:bg-[#dfe9fa] text-primary rounded-lg p-1.5 transition-colors" title="Editar">
+                            <span className="material-symbols-outlined text-[16px]">edit</span>
+                          </button>
+                          <button onClick={() => {
+                            if (window.confirm(`¿Eliminar la meta "${camp.title}"?`)) {
+                              const campaigns = config.campaigns.filter(c => c.id !== camp.id);
+                              saveConfig({ ...config, campaigns });
+                            }
+                          }} className="bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg p-1.5 transition-colors" title="Eliminar">
+                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-display font-bold text-sm text-slate-900">{camp.title}</h4>
+                        <p className="text-xs text-slate-500 mt-0.5">{camp.description}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2 mt-4">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-bold text-[#00346f]">S/. {camp.currentAmount.toLocaleString()}</span>
+                        <span className="text-slate-400">Meta: S/. {camp.targetAmount.toLocaleString()}</span>
+                      </div>
+                      <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                        <div className={`h-full rounded-full transition-all duration-500 ${
+                          percent >= 100 ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : 'bg-gradient-to-r from-[#fc9d41] to-[#fa8b23]'
+                        }`} style={{ width: `${Math.max(percent, 2)}%` }}></div>
+                      </div>
+                      <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-slate-400 font-bold">{percent}% completo</span>
+                        <span className="text-slate-500">
+                          {percent >= 100 ? '¡Meta lograda!' : `Faltan S/. ${(camp.targetAmount - camp.currentAmount).toLocaleString()}`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       )}
