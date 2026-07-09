@@ -67,6 +67,9 @@ function AppContent() {
   const [campaigns, setCampaigns] = useState<DonationCampana[]>([]);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [editingPet, setEditingPet] = useState<Pet | null>(null);
+  const [deletingPet, setDeletingPet] = useState<Pet | null>(null);
+  const [editForm, setEditForm] = useState<Partial<Pet>>({});
 
   const handlePetsChanged = useCallback((pet?: Pet, action?: string) => {
     if (action === 'delete' && pet) {
@@ -522,7 +525,10 @@ function AppContent() {
                   <PetCard 
                     key={pet.id} 
                     pet={pet} 
-                    onSelect={setSelectedPet} 
+                    onSelect={setSelectedPet}
+                    isAdmin={isAdmin}
+                    onEdit={(p) => { setEditingPet(p); setEditForm(p); }}
+                    onDelete={(p) => setDeletingPet(p)}
                   />
                 ))}
               </div>
@@ -546,6 +552,102 @@ function AppContent() {
               </div>
             )}
 
+          </div>
+        )}
+
+        {/* Edit Pet Modal */}
+        {editingPet && isAdmin && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50" onClick={() => setEditingPet(null)}>
+            <div className="bg-white rounded-3xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <h3 className="font-display font-bold text-lg">Editar Mascota</h3>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="col-span-2">
+                  <label className="block font-bold text-slate-600 mb-1">Nombre</label>
+                  <input value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200" />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-600 mb-1">Especie</label>
+                  <select value={editForm.species || 'dog'} onChange={e => setEditForm({...editForm, species: e.target.value as 'dog' | 'cat'})} className="w-full p-2 rounded-xl border border-slate-200">
+                    <option value="dog">Perro</option><option value="cat">Gato</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-600 mb-1">Género</label>
+                  <select value={editForm.gender || 'male'} onChange={e => setEditForm({...editForm, gender: e.target.value as 'male' | 'female' | 'group'})} className="w-full p-2 rounded-xl border border-slate-200">
+                    <option value="male">Macho</option><option value="female">Hembra</option><option value="group">Grupo</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-600 mb-1">Edad</label>
+                  <input value={editForm.age || ''} onChange={e => setEditForm({...editForm, age: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200" />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-600 mb-1">Estado</label>
+                  <input value={editForm.status || ''} onChange={e => setEditForm({...editForm, status: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200" />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-600 mb-1">Tipo</label>
+                  <select value={editForm.statusType || 'info'} onChange={e => setEditForm({...editForm, statusType: e.target.value as any})} className="w-full p-2 rounded-xl border border-slate-200">
+                    <option value="success">success</option><option value="warning">warning</option><option value="error">error</option><option value="info">info</option><option value="primary">primary</option>
+                  </select>
+                </div>
+                <div className="col-span-2">
+                  <label className="block font-bold text-slate-600 mb-1">Tags (separados por coma)</label>
+                  <input value={(editForm.tags || []).join(', ')} onChange={e => setEditForm({...editForm, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean)})} className="w-full p-2 rounded-xl border border-slate-200" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block font-bold text-slate-600 mb-1">Ubicación</label>
+                  <input value={editForm.location || ''} onChange={e => setEditForm({...editForm, location: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block font-bold text-slate-600 mb-1">Descripción</label>
+                  <textarea rows={2} value={editForm.description || ''} onChange={e => setEditForm({...editForm, description: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block font-bold text-slate-600 mb-1">Historia</label>
+                  <textarea rows={3} value={editForm.story || ''} onChange={e => setEditForm({...editForm, story: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200" />
+                </div>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button onClick={() => setEditingPet(null)} className="flex-1 bg-slate-100 text-slate-700 text-xs font-bold py-2.5 rounded-xl">Cancelar</button>
+                <button onClick={async () => {
+                  const updated = { ...editingPet, ...editForm } as Pet;
+                  setPets(prev => {
+                    const filtered = prev.filter(p => p.id !== updated.id);
+                    const result = [updated, ...filtered];
+                    localStorage.setItem('undc_pets', JSON.stringify(result));
+                    return result;
+                  });
+                  await supabase.from('pets').upsert({ id: updated.id, data: updated as any }).catch(() => {});
+                  setEditingPet(null);
+                  triggerNotification('Mascota actualizada');
+                }} className="flex-1 bg-[#00346f] text-white text-xs font-bold py-2.5 rounded-xl">Guardar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation */}
+        {deletingPet && isAdmin && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50" onClick={() => setDeletingPet(null)}>
+            <div className="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 text-center" onClick={e => e.stopPropagation()}>
+              <span className="material-symbols-outlined text-[48px] text-rose-500">delete_forever</span>
+              <h3 className="font-display font-bold text-lg text-slate-900">¿Eliminar {deletingPet.name}?</h3>
+              <p className="text-xs text-slate-500">Esta acción no se puede deshacer. La mascota se eliminará del directorio.</p>
+              <div className="flex gap-2 pt-2">
+                <button onClick={() => setDeletingPet(null)} className="flex-1 bg-slate-100 text-slate-700 text-xs font-bold py-2.5 rounded-xl">Cancelar</button>
+                <button onClick={async () => {
+                  setPets(prev => {
+                    const updated = prev.filter(p => p.id !== deletingPet.id);
+                    localStorage.setItem('undc_pets', JSON.stringify(updated));
+                    return updated;
+                  });
+                  await supabase.from('pets').delete().eq('id', deletingPet.id).catch(() => {});
+                  setDeletingPet(null);
+                  triggerNotification(`"${deletingPet.name}" eliminada`);
+                }} className="flex-1 bg-rose-600 text-white text-xs font-bold py-2.5 rounded-xl">Eliminar</button>
+              </div>
+            </div>
           </div>
         )}
 
