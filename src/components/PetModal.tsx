@@ -64,7 +64,7 @@ export default function PetModal({ pet, onClose }: PetModalProps) {
               <div>
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Especie</p>
                 <p className="font-bold text-[#00346f] text-sm flex items-center justify-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">{pet.species === 'dog' ? 'pets' : 'cat'}</span>
+                  <span className="text-[16px]">{pet.species === 'dog' ? '🐕' : '🐈'}</span>
                   {pet.species === 'dog' ? 'Perro' : 'Gato'}
                 </p>
               </div>
@@ -89,7 +89,7 @@ export default function PetModal({ pet, onClose }: PetModalProps) {
             {/* Story */}
             <div>
               <h3 className="font-display font-bold text-lg text-slate-900 mb-2 flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">book_heart</span>
+                <span className="material-symbols-outlined text-primary">auto_stories</span>
                 Su Historia
               </h3>
               <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">

@@ -232,15 +232,15 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
                 Ver blog <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-4">
               {blogPosts.slice(0, 3).map(post => (
-                <button key={post.id} onClick={() => onNavigate('blog')} className="group bg-white rounded-2xl border-2 border-slate-100 overflow-hidden text-left hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-md">
+                <button key={post.id} onClick={() => onNavigate('blog')} className="flex flex-col md:flex-row bg-white rounded-2xl border border-slate-100 overflow-hidden text-left hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group w-full shadow-sm">
                   {post.image && (
-                    <div className="h-44 bg-slate-100 overflow-hidden">
-                      <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="md:w-56 md:h-44 shrink-0 bg-slate-50 flex items-center justify-center overflow-hidden">
+                      <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
                     </div>
                   )}
-                  <div className="p-4 space-y-2">
+                  <div className="flex-1 p-5 space-y-2 flex flex-col justify-center">
                     <div className="flex items-center gap-2 text-[10px] text-slate-400">
                       <span className="material-symbols-outlined text-[12px]">calendar_month</span>
                       {post.date}
@@ -248,7 +248,7 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
                       <span className="material-symbols-outlined text-[12px]">person</span>
                       {post.author}
                     </div>
-                    <h3 className="font-display font-bold text-sm text-slate-900 group-hover:text-[#00346f] transition-colors">{post.title}</h3>
+                    <h3 className="font-display font-bold text-sm md:text-base text-slate-900 group-hover:text-[#00346f] transition-colors">{post.title}</h3>
                     <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{post.excerpt}</p>
                   </div>
                 </button>

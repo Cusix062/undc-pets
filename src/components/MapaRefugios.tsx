@@ -56,6 +56,14 @@ export default function MapaRefugios() {
     document.body.appendChild(script);
   }, []);
 
+  const filtered = useMemo(() => {
+    return REFUGIOS.filter(r => {
+      const matchSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchDistrict = !districtFilter || r.district === districtFilter;
+      return matchSearch && matchDistrict;
+    });
+  }, [searchQuery, districtFilter]);
+
   // Initialize map once Leaflet is ready
   useEffect(() => {
     if (!leafletReady || !containerRef.current || mapRef.current) return;
@@ -154,14 +162,6 @@ export default function MapaRefugios() {
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
     }
   }, [leafletReady, filtered, userLocation]);
-
-  const filtered = useMemo(() => {
-    return REFUGIOS.filter(r => {
-      const matchSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchDistrict = !districtFilter || r.district === districtFilter;
-      return matchSearch && matchDistrict;
-    });
-  }, [searchQuery, districtFilter]);
 
   return (
     <section className="py-16 md:py-20 px-4 bg-white">

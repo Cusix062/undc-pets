@@ -415,7 +415,7 @@ function AppContent() {
                         speciesFilter === 'cat' ? 'bg-[#00346f] text-white shadow-3xs' : 'text-slate-500 hover:text-slate-800'
                       }`}
                     >
-                      <span className="material-symbols-outlined text-[14px]">cat</span>
+                      <span className="text-[14px]">🐈</span>
                       Gatos
                     </button>
                   </div>
