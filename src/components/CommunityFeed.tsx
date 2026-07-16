@@ -443,32 +443,41 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
                   const displayLikes = post.likes;
                   const isOwner = user && post.userId === user.id;
                   return (
-                    <div key={post.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all hover:shadow-md">
+                    <div key={post.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 duration-200 relative">
+                      {/* Colored left accent bar */}
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#00346f] via-[#fc9d41] to-rose-400 rounded-l-2xl opacity-60" />
+
                       {/* Post Header */}
-                      <div className="p-4 flex justify-between items-center border-b border-slate-50">
-                        <div className="flex items-center gap-3">
+                      <div className="pl-5 pr-4 pt-4 pb-3 flex justify-between items-start gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                           {post.userAvatar ? (
-                            <img src={post.userAvatar} alt="" className="h-10 w-10 rounded-full border-2 border-slate-100 cursor-pointer hover:ring-2 hover:ring-[#00346f] transition-all shadow-xs" referrerPolicy="no-referrer" onClick={() => post.userId && onViewProfile?.(post.userId)} />
+                            <img src={post.userAvatar} alt="" className="h-11 w-11 rounded-full border-2 border-slate-100 cursor-pointer hover:ring-2 hover:ring-[#00346f] transition-all shadow-sm" referrerPolicy="no-referrer" onClick={() => post.userId && onViewProfile?.(post.userId)} />
                           ) : (
-                            <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold font-display shadow-xs ${post.avatarColor} cursor-pointer hover:ring-2 hover:ring-[#00346f] transition-all`} onClick={() => post.userId && onViewProfile?.(post.userId)}>{post.authorInitials}</div>
+                            <div className={`h-11 w-11 rounded-full flex items-center justify-center text-white font-bold font-display shadow-sm ${post.avatarColor} cursor-pointer hover:ring-2 hover:ring-[#00346f] transition-all`} onClick={() => post.userId && onViewProfile?.(post.userId)}>{post.authorInitials}</div>
                           )}
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <p className="text-xs font-bold text-slate-800 cursor-pointer hover:text-[#00346f] transition-colors" onClick={() => post.userId && onViewProfile?.(post.userId)}>{post.authorName}</p>
-                              {post.isCampusFavorite && <span className="bg-amber-100 text-amber-800 text-[8px] font-bold px-1.5 py-0.5 rounded-full">⭐ Favorito</span>}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="text-sm font-bold text-slate-800 cursor-pointer hover:text-[#00346f] transition-colors truncate" onClick={() => post.userId && onViewProfile?.(post.userId)}>{post.authorName}</p>
+                              {post.isCampusFavorite && <span className="bg-amber-100 text-amber-800 text-[9px] font-bold px-2 py-0.5 rounded-full border border-amber-200 shrink-0">⭐ Favorito</span>}
                             </div>
-                            <p className="text-[10px] text-slate-400 font-medium">{post.authorRole} · {post.timeAgo}</p>
+                            <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 mt-0.5">
+                              <span className="material-symbols-outlined text-[12px]">school</span>
+                              {post.authorRole}
+                              <span className="text-slate-300">·</span>
+                              <span className="material-symbols-outlined text-[12px]">schedule</span>
+                              {post.timeAgo}
+                            </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {post.tag && <span className="bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold px-2 py-0.5 rounded-md">{post.tag}</span>}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {post.tag && <span className="bg-gradient-to-r from-rose-500 to-rose-600 text-white text-[9px] font-bold px-2.5 py-1 rounded-full shadow-xs">{post.tag}</span>}
                           {isOwner && (
-                            <div className="flex gap-1">
+                            <div className="flex gap-0.5">
                               <button onClick={() => { setEditingPostId(post.id); setEditContent(post.content); }} className="text-slate-400 hover:text-[#00346f] p-1.5 rounded-lg hover:bg-[#eef4ff] transition-all" title="Editar">
-                                <span className="material-symbols-outlined text-[16px]">edit</span>
+                                <span className="material-symbols-outlined text-[17px]">edit</span>
                               </button>
                               <button onClick={() => handleDelete(post.id)} className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-all" title="Eliminar">
-                                <span className="material-symbols-outlined text-[16px]">delete</span>
+                                <span className="material-symbols-outlined text-[17px]">delete</span>
                               </button>
                             </div>
                           )}
@@ -476,7 +485,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
                       </div>
 
                       {/* Post Content */}
-                      <div className="p-4 space-y-3">
+                      <div className="px-5 pb-3">
                         {editingPostId === post.id ? (
                           <div className="space-y-3">
                             <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={3} className="w-full text-sm p-3 rounded-2xl border border-[#00346f] focus:outline-none focus:ring-2 focus:ring-[#00346f]/10 bg-white resize-none" />
@@ -486,72 +495,82 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
                             </div>
                           </div>
                         ) : (
-                          <p className="text-slate-700 text-xs leading-relaxed whitespace-pre-line">{post.content}</p>
+                          <div className="bg-slate-50/60 rounded-xl p-4 border border-slate-100">
+                            <p className="text-slate-800 text-sm leading-relaxed whitespace-pre-line">{post.content}</p>
+                          </div>
                         )}
                         {post.image && !editingPostId && (
-                          <div className="rounded-xl overflow-hidden cursor-pointer border border-slate-100 shadow-xs" onClick={() => setViewingImage(post.image!)}>
-                            <img src={post.image} alt="Publicación" className="w-full object-cover hover:scale-[1.02] transition-transform duration-300" referrerPolicy="no-referrer" />
+                          <div className="mt-3 rounded-xl overflow-hidden cursor-pointer border border-slate-100 shadow-sm group" onClick={() => setViewingImage(post.image!)}>
+                            <div className="relative">
+                              <img src={post.image} alt="Publicación" className="w-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                <span className="material-symbols-outlined text-white text-[32px] opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg">zoom_in</span>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
 
                       {/* Post Stats */}
-                      <div className="px-4 py-2.5 bg-slate-50/80 border-y border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-bold">
+                      <div className="mx-5 mb-2 px-4 py-2 bg-slate-50/80 rounded-xl border border-slate-100 flex items-center justify-between text-xs text-slate-500 font-bold">
                         <span className="flex items-center gap-1.5">
-                          <span className="material-symbols-outlined text-rose-500 font-bold text-[14px]">favorite</span>
+                          <span className="material-symbols-outlined text-rose-500 font-bold text-[16px]">favorite</span>
                           {displayLikes} {displayLikes === 1 ? 'Me gusta' : 'Me gusta'}
                         </span>
                         <span className="flex items-center gap-1.5">
-                          <span className="material-symbols-outlined text-slate-400 text-[14px]">chat_bubble</span>
+                          <span className="material-symbols-outlined text-slate-400 text-[16px]">chat_bubble</span>
                           {post.comments.length} {post.comments.length === 1 ? 'Comentario' : 'Comentarios'}
                         </span>
                       </div>
 
                       {/* Post Actions */}
-                      <div className="px-4 py-1.5 border-b border-slate-50 flex">
-                        <button onClick={() => handleLike(post.id)} className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${isLiked ? 'text-rose-600 bg-rose-50' : 'text-slate-600 hover:bg-slate-50 hover:text-rose-600'}`}>
-                          <span className={`material-symbols-outlined text-[18px] ${isLiked ? '' : ''}`}>{isLiked ? 'favorite' : 'favorite_border'}</span>
+                      <div className="px-5 pb-2 flex gap-1.5">
+                        <button onClick={() => handleLike(post.id)} className={`flex-1 py-2.5 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${isLiked ? 'text-rose-600 bg-rose-50 border border-rose-200' : 'text-slate-600 hover:bg-rose-50 hover:text-rose-600 border border-transparent hover:border-rose-200'}`}>
+                          <span className="material-symbols-outlined text-[18px]">{isLiked ? 'favorite' : 'favorite_border'}</span>
                           {isLiked ? 'Te gusta' : 'Me gusta'}
                         </button>
-                        <button onClick={() => handleShare(post.id)} className="flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 text-slate-600 hover:bg-slate-50 hover:text-[#00346f]">
+                        <button onClick={() => handleShare(post.id)} className="flex-1 py-2.5 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-slate-600 hover:bg-[#eef4ff] hover:text-[#00346f] border border-transparent hover:border-[#dfe9fa]">
                           <span className="material-symbols-outlined text-[18px]">share</span>
                           Compartir
                         </button>
-                        <div className="flex-1 text-center py-2 text-xs font-bold text-slate-600 flex items-center justify-center gap-1.5 hover:bg-slate-50 rounded-lg transition-all cursor-default">
+                        <div className="flex-1 py-2.5 px-3 text-xs font-bold rounded-xl flex items-center justify-center gap-2 text-slate-600 border border-transparent cursor-default">
                           <span className="material-symbols-outlined text-[18px]">chat_bubble</span>
                           Comentar
                         </div>
                       </div>
 
                       {/* Comments Section */}
-                      <div className="px-4 py-3 bg-slate-50/40 space-y-3">
+                      <div className="mx-5 mb-4 px-4 py-3 bg-slate-50/60 rounded-xl border border-slate-100 space-y-3">
+                        {post.comments.length > 0 && (
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Comentarios</p>
+                        )}
                         {post.comments.map((comment) => (
-                          <div key={comment.id} className="text-xs flex gap-2.5 items-start bg-white p-3 rounded-xl border border-slate-100 shadow-2xs">
+                          <div key={comment.id} className="flex gap-2.5 items-start bg-white p-3 rounded-xl border border-slate-100 shadow-2xs">
                             {comment.authorAvatar ? (
                               <img src={comment.authorAvatar} alt="" className="h-7 w-7 rounded-full border border-slate-200 mt-0.5" referrerPolicy="no-referrer" />
                             ) : (
-                              <div className="bg-gradient-to-br from-[#00346f]/20 to-[#0050aa]/20 text-primary h-7 w-7 rounded-full flex items-center justify-center font-bold text-[9px] mt-0.5">
-                                {comment.authorName.split(' ').map(n => n[0]).join('')}
+                              <div className="bg-gradient-to-br from-[#00346f] to-[#0050aa] text-white h-7 w-7 rounded-full flex items-center justify-center font-bold text-[9px] mt-0.5 shadow-xs">
+                                {comment.authorName.split(' ').map(n => n[0]).join('').substring(0, 2)}
                               </div>
                             )}
-                            <div className="flex-grow">
+                            <div className="flex-grow min-w-0">
                               <div className="flex justify-between items-center mb-0.5">
-                                <span className="font-bold text-slate-800 text-[10px]">{comment.authorName}</span>
-                                <span className="text-[9px] text-slate-400 font-medium">{comment.timeAgo}</span>
+                                <span className="font-bold text-slate-800 text-xs">{comment.authorName}</span>
+                                <span className="text-[9px] text-slate-400 font-medium shrink-0 ml-2">{comment.timeAgo}</span>
                               </div>
-                              <p className="text-slate-600 leading-relaxed text-[11px]">{comment.content}</p>
+                              <p className="text-slate-600 leading-relaxed text-sm">{comment.content}</p>
                             </div>
                           </div>
                         ))}
-                        <form onSubmit={(e) => handleAddComment(e, post.id)} className="flex gap-2 pt-2">
+                        <form onSubmit={(e) => handleAddComment(e, post.id)} className="flex gap-2 pt-1">
                           {user?.user_metadata?.avatar_url ? (
                             <img src={user.user_metadata.avatar_url} alt="" className="h-8 w-8 rounded-full border border-slate-200 mt-0.5 shadow-xs" referrerPolicy="no-referrer" />
                           ) : (
-                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 text-white text-[9px] font-bold flex items-center justify-center mt-0.5 shadow-xs">?</div>
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#00346f] to-[#0050aa] text-white text-[9px] font-bold flex items-center justify-center mt-0.5 shadow-xs">?</div>
                           )}
                           <div className="flex-grow flex gap-2">
-                            <input type="text" value={commentInputs[post.id] || ''} onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))} placeholder="Escribe un comentario..." disabled={!user} className="flex-grow text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] bg-white disabled:bg-slate-50 disabled:text-slate-400 transition-all" />
-                            <button type="submit" disabled={!user} className="bg-[#00346f] hover:bg-[#002450] text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs flex items-center justify-center disabled:opacity-40 transition-all">
+                            <input type="text" value={commentInputs[post.id] || ''} onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))} placeholder="Escribe un comentario..." disabled={!user} className="flex-grow text-sm px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] focus:ring-1 focus:ring-[#00346f]/20 bg-white disabled:bg-slate-50 disabled:text-slate-400 transition-all" />
+                            <button type="submit" disabled={!user} className="bg-gradient-to-r from-[#00346f] to-[#0050aa] hover:from-[#002450] hover:to-[#00346f] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xs flex items-center justify-center disabled:opacity-40 transition-all">
                               <span className="material-symbols-outlined text-[16px]">send</span>
                             </button>
                           </div>
