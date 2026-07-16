@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Pet, BlogPost } from '../types';
+import MapaRefugios from './MapaRefugios';
 
 interface LandingPageProps {
   pets: Pet[];
@@ -261,6 +262,9 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
           </div>
         </section>
       )}
+
+      {/* ===== MAPA DE REFUGIOS ===== */}
+      <MapaRefugios />
 
       {/* ===== CTA FINAL ===== */}
       <section className="bg-gradient-to-r from-[#001a3a] via-[#00346f] to-[#002450] py-16 md:py-20 px-4">
