@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Pet, BlogPost } from '../types';
 
 interface LandingPageProps {
@@ -9,11 +9,20 @@ interface LandingPageProps {
 }
 
 export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }: LandingPageProps) {
-  const featuredPets = pets.slice(0, 4);
+  const featuredPets = pets.slice(0, 5);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    if (featuredPets.length < 2) return;
+    const timer = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % featuredPets.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [featuredPets.length]);
+
   const totalPets = pets.length;
   const healthyPets = pets.filter(p => p.status === 'Sano' || p.status === 'Saludable' || p.status === 'Alegre').length;
   const seekingHome = pets.filter(p => p.status === 'Buscando hogar').length;
-
   const speciesIcons: Record<string, string> = { dog: 'pets', cat: 'cat', other: 'pets' };
 
   return (
@@ -50,18 +59,35 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
                 </button>
               </div>
             </div>
+
+            {/* Carousel */}
             <div className="relative hidden lg:block">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="relative h-[420px] rounded-2xl overflow-hidden bg-white/5 backdrop-blur-xs border border-white/10 shadow-2xl">
                 {featuredPets.map((pet, i) => (
-                  <button key={pet.id} onClick={() => onSelectPet(pet)} className={`group relative rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xs hover:border-white/30 transition-all ${i === 0 ? 'row-span-2' : ''}`}>
-                    <div className={`${i === 0 ? 'h-80' : 'h-36'} flex items-center justify-center p-4`}>
-                      <img src={pet.image} alt={pet.name} className="w-full h-full object-contain drop-shadow-lg group-hover:scale-105 transition-transform duration-500" />
-                    </div>
-                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3">
-                      <p className="font-bold text-white text-xs">{pet.name}</p>
-                      <p className="text-[10px] text-white/60">{pet.age} • {pet.location}</p>
-                    </div>
+                  <button
+                    key={pet.id}
+                    onClick={() => onSelectPet(pet)}
+                    className={`absolute inset-0 flex items-center justify-center p-8 transition-all duration-700 ${i === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
+                  >
+                    <img
+                      src={pet.image}
+                      alt={pet.name}
+                      className="w-full h-full object-contain drop-shadow-2xl"
+                    />
                   </button>
+                ))}
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-5 pt-12">
+                  <p className="font-display font-bold text-white text-lg">{featuredPets[currentSlide]?.name}</p>
+                  <p className="text-xs text-white/60">{featuredPets[currentSlide]?.age} • {featuredPets[currentSlide]?.location}</p>
+                </div>
+              </div>
+              <div className="flex justify-center gap-2 mt-4">
+                {featuredPets.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentSlide(i)}
+                    className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? 'w-8 bg-[#fc9d41]' : 'w-2 bg-white/30 hover:bg-white/50'}`}
+                  />
                 ))}
               </div>
             </div>
@@ -92,7 +118,7 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
       </section>
 
       {/* ===== CÓMO AYUDAR SECTION ===== */}
-      <section className="bg-[#f8f9ff] py-16 md:py-20 px-4">
+      <section className="bg-gradient-to-b from-white to-[#f8f9ff] py-16 md:py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 space-y-3">
             <span className="inline-block bg-[#00346f]/10 text-[#00346f] font-bold text-xs px-3.5 py-1.5 rounded-full uppercase tracking-wider">Cómo ayudar</span>
@@ -122,7 +148,7 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
 
       {/* ===== MASCOTAS DESTACADAS ===== */}
       {pets.length > 0 && (
-        <section className="bg-white py-16 md:py-20 px-4">
+        <section className="bg-[#f8f9ff] py-16 md:py-20 px-4">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-end justify-between mb-10">
               <div className="space-y-2">
@@ -130,12 +156,16 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
                 <h2 className="font-display font-extrabold text-2xl md:text-3xl text-slate-900">Mascotas del Campus</h2>
               </div>
               <button onClick={() => onNavigate('directorio')} className="hidden md:flex items-center gap-1.5 text-[#00346f] font-bold text-xs hover:underline">
-                Ver todos <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                Ver todas <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
               </button>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {pets.slice(0, 8).map(pet => (
-                <button key={pet.id} onClick={() => onSelectPet(pet)} className="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300 text-left">
+                <button
+                  key={pet.id}
+                  onClick={() => onSelectPet(pet)}
+                  className="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg hover:-translate-y-1.5 transition-all duration-300 text-left shadow-sm"
+                >
                   <div className="h-40 md:h-48 bg-slate-50 flex items-center justify-center p-4 relative">
                     <img src={pet.image} alt={pet.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                     <span className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -173,7 +203,7 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
 
       {/* ===== BLOG PREVIEW ===== */}
       {blogPosts.length > 0 && (
-        <section className="bg-[#f8f9ff] py-16 md:py-20 px-4">
+        <section className="bg-white py-16 md:py-20 px-4">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-end justify-between mb-10">
               <div className="space-y-2">
@@ -186,7 +216,7 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {blogPosts.slice(0, 3).map(post => (
-                <button key={post.id} onClick={() => onNavigate('blog')} className="group bg-white rounded-2xl border border-slate-100 overflow-hidden text-left hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                <button key={post.id} onClick={() => onNavigate('blog')} className="group bg-white rounded-2xl border border-slate-100 overflow-hidden text-left hover:shadow-lg hover:-translate-y-1 transition-all duration-300 shadow-sm">
                   {post.image && (
                     <div className="h-44 bg-slate-100 overflow-hidden">
                       <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
