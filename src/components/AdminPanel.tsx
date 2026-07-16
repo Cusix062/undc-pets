@@ -67,7 +67,11 @@ function PostsPanel({ onShowNotification }: { onShowNotification: (msg: string) 
   useEffect(() => { load(); }, [load]);
 
   const handleDelete = async (postId: string) => {
-    await supabase.from('posts').delete().eq('id', postId);
+    const { error } = await supabase.rpc('admin_delete_post', { post_id: postId });
+    if (error) {
+      onShowNotification('Error: ' + error.message);
+      return;
+    }
     onShowNotification('Post eliminado');
     load();
   };

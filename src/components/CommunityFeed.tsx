@@ -21,7 +21,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeSubTab, setActiveSubTab] = useState<'muro' | 'reporte'>('muro');
+  const [reportExpanded, setReportExpanded] = useState(false);
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostImage, setNewPostImage] = useState('');
   const [newPostFile, setNewPostFile] = useState<File | null>(null);
@@ -91,6 +91,16 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
     setLikedPosts(prev => ({ ...prev, [postId]: !isLiked }));
     await updatePost(postId, { likes: newLikes });
     onShowNotification(isLiked ? 'Quitaste tu Me gusta' : '¡Le diste Me gusta!');
+  };
+
+  const handleReportImageSelect = (file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      if (dataUrl) setReportImage(dataUrl);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleAddComment = async (e: React.FormEvent, postId: string) => {
@@ -237,6 +247,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
     onAddPetToDirectory(newPet);
     const newPost: Post = {
       id: `post_report_${Date.now()}`,
+      userId: user.id,
       authorName: 'Reporte de Alerta',
       authorRole: 'Bienestar Animal',
       authorInitials: '🚨',
@@ -262,12 +273,13 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
     setReportDescription('');
     setReportStory('');
     setReporterEmail('');
-    setActiveSubTab('muro');
     onShowNotification(`¡Reporte de ${reportName} registrado!`);
   };
 
   const totalLikes = posts.reduce((sum, p) => sum + p.likes, 0);
   const totalComments = posts.reduce((sum, p) => sum + p.comments.length, 0);
+  const alertPosts = posts.filter(p => p.authorName === 'Reporte de Alerta');
+  const regularPosts = posts.filter(p => p.authorName !== 'Reporte de Alerta');
 
   return (
     <div id="community-feed-container" className="space-y-6">
@@ -334,31 +346,19 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
         </div>
       </div>
 
-      {/* Tab Switcher */}
       <div className="flex items-center justify-between bg-white p-1.5 rounded-2xl border border-slate-100 shadow-xs">
         <div className="flex gap-1">
-          <button
-            onClick={() => setActiveSubTab('muro')}
-            className={`flex items-center gap-2 py-2.5 px-5 rounded-xl text-xs font-bold transition-all ${activeSubTab === 'muro' ? 'bg-[#00346f] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}
-          >
+          <div className="flex items-center gap-2 py-2.5 px-5 rounded-xl text-xs font-bold bg-[#00346f] text-white shadow-sm">
             <span className="material-symbols-outlined text-[16px]">forum</span>
             Muro Comunitario
-          </button>
-          <button
-            onClick={() => setActiveSubTab('reporte')}
-            className={`flex items-center gap-2 py-2.5 px-5 rounded-xl text-xs font-bold transition-all ${activeSubTab === 'reporte' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-600 hover:bg-rose-50'}`}
-          >
-            <span className="material-symbols-outlined text-[16px]">crisis_alert</span>
-            Reportar Mascota
-          </button>
+          </div>
         </div>
         <div className="hidden sm:block">
           <GoogleSignIn />
         </div>
       </div>
 
-      {activeSubTab === 'muro' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
 
             {/* Create Post Card - improved */}
@@ -438,7 +438,130 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
               </div>
             ) : (
               <div className="space-y-5">
-                {posts.map((post) => {
+                {/* Alert Posts Section */}
+                {alertPosts.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 px-1">
+                      <div className="bg-rose-100 h-7 w-7 rounded-lg flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[16px] text-rose-600">crisis_alert</span>
+                      </div>
+                      <h3 className="font-display font-bold text-sm text-slate-900">Alertas de Mascotas</h3>
+                      <span className="bg-rose-50 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-200">{alertPosts.length}</span>
+                    </div>
+                    {alertPosts.map((post) => (
+                      <div key={post.id} className="bg-white rounded-2xl border-l-4 border-rose-500 border border-slate-100 shadow-sm overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 duration-200 relative">
+                        <div className="absolute top-0 right-0 bg-rose-500 text-white text-[9px] font-bold px-2.5 py-1 rounded-bl-xl">🚨 Alerta</div>
+                        <div className="pl-5 pr-4 pt-4 pb-3 flex justify-between items-start gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-11 w-11 rounded-full flex items-center justify-center text-white font-bold font-display shadow-sm bg-rose-600 text-lg">🚨</div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-slate-800">{post.authorName}</p>
+                              <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 mt-0.5">
+                                <span className="material-symbols-outlined text-[12px]">pets</span>
+                                {post.authorRole}
+                                <span className="text-slate-300">·</span>
+                                <span className="material-symbols-outlined text-[12px]">schedule</span>
+                                {post.timeAgo}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="px-5 pb-3">
+                          <div className="bg-rose-50/70 rounded-xl p-4 border border-rose-100">
+                            <p className="text-slate-800 text-sm leading-relaxed whitespace-pre-line">{post.content}</p>
+                          </div>
+                          {post.image && (
+                            <div className="mt-3 rounded-xl overflow-hidden cursor-pointer border border-rose-100 shadow-sm group" onClick={() => setViewingImage(post.image!)}>
+                              <div className="relative">
+                                <img src={post.image} alt="Reporte" className="w-full max-h-48 object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                  <span className="material-symbols-outlined text-white text-[32px] opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg">zoom_in</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mx-5 mb-2 px-4 py-2 bg-rose-50/50 rounded-xl border border-rose-100 flex items-center justify-between text-xs text-slate-500 font-bold">
+                          <span className="flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-rose-500 text-[16px]">favorite</span>
+                            {post.likes} Me gusta
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-slate-400 text-[16px]">chat_bubble</span>
+                            {post.comments.length} {post.comments.length === 1 ? 'Comentario' : 'Comentarios'}
+                          </span>
+                        </div>
+                        <div className="px-5 pb-2 flex gap-1.5">
+                          <button onClick={() => handleLike(post.id)} className={`flex-1 py-2.5 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${likedPosts[post.id] ? 'text-rose-600 bg-rose-50 border border-rose-200' : 'text-slate-600 hover:bg-rose-50 hover:text-rose-600 border border-transparent hover:border-rose-200'}`}>
+                            <span className="material-symbols-outlined text-[18px]">{likedPosts[post.id] ? 'favorite' : 'favorite_border'}</span>
+                            {likedPosts[post.id] ? 'Te gusta' : 'Me gusta'}
+                          </button>
+                          <button onClick={() => handleShare(post.id)} className="flex-1 py-2.5 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-slate-600 hover:bg-rose-50 hover:text-rose-700 border border-transparent hover:border-rose-200">
+                            <span className="material-symbols-outlined text-[18px]">share</span>
+                            Compartir
+                          </button>
+                        </div>
+                        <div className="mx-5 mb-4 px-4 py-3 bg-rose-50/50 rounded-xl border border-rose-100 space-y-3">
+                          {post.comments.length > 0 && (
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Comentarios</p>
+                          )}
+                          {post.comments.map((comment) => (
+                            <div key={comment.id} className="flex gap-2.5 items-start bg-white p-3 rounded-xl border border-slate-100 shadow-2xs">
+                              {comment.authorAvatar ? (
+                                <img src={comment.authorAvatar} alt="" className="h-7 w-7 rounded-full border border-slate-200 mt-0.5" referrerPolicy="no-referrer" />
+                              ) : (
+                                <div className="bg-gradient-to-br from-rose-600 to-rose-500 text-white h-7 w-7 rounded-full flex items-center justify-center font-bold text-[9px] mt-0.5 shadow-xs">
+                                  {comment.authorName.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                                </div>
+                              )}
+                              <div className="flex-grow min-w-0">
+                                <div className="flex justify-between items-center mb-0.5">
+                                  <span className="font-bold text-slate-800 text-xs">{comment.authorName}</span>
+                                  <span className="text-[9px] text-slate-400 font-medium shrink-0 ml-2">{comment.timeAgo}</span>
+                                </div>
+                                <p className="text-slate-600 leading-relaxed text-sm">{comment.content}</p>
+                              </div>
+                            </div>
+                          ))}
+                          <form onSubmit={(e) => handleAddComment(e, post.id)} className="flex gap-2 pt-1">
+                            {user?.user_metadata?.avatar_url ? (
+                              <img src={user.user_metadata.avatar_url} alt="" className="h-8 w-8 rounded-full border border-slate-200 mt-0.5 shadow-xs" referrerPolicy="no-referrer" />
+                            ) : (
+                              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-rose-600 to-rose-500 text-white text-[9px] font-bold flex items-center justify-center mt-0.5 shadow-xs">?</div>
+                            )}
+                            <div className="flex-grow flex gap-2">
+                              <input type="text" value={commentInputs[post.id] || ''} onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))} placeholder="Escribe un comentario..." disabled={!user} className="flex-grow text-sm px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/20 bg-white disabled:bg-slate-50 disabled:text-slate-400 transition-all" />
+                              <button type="submit" disabled={!user} className="bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-700 hover:to-rose-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xs flex items-center justify-center disabled:opacity-40 transition-all">
+                                <span className="material-symbols-outlined text-[16px]">send</span>
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    ))}
+                    {/* Separator */}
+                    <div className="relative py-3">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-slate-200"></div>
+                      </div>
+                      <div className="relative flex justify-center">
+                        <span className="bg-white px-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Publicaciones de la comunidad</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Regular Posts */}
+                {regularPosts.length === 0 && alertPosts.length > 0 ? (
+                  <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center space-y-3">
+                    <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
+                      <span className="material-symbols-outlined text-[48px] text-slate-300">forum</span>
+                    </div>
+                    <h3 className="font-display font-bold text-base text-slate-800">¡Sé el primero en compartir!</h3>
+                    <p className="text-xs text-slate-400 max-w-sm mx-auto">No hay publicaciones de la comunidad aún. Anímate a contar una anécdota de los peludos del campus.</p>
+                  </div>
+                ) : regularPosts.length > 0 ? (
+                    regularPosts.map((post) => {
                   const isLiked = likedPosts[post.id];
                   const displayLikes = post.likes;
                   const isOwner = user && post.userId === user.id;
@@ -578,7 +701,8 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
                       </div>
                     </div>
                   );
-                })}
+                })
+            ) : null}
               </div>
             )}
           </div>
@@ -664,105 +788,71 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
               </ul>
             </div>
 
-          </div>
-        </div>
-      ) : (
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-md p-6 md:p-8 space-y-6">
-            <div className="text-center space-y-3 border-b border-slate-100 pb-6">
-              <div className="bg-rose-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto animate-pulse">
-                <span className="material-symbols-outlined text-[36px] text-rose-600">crisis_alert</span>
-              </div>
-              <h2 className="font-display font-extrabold text-2xl text-slate-900">Reportar Mascota</h2>
-              <p className="text-xs text-slate-500 max-w-md mx-auto">¿Viste una mascota perdida o herida en el campus? Regístrala para que la comunidad pueda ayudarla.</p>
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 flex items-start gap-2 text-left">
-                <span className="material-symbols-outlined text-[16px] mt-0.5">info</span>
-                <span>Tu reporte creará automáticamente una publicación en el Muro Comunitario para máxima visibilidad.</span>
-              </div>
-            </div>
-            <form onSubmit={handleReportMascotSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Nombre temporal *</label>
-                  <input type="text" value={reportName} onChange={(e) => setReportName(e.target.value)} placeholder="Ej. Blanquita, Orejas" required className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 focus:ring-1 focus:ring-rose-600 bg-slate-50" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Ubicación *</label>
-                  <input type="text" value={reportLocation} onChange={(e) => setReportLocation(e.target.value)} placeholder="Ej. Detrás del laboratorio" required className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 focus:ring-1 focus:ring-rose-600 bg-slate-50" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Especie</label>
-                  <select value={reportSpecies} onChange={(e) => setReportSpecies(e.target.value as 'dog' | 'cat')} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50">
-                    <option value="dog">🐕 Perro</option>
-                    <option value="cat">🐈 Gato</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Género</label>
-                  <select value={reportGender} onChange={(e) => setReportGender(e.target.value as 'male' | 'female' | 'group')} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50">
-                    <option value="male">♂️ Macho</option>
-                    <option value="female">♀️ Hembra</option>
-                    <option value="group">👥 Grupo</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Edad</label>
-                  <input type="text" value={reportAge} onChange={(e) => setReportAge(e.target.value)} placeholder="Ej. Cachorro, 2 años" className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Estado</label>
-                <select value={reportStatus} onChange={(e) => setReportStatus(e.target.value)} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50">
-                  <option value="Avistado recientemente">👀 Avistado recientemente</option>
-                  <option value="Abandonado recientemente">🏠 Abandonado (Buscando hogar)</option>
-                  <option value="Herido / Necesita veterinario">🚑 Herido - Necesita asistencia</option>
-                  <option value="Desnutrido">🍽️ Desnutrido - Requiere alimento</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Descripción *</label>
-                <textarea rows={2} value={reportDescription} onChange={(e) => setReportDescription(e.target.value)} placeholder="Pelaje negro, collar rojo, tímido..." required className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50 resize-none"></textarea>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Historia (Opcional)</label>
-                <textarea rows={3} value={reportStory} onChange={(e) => setReportStory(e.target.value)} placeholder="Más detalles para ayudar..." className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50 resize-none"></textarea>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-2">Foto Representativa</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-                  {REPORT_IMAGE_PRESETS.map((p, idx) => (
-                    <div key={idx} onClick={() => setReportImage(p.url)} className={`relative cursor-pointer rounded-xl overflow-hidden aspect-video border-2 transition-all ${reportImage === p.url ? 'border-rose-600 scale-[1.02] shadow-md' : 'border-slate-200 opacity-70 hover:opacity-100'}`}>
-                      <img src={p.url} alt={p.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-1.5">
-                        <span className="text-[9px] text-white font-bold truncate drop-shadow-xs">{p.name}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = (ev) => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); let w = img.width, h = img.height, max = 1200; if (w > max || h > max) { if (w > h) { h = h * max / w; w = max; } else { w = w * max / h; h = max; } } c.width = w; c.height = h; c.getContext('2d')!.drawImage(img, 0, 0, w, h); setReportImage(c.toDataURL('image/jpeg', 0.7)); }; img.src = ev.target?.result as string; }; r.readAsDataURL(f); }} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-rose-600 file:text-white hover:file:bg-rose-700" />
-                {reportImage && reportImage.startsWith('data:') && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <img src={reportImage} alt="Preview" className="h-10 w-10 rounded object-cover border" />
-                    <button type="button" onClick={() => setReportImage(REPORT_IMAGE_PRESETS[0].url)} className="text-[10px] text-rose-600 font-bold">Usar imagen por defecto</button>
+            {/* Collapsible Report Card */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <button
+                onClick={() => setReportExpanded(!reportExpanded)}
+                className="w-full p-5 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="bg-rose-100 h-9 w-9 rounded-xl flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[20px] text-rose-600">crisis_alert</span>
                   </div>
-                )}
-              </div>
-              {!user && (
-                <div className="border-t border-slate-100 pt-4">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Tu Correo (Opcional)</label>
-                  <input type="email" value={reporterEmail} onChange={(e) => setReporterEmail(e.target.value)} placeholder="alu.estudiante@undc.edu.pe" className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50" />
+                  <div>
+                    <h4 className="font-display font-bold text-xs text-slate-900">Reportar Mascota</h4>
+                    <p className="text-[10px] text-slate-400">¿Viste un animal perdido o herido?</p>
+                  </div>
+                </div>
+                <span className={`material-symbols-outlined text-slate-400 transition-transform duration-300 ${reportExpanded ? 'rotate-180' : ''}`}>
+                  expand_more
+                </span>
+              </button>
+              {reportExpanded && (
+                <div className="px-5 pb-5 border-t border-slate-100 pt-4 animate-fade-in">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 flex items-start gap-2 mb-4">
+                    <span className="material-symbols-outlined text-[16px] mt-0.5 shrink-0">info</span>
+                    <span>Tu reporte creará una publicación en el Muro y registrará la mascota en el sistema.</span>
+                  </div>
+                  <form onSubmit={(e) => {
+                    handleReportMascotSubmit(e);
+                    setReportExpanded(false);
+                  }} className="space-y-3">
+                    <input type="text" value={reportName} onChange={(e) => setReportName(e.target.value)} placeholder="Nombre temporal *" required className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50" />
+                    <input type="text" value={reportLocation} onChange={(e) => setReportLocation(e.target.value)} placeholder="Ubicación en el campus *" required className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50" />
+                    <div className="grid grid-cols-2 gap-2">
+                      <select value={reportSpecies} onChange={(e) => setReportSpecies(e.target.value as 'dog' | 'cat')} className="text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50">
+                        <option value="dog">🐕 Perro</option>
+                        <option value="cat">🐈 Gato</option>
+                      </select>
+                      <select value={reportGender} onChange={(e) => setReportGender(e.target.value as 'male' | 'female' | 'group')} className="text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50">
+                        <option value="male">♂️ Macho</option>
+                        <option value="female">♀️ Hembra</option>
+                        <option value="group">👥 Grupo</option>
+                      </select>
+                    </div>
+                    <select value={reportStatus} onChange={(e) => setReportStatus(e.target.value)} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50">
+                      <option value="Avistado recientemente">👀 Avistado recientemente</option>
+                      <option value="Abandonado recientemente">🏠 Abandonado (Buscando hogar)</option>
+                      <option value="Herido / Necesita veterinario">🚑 Herido - Necesita asistencia</option>
+                      <option value="Desnutrido">🍽️ Desnutrido - Requiere alimento</option>
+                    </select>
+                    <textarea rows={2} value={reportDescription} onChange={(e) => setReportDescription(e.target.value)} placeholder="Describe a la mascota (color, tamaño, señas) *" required className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50 resize-none"></textarea>
+                    <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-rose-600 hover:bg-rose-50 cursor-pointer transition-all text-xs font-bold text-slate-600 hover:text-rose-600">
+                      <span className="material-symbols-outlined text-[18px]">photo_camera</span>
+                      Subir Foto
+                      <input type="file" accept="image/*" onChange={(e) => handleReportImageSelect(e.target.files?.[0] || null)} className="hidden" />
+                    </label>
+                    <button type="submit" className="w-full bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-700 hover:to-rose-600 text-white font-bold text-xs py-2.5 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
+                      <span className="material-symbols-outlined text-[16px]">add_moderator</span>
+                      Registrar Alerta
+                    </button>
+                  </form>
                 </div>
               )}
-              <button type="submit" className="w-full bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-700 hover:to-rose-600 text-white font-bold text-sm py-3 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 mt-4 hover:shadow-lg hover:-translate-y-0.5">
-                <span className="material-symbols-outlined font-bold">add_moderator</span>
-                Registrar Alerta y Publicar
-              </button>
-            </form>
-          </div>
+            </div>
+
         </div>
-      )}
+      </div>
     </div>
   );
 }

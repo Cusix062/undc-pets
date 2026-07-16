@@ -358,7 +358,7 @@ function AppContent() {
         {/* LANDING PAGE */}
         {activeTab === 'inicio' && (
           <LandingPage
-            pets={pets}
+            pets={pets.filter(p => !p.id.startsWith('report_'))}
             blogPosts={blogPosts}
             onNavigate={(tab) => setActiveTab(tab as any)}
             onSelectPet={setSelectedPet}
