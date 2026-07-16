@@ -91,6 +91,26 @@ export interface BlogPost {
   featured?: boolean;
 }
 
+export interface Adoption {
+  id: string;
+  userId?: string;
+  name: string;
+  species: 'dog' | 'cat';
+  gender: 'male' | 'female' | 'group';
+  age: string;
+  description: string;
+  image: string;
+  location: string;
+  contactName: string;
+  contactPhone: string;
+  contactEmail: string;
+  vaccinated: boolean;
+  sterilized: boolean;
+  status: string;
+  timeAgo: string;
+  createdAt: string;
+}
+
 export interface DonationConfig {
   accounts: DonationAccount[];
   yapeNumber: string;

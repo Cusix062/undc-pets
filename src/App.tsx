@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Pet, DonationConfig, PendingDonation, BlogPost } from './types';
+import { Pet, DonationConfig, PendingDonation, BlogPost, Adoption } from './types';
 import { INITIAL_PETS, FAQS, INITIAL_BLOG_POSTS } from './data';
 import { supabase } from './lib/supabase';
 import { AuthProvider, useAuth } from './lib/AuthContext';
@@ -18,6 +18,7 @@ import AuthModal from './components/AuthModal';
 import UserProfile from './components/UserProfile';
 import AdminPanel from './components/AdminPanel';
 import PetBlog from './components/PetBlog';
+import AdoptionPanel from './components/AdoptionPanel';
 import LandingPage from './components/LandingPage';
 
 export default function App() {
@@ -31,8 +32,8 @@ export default function App() {
 function AppContent() {
   const { isAdmin } = useAuth();
 
-  // Tabs: 'directorio' | 'comunidad' | 'donaciones' | 'perfil' | 'faqs' | 'album' | 'blog' | 'admin'
-  const [activeTab, setActiveTab] = useState<'inicio' | 'directorio' | 'comunidad' | 'donaciones' | 'perfil' | 'faqs' | 'album' | 'blog' | 'admin'>('inicio');
+  // Tabs: 'directorio' | 'comunidad' | 'donaciones' | 'perfil' | 'faqs' | 'album' | 'blog' | 'admin' | 'adopciones'
+  const [activeTab, setActiveTab] = useState<'inicio' | 'directorio' | 'comunidad' | 'donaciones' | 'perfil' | 'faqs' | 'album' | 'blog' | 'admin' | 'adopciones'>('inicio');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileUserId, setProfileUserId] = useState<string | undefined>();
   const [authOpen, setAuthOpen] = useState(false);
@@ -225,6 +226,7 @@ function AppContent() {
               { tab: 'inicio' as const, icon: 'home', label: 'Inicio' },
               { tab: 'directorio' as const, icon: 'pets', label: 'Mascotas' },
               { tab: 'comunidad' as const, icon: 'forum', label: 'Comunidad' },
+              { tab: 'adopciones' as const, icon: 'crowdsource', label: 'Adopciones' },
               { tab: 'album' as const, icon: 'photo_library', label: 'Álbum' },
               { tab: 'blog' as const, icon: 'newspaper', label: 'Blog' },
               ...(isAdmin ? [{ tab: 'admin' as const, icon: 'admin_panel_settings', label: 'Panel' }] : []),
@@ -308,6 +310,7 @@ function AppContent() {
                 { tab: 'inicio' as const, icon: 'home', label: 'Inicio' },
                 { tab: 'directorio' as const, icon: 'pets', label: 'Mascotas' },
                 { tab: 'comunidad' as const, icon: 'forum', label: 'Comunidad' },
+                { tab: 'adopciones' as const, icon: 'crowdsource', label: 'Adopciones' },
                 { tab: 'album' as const, icon: 'photo_library', label: 'Álbum' },
                 { tab: 'blog' as const, icon: 'newspaper', label: 'Blog' },
                 { tab: 'faqs' as const, icon: 'help', label: 'FAQ' },
@@ -701,6 +704,11 @@ function AppContent() {
               </button>
             </div>
           </div>
+        )}
+
+        {/* ADOPCIONES VIEW */}
+        {activeTab === 'adopciones' && (
+          <AdoptionPanel onShowNotification={triggerNotification} />
         )}
 
         {/* ADMIN VIEW */}
