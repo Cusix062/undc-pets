@@ -335,27 +335,27 @@ function DonacionesPanel({ onShowNotification, onConfigChanged, donationConfig }
   const [celebrationVerify, setCelebrationVerify] = useState<{ title: string; targetAmount: number; amount: number } | null>(null);
   const [localConfig, setLocalConfig] = useState<DonationConfig | null>(null);
 
-  // Fresh data from Supabase takes priority; fall back to prop
-  const config = localConfig || donationConfig;
+  // Use prop if available (reactive), otherwise load from Supabase
+  const config = donationConfig || localConfig;
+  const pendingCount = (config.pendingDonations || []).filter(pd => !pd.verified).length;
 
-  // Always reload from Supabase when this panel opens (ensures fresh data)
   useEffect(() => {
-    const load = async () => {
-      try {
-        const { data } = await supabase.from('donation_config').select('*').eq('id', 'main').single();
-        if (data) setLocalConfig(data.data as DonationConfig);
-      } catch { /* ignore */ }
-    };
-    load();
-  }, []);
-
-  // When the prop changes (real-time / onConfigChanged), sync to local state
-  useEffect(() => {
-    if (donationConfig) setLocalConfig(donationConfig);
+    if (!donationConfig) {
+      const load = async () => {
+        try {
+          const { data } = await supabase.from('donation_config').select('*').limit(1);
+          if (data && data.length > 0) setLocalConfig(data[0].data as DonationConfig);
+          else setLocalConfig(getDefaultConfig());
+        } catch {
+          setLocalConfig(getDefaultConfig());
+        }
+      };
+      load();
+    }
   }, [donationConfig]);
 
   const saveConfig = async (newConfig: DonationConfig) => {
-    setLocalConfig(newConfig);
+    if (!donationConfig) setLocalConfig(newConfig);
     if (onConfigChanged) onConfigChanged(newConfig);
     onShowNotification('Configuración de donaciones actualizada');
   };
@@ -376,8 +376,6 @@ function DonacionesPanel({ onShowNotification, onConfigChanged, donationConfig }
     ],
     pendingDonations: [],
   });
-
-  const pendingCount = (config.pendingDonations || []).filter(pd => !pd.verified).length;
 
   return (
     <div className="space-y-4">

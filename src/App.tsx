@@ -101,11 +101,12 @@ function AppContent() {
   // Load pets and donation config from Supabase on mount
   useEffect(() => {
     const load = async () => {
-      const [petsRes, configRes, blogRes] = await Promise.all([
+      // Use allSettled so one failing query doesn't break the others
+      const [petsRes, configRes, blogRes] = await Promise.allSettled([
         supabase.from('pets').select('*'),
-        supabase.from('donation_config').select('*').eq('id', 'main').single(),
+        supabase.from('donation_config').select('*').limit(1),
         supabase.from('blog_posts').select('*').order('created_at', { ascending: false }),
-      ]);
+      ]).then(results => results.map(r => r.status === 'fulfilled' ? r.value : { data: null, error: r.reason }));
       if (petsRes.data && petsRes.data.length > 0) {
         const loaded = petsRes.data.map((r: any) => r.data as Pet);
         setPets(loaded);
@@ -118,8 +119,8 @@ function AppContent() {
           setPets(INITIAL_PETS);
         }
       }
-      if (configRes.data) {
-        const cfg = configRes.data.data as DonationConfig;
+      if (configRes.data && configRes.data.length > 0) {
+        const cfg = configRes.data[0].data as DonationConfig;
         setDonationConfig(cfg);
         localStorage.setItem('undc_donation_config', JSON.stringify(cfg));
       } else {
@@ -138,7 +139,20 @@ function AppContent() {
     load();
   }, []);
 
-  // Realtime: sync donation_config changes across tabs/devices
+  // Sync donation_config across tabs in the same browser (localStorage storage event)
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'undc_donation_config' && e.newValue) {
+        try {
+          setDonationConfig(JSON.parse(e.newValue));
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  // Realtime: sync donation_config changes across devices
   useEffect(() => {
     const channel = supabase.channel('donation_config_realtime')
       .on('postgres_changes',
@@ -158,8 +172,8 @@ function AppContent() {
   // Ensure default donation_config row exists in Supabase (so subsequent writes are UPDATEs, not INSERTs)
   useEffect(() => {
     const seed = async () => {
-      const { data } = await supabase.from('donation_config').select('id').eq('id', 'main').maybeSingle();
-      if (!data) {
+      const { data } = await supabase.from('donation_config').select('id').limit(1);
+      if (!data || data.length === 0) {
         await supabase.from('donation_config').upsert({ id: 'main', data: donationConfig as any }).catch(() => {});
       }
     };
