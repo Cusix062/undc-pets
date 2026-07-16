@@ -37,6 +37,10 @@ function AppContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileUserId, setProfileUserId] = useState<string | undefined>();
   const [authOpen, setAuthOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    const stored = localStorage.getItem('undc_dark_mode');
+    return stored === 'true';
+  });
   
   // Data States
   const [pets, setPets] = useState<Pet[]>([]);
@@ -137,6 +141,16 @@ function AppContent() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
+  // Sync dark mode to document element
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('undc_dark_mode', isDark ? 'true' : 'false');
+  }, [isDark]);
+
   // Filters state (Directory)
   const [searchQuery, setSearchQuery] = useState('');
   const [speciesFilter, setSpeciesFilter] = useState<'all' | 'dog' | 'cat'>('all');
@@ -179,9 +193,10 @@ function AppContent() {
   };
 
   // Handle full config updates from AdminPanel
-  const handleConfigChanged = (newConfig: DonationConfig) => {
+  const handleConfigChanged = async (newConfig: DonationConfig) => {
     setDonationConfig(newConfig);
     localStorage.setItem('undc_donation_config', JSON.stringify(newConfig));
+    await supabase.from('donation_config').upsert({ id: 'main', data: newConfig as any }).catch(() => {});
   };
 
   // Process adoption request trigger
@@ -199,11 +214,11 @@ function AppContent() {
   });
 
   return (
-    <div id="app-root-container" className="min-h-screen flex flex-col font-sans text-[#121c28]">
+    <div id="app-root-container" className="min-h-screen flex flex-col font-sans text-[#121c28] dark:bg-slate-900 dark:text-slate-100">
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onNotification={(msg) => {}} />
       
       {/* Header Navigation Bar */}
-      <header className="sticky top-0 bg-white/90 backdrop-blur-lg border-b border-slate-100/60 z-40 transition-shadow">
+      <header className="sticky top-0 bg-white/90 backdrop-blur-lg border-b border-slate-100/60 z-40 transition-shadow dark:bg-slate-900/90 dark:border-slate-700/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 md:h-16 flex items-center justify-between gap-2">
 
           {/* Logo Brand */}
@@ -229,19 +244,20 @@ function AppContent() {
               { tab: 'adopciones' as const, icon: 'crowdsource', label: 'Adopciones' },
               { tab: 'album' as const, icon: 'photo_library', label: 'Álbum' },
               { tab: 'blog' as const, icon: 'newspaper', label: 'Blog' },
+              { tab: 'faqs' as const, icon: 'help', label: 'FAQ' },
               ...(isAdmin ? [{ tab: 'admin' as const, icon: 'admin_panel_settings', label: 'Panel' }] : []),
             ].map(item => (
               <button
                 key={item.tab}
                 onClick={() => setActiveTab(item.tab)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   activeTab === item.tab
                     ? 'bg-[#00346f] text-white shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800'
                 }`}
               >
                 <span className="material-symbols-outlined text-[16px]">{item.icon}</span>
-                {item.label}
+                <span className="hidden lg:inline">{item.label}</span>
               </button>
             ))}
           </nav>
@@ -257,23 +273,26 @@ function AppContent() {
             </button>
 
             <button
-              onClick={() => setActiveTab('faqs')}
-              className={`hidden md:flex items-center justify-center h-9 w-9 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'faqs'
-                  ? 'bg-[#eef4ff] text-[#00346f]'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
-              }`}
-              title="Preguntas frecuentes"
+              onClick={() => setIsDark(!isDark)}
+              className="hidden md:flex items-center justify-center h-9 w-9 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-all"
+              title={isDark ? 'Modo claro' : 'Modo oscuro'}
             >
-              <span className="material-symbols-outlined text-[18px]">help</span>
+              <span className="material-symbols-outlined text-[20px]">{isDark ? 'light_mode' : 'dark_mode'}</span>
             </button>
 
+            <button
+              onClick={() => setIsDark(!isDark)}
+              className="md:hidden flex items-center justify-center h-9 w-9 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-all"
+              title={isDark ? 'Modo claro' : 'Modo oscuro'}
+            >
+              <span className="material-symbols-outlined text-[20px]">{isDark ? 'light_mode' : 'dark_mode'}</span>
+            </button>
             <button
               onClick={() => setActiveTab('perfil')}
               className={`flex items-center justify-center h-9 w-9 rounded-xl transition-all ${
                 activeTab === 'perfil'
                   ? 'bg-[#eef4ff] text-[#00346f]'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800'
               }`}
               title="Mi Perfil"
             >
@@ -304,7 +323,7 @@ function AppContent() {
             className="md:hidden fixed inset-0 top-14 z-40"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="md:hidden fixed inset-x-0 top-14 z-50 bg-white/95 backdrop-blur-lg border-b border-slate-100 shadow-lg animate-slide-down">
+          <div className="md:hidden fixed inset-x-0 top-14 z-50 bg-white/95 backdrop-blur-lg border-b border-slate-100 shadow-lg animate-slide-down dark:bg-slate-900/95 dark:border-slate-700">
             <nav className="flex flex-col py-2 px-3 gap-0.5">
               {[
                 { tab: 'inicio' as const, icon: 'home', label: 'Inicio' },
@@ -322,14 +341,14 @@ function AppContent() {
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
                     activeTab === item.tab
                       ? 'bg-[#00346f] text-white shadow-xs'
-                      : 'text-slate-600 hover:bg-slate-50'
+                      : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
                   }`}
                 >
                   <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
                   {item.label}
                 </button>
               ))}
-              <div className="border-t border-slate-100 mt-2 pt-2 space-y-0.5">
+              <div className="border-t border-slate-100 dark:border-slate-700 mt-2 pt-2 space-y-0.5">
                 <button
                   onClick={() => { setActiveTab('donaciones'); setMobileMenuOpen(false); }}
                   className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-[#6b3900] bg-[#fc9d41]/10 hover:bg-[#fc9d41]/20 transition-all w-full"
@@ -339,7 +358,7 @@ function AppContent() {
                 </button>
                 <button
                   onClick={() => { setActiveTab('perfil'); setMobileMenuOpen(false); }}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all w-full"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800 transition-all w-full"
                 >
                   <span className="material-symbols-outlined text-[18px]">person</span>
                   Mi Perfil
@@ -373,7 +392,7 @@ function AppContent() {
           <div className="space-y-6 animate-fade-in-up">
 
             {/* Search and Filters Layout */}
-            <div className="bg-white border border-slate-100 rounded-2xl shadow-xs p-5 space-y-4">
+            <div className="bg-white border border-slate-100 rounded-2xl shadow-xs p-5 space-y-4 dark:bg-slate-800 dark:border-slate-700">
               <div className="flex flex-col md:flex-row gap-4">
                 
                 {/* Search query input */}
@@ -386,7 +405,7 @@ function AppContent() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Buscar mascota por nombre, zona del campus o etiquetas (ej. Juguetón)..."
-                    className="w-full text-xs pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary rounded-xl"
+                    className="w-full text-xs pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary rounded-xl dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:placeholder:text-slate-400"
                   />
                 </div>
 
@@ -394,11 +413,11 @@ function AppContent() {
                 <div className="flex flex-wrap gap-2">
                   
                   {/* Species Filter buttons */}
-                  <div className="flex bg-slate-100 p-1 rounded-xl">
+                  <div className="flex bg-slate-100 p-1 rounded-xl dark:bg-slate-700">
                     <button
                       onClick={() => setSpeciesFilter('all')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        speciesFilter === 'all' ? 'bg-white text-slate-800 shadow-3xs' : 'text-slate-500 hover:text-slate-800'
+                        speciesFilter === 'all' ? 'bg-white text-slate-800 shadow-3xs dark:bg-slate-600 dark:text-slate-100' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                       }`}
                     >
                       Todos
@@ -406,7 +425,7 @@ function AppContent() {
                     <button
                       onClick={() => setSpeciesFilter('dog')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                        speciesFilter === 'dog' ? 'bg-[#00346f] text-white shadow-3xs' : 'text-slate-500 hover:text-slate-800'
+                        speciesFilter === 'dog' ? 'bg-[#00346f] text-white shadow-3xs' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                       }`}
                     >
                       <span className="material-symbols-outlined text-[14px]">pets</span>
@@ -415,7 +434,7 @@ function AppContent() {
                     <button
                       onClick={() => setSpeciesFilter('cat')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                        speciesFilter === 'cat' ? 'bg-[#00346f] text-white shadow-3xs' : 'text-slate-500 hover:text-slate-800'
+                        speciesFilter === 'cat' ? 'bg-[#00346f] text-white shadow-3xs' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                       }`}
                     >
                       <span className="text-[14px]">🐈</span>
@@ -427,7 +446,7 @@ function AppContent() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="text-xs font-bold px-3 py-2 bg-slate-50 border border-slate-200 focus:outline-none focus:border-primary rounded-xl"
+                    className="text-xs font-bold px-3 py-2 bg-slate-50 border border-slate-200 focus:outline-none focus:border-primary rounded-xl dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"
                   >
                     <option value="all">Cualquier Estado</option>
                     <option value="Buscando hogar">Buscando hogar</option>
@@ -441,14 +460,14 @@ function AppContent() {
               </div>
 
               {/* Quick statistics tag indicators */}
-              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-50 text-[11px] font-bold text-slate-500">
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-50 dark:border-slate-700 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                 <span className="material-symbols-outlined text-slate-400 text-[16px]">info</span>
                 <span>Filtros rápidos:</span>
                 {['Juguetón', 'Vacunado', 'Esterilizada', 'Cachorros', 'Tranquilo'].map((tag) => (
                   <button
                     key={tag}
                     onClick={() => setSearchQuery(tag)}
-                    className="bg-slate-50 hover:bg-[#eef4ff] text-slate-600 hover:text-[#00346f] border border-slate-200 px-2.5 py-1 rounded-lg transition-all"
+                    className="bg-slate-50 hover:bg-[#eef4ff] text-slate-600 hover:text-[#00346f] border border-slate-200 px-2.5 py-1 rounded-lg transition-all dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 dark:hover:text-white dark:border-slate-600"
                   >
                     #{tag}
                   </button>
@@ -480,10 +499,10 @@ function AppContent() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center space-y-3">
-                <span className="material-symbols-outlined text-[48px] text-slate-300">sentiment_dissatisfied</span>
-                <p className="font-display font-bold text-slate-800 text-sm">No encontramos mascotas con tu filtro</p>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+              <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center space-y-3 dark:bg-slate-800 dark:border-slate-700">
+                <span className="material-symbols-outlined text-[48px] text-slate-300 dark:text-slate-500">sentiment_dissatisfied</span>
+                <p className="font-display font-bold text-slate-800 text-sm dark:text-slate-200">No encontramos mascotas con tu filtro</p>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed dark:text-slate-400">
                   Prueba cambiando el término de búsqueda o el filtro de especies para conocer a nuestros amigos.
                 </p>
                 <button
@@ -501,7 +520,7 @@ function AppContent() {
 
             {/* Blog / Consejos section on homepage */}
             {blogPosts.length > 0 && (
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-5">
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-5 dark:bg-slate-800 dark:border-slate-700">
                 <PetBlog posts={blogPosts} compact />
               </div>
             )}
@@ -512,58 +531,58 @@ function AppContent() {
         {/* Edit Pet Modal */}
         {editingPet && isAdmin && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50" onClick={() => setEditingPet(null)}>
-            <div className="bg-white rounded-3xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-              <h3 className="font-display font-bold text-lg">Editar Mascota</h3>
+            <div className="bg-white rounded-3xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto dark:bg-slate-800 dark:border dark:border-slate-700" onClick={e => e.stopPropagation()}>
+              <h3 className="font-display font-bold text-lg dark:text-slate-100">Editar Mascota</h3>
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="col-span-2">
-                  <label className="block font-bold text-slate-600 mb-1">Nombre</label>
-                  <input value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200" />
+                  <label className="block font-bold text-slate-600 mb-1 dark:text-slate-400">Nombre</label>
+                  <input value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" />
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1">Especie</label>
-                  <select value={editForm.species || 'dog'} onChange={e => setEditForm({...editForm, species: e.target.value as 'dog' | 'cat'})} className="w-full p-2 rounded-xl border border-slate-200">
+                  <label className="block font-bold text-slate-600 mb-1 dark:text-slate-400">Especie</label>
+                  <select value={editForm.species || 'dog'} onChange={e => setEditForm({...editForm, species: e.target.value as 'dog' | 'cat'})} className="w-full p-2 rounded-xl border border-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200">
                     <option value="dog">Perro</option><option value="cat">Gato</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1">Género</label>
-                  <select value={editForm.gender || 'male'} onChange={e => setEditForm({...editForm, gender: e.target.value as 'male' | 'female' | 'group'})} className="w-full p-2 rounded-xl border border-slate-200">
+                  <label className="block font-bold text-slate-600 mb-1 dark:text-slate-400">Género</label>
+                  <select value={editForm.gender || 'male'} onChange={e => setEditForm({...editForm, gender: e.target.value as 'male' | 'female' | 'group'})} className="w-full p-2 rounded-xl border border-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200">
                     <option value="male">Macho</option><option value="female">Hembra</option><option value="group">Grupo</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1">Edad</label>
-                  <input value={editForm.age || ''} onChange={e => setEditForm({...editForm, age: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200" />
+                  <label className="block font-bold text-slate-600 mb-1 dark:text-slate-400">Edad</label>
+                  <input value={editForm.age || ''} onChange={e => setEditForm({...editForm, age: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" />
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1">Estado</label>
-                  <input value={editForm.status || ''} onChange={e => setEditForm({...editForm, status: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200" />
+                  <label className="block font-bold text-slate-600 mb-1 dark:text-slate-400">Estado</label>
+                  <input value={editForm.status || ''} onChange={e => setEditForm({...editForm, status: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" />
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1">Tipo</label>
-                  <select value={editForm.statusType || 'info'} onChange={e => setEditForm({...editForm, statusType: e.target.value as any})} className="w-full p-2 rounded-xl border border-slate-200">
+                  <label className="block font-bold text-slate-600 mb-1 dark:text-slate-400">Tipo</label>
+                  <select value={editForm.statusType || 'info'} onChange={e => setEditForm({...editForm, statusType: e.target.value as any})} className="w-full p-2 rounded-xl border border-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200">
                     <option value="success">success</option><option value="warning">warning</option><option value="error">error</option><option value="info">info</option><option value="primary">primary</option>
                   </select>
                 </div>
                 <div className="col-span-2">
-                  <label className="block font-bold text-slate-600 mb-1">Tags (separados por coma)</label>
-                  <input value={(editForm.tags || []).join(', ')} onChange={e => setEditForm({...editForm, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean)})} className="w-full p-2 rounded-xl border border-slate-200" />
+                  <label className="block font-bold text-slate-600 mb-1 dark:text-slate-400">Tags (separados por coma)</label>
+                  <input value={(editForm.tags || []).join(', ')} onChange={e => setEditForm({...editForm, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean)})} className="w-full p-2 rounded-xl border border-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block font-bold text-slate-600 mb-1">Ubicación</label>
-                  <input value={editForm.location || ''} onChange={e => setEditForm({...editForm, location: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200" />
+                  <label className="block font-bold text-slate-600 mb-1 dark:text-slate-400">Ubicación</label>
+                  <input value={editForm.location || ''} onChange={e => setEditForm({...editForm, location: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block font-bold text-slate-600 mb-1">Descripción</label>
-                  <textarea rows={2} value={editForm.description || ''} onChange={e => setEditForm({...editForm, description: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200" />
+                  <label className="block font-bold text-slate-600 mb-1 dark:text-slate-400">Descripción</label>
+                  <textarea rows={2} value={editForm.description || ''} onChange={e => setEditForm({...editForm, description: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block font-bold text-slate-600 mb-1">Historia</label>
-                  <textarea rows={3} value={editForm.story || ''} onChange={e => setEditForm({...editForm, story: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200" />
+                  <label className="block font-bold text-slate-600 mb-1 dark:text-slate-400">Historia</label>
+                  <textarea rows={3} value={editForm.story || ''} onChange={e => setEditForm({...editForm, story: e.target.value})} className="w-full p-2 rounded-xl border border-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" />
                 </div>
               </div>
               <div className="flex gap-2 pt-2">
-                <button onClick={() => setEditingPet(null)} className="flex-1 bg-slate-100 text-slate-700 text-xs font-bold py-2.5 rounded-xl">Cancelar</button>
+                <button onClick={() => setEditingPet(null)} className="flex-1 bg-slate-100 text-slate-700 text-xs font-bold py-2.5 rounded-xl dark:bg-slate-700 dark:text-slate-300">Cancelar</button>
                 <button onClick={async () => {
                   const updated = { ...editingPet, ...editForm } as Pet;
                   setPets(prev => {
@@ -584,12 +603,12 @@ function AppContent() {
         {/* Delete Confirmation */}
         {deletingPet && isAdmin && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50" onClick={() => setDeletingPet(null)}>
-            <div className="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 text-center" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 text-center dark:bg-slate-800 dark:border dark:border-slate-700" onClick={e => e.stopPropagation()}>
               <span className="material-symbols-outlined text-[48px] text-rose-500">delete_forever</span>
-              <h3 className="font-display font-bold text-lg text-slate-900">¿Eliminar {deletingPet.name}?</h3>
-              <p className="text-xs text-slate-500">Esta acción no se puede deshacer. La mascota se eliminará del directorio.</p>
+              <h3 className="font-display font-bold text-lg text-slate-900 dark:text-slate-100">¿Eliminar {deletingPet.name}?</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Esta acción no se puede deshacer. La mascota se eliminará del directorio.</p>
               <div className="flex gap-2 pt-2">
-                <button onClick={() => setDeletingPet(null)} className="flex-1 bg-slate-100 text-slate-700 text-xs font-bold py-2.5 rounded-xl">Cancelar</button>
+                <button onClick={() => setDeletingPet(null)} className="flex-1 bg-slate-100 text-slate-700 text-xs font-bold py-2.5 rounded-xl dark:bg-slate-700 dark:text-slate-300">Cancelar</button>
                 <button onClick={async () => {
                   setPets(prev => {
                     const updated = prev.filter(p => p.id !== deletingPet.id);
@@ -653,8 +672,8 @@ function AppContent() {
           <div className="max-w-3xl mx-auto space-y-6 animate-fade-in-up">
             <div className="text-center space-y-2 mb-8">
               <span className="material-symbols-outlined text-[48px] text-[#fc9d41] font-bold">help_center</span>
-              <h2 className="font-display font-extrabold text-2xl md:text-3xl text-slate-900">Preguntas Frecuentes</h2>
-              <p className="text-xs text-slate-500 max-w-md mx-auto">
+              <h2 className="font-display font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-slate-100">Preguntas Frecuentes</h2>
+              <p className="text-xs text-slate-500 max-w-md mx-auto dark:text-slate-400">
                 ¿Tienes dudas sobre cómo funciona la iniciativa de bienestar animal en la Universidad Nacional de Cañete? Encuentra tus respuestas inmediatas aquí:
               </p>
             </div>
@@ -665,13 +684,13 @@ function AppContent() {
                 return (
                   <div 
                     key={faq.id}
-                    className="bg-white border border-slate-100 rounded-2xl overflow-hidden transition-all shadow-3xs"
+                    className="bg-white border border-slate-100 rounded-2xl overflow-hidden transition-all shadow-3xs dark:bg-slate-800 dark:border-slate-700"
                   >
                     <button
                       onClick={() => setActiveFaq(isOpen ? null : faq.id)}
-                      className="w-full flex justify-between items-center px-6 py-4 text-left focus:outline-none hover:bg-slate-50/50"
+                      className="w-full flex justify-between items-center px-6 py-4 text-left focus:outline-none hover:bg-slate-50/50 dark:hover:bg-slate-700/50"
                     >
-                      <span className="font-display font-bold text-xs md:text-sm text-slate-800">
+                      <span className="font-display font-bold text-xs md:text-sm text-slate-800 dark:text-slate-200">
                         {faq.question}
                       </span>
                       <span className={`material-symbols-outlined transition-transform duration-300 text-slate-400 ${isOpen ? 'rotate-180' : ''}`}>
@@ -679,8 +698,8 @@ function AppContent() {
                       </span>
                     </button>
                     
-                    {isOpen && (
-                      <div className="px-6 pb-4 pt-1 text-xs text-slate-600 leading-relaxed border-t border-slate-50 bg-slate-50/30 animate-fade-in">
+                      {isOpen && (
+                      <div className="px-6 pb-4 pt-1 text-xs text-slate-600 leading-relaxed border-t border-slate-50 bg-slate-50/30 animate-fade-in dark:text-slate-400 dark:border-slate-700 dark:bg-slate-700/30">
                         {faq.answer}
                       </div>
                     )}
@@ -690,10 +709,10 @@ function AppContent() {
             </div>
 
             {/* AI Callout inside FAQs */}
-            <div className="bg-[#eef4ff] rounded-2xl border border-[#dfe9fa] p-6 text-center space-y-3 mt-8">
-              <span className="material-symbols-outlined text-[32px] text-primary">smart_toy</span>
-              <h4 className="font-display font-bold text-slate-900 text-sm">¿Aún tienes dudas? Habla con el Guardián AI</h4>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <div className="bg-[#eef4ff] rounded-2xl border border-[#dfe9fa] p-6 text-center space-y-3 mt-8 dark:bg-slate-800 dark:border-slate-700">
+              <span className="material-symbols-outlined text-[32px] text-primary dark:text-slate-300">smart_toy</span>
+              <h4 className="font-display font-bold text-slate-900 text-sm dark:text-slate-100">¿Aún tienes dudas? Habla con el Guardián AI</h4>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto dark:text-slate-400">
                 Nuestro asistente virtual de Inteligencia Artificial está disponible 24/7 para responder preguntas detalladas sobre los perritos y gatitos.
               </p>
               <button
@@ -772,7 +791,7 @@ function AppContent() {
 
       {/* Floating Interactive Toast Alert */}
       {notification && (
-        <div className="fixed bottom-6 right-6 bg-slate-900 text-white rounded-2xl px-4 py-3.5 shadow-xl flex items-center gap-3 z-50 animate-slide-up max-w-sm border border-slate-800">
+        <div className="fixed bottom-6 right-6 bg-slate-900 text-white rounded-2xl px-4 py-3.5 shadow-xl flex items-center gap-3 z-50 animate-slide-up max-w-sm border border-slate-800 dark:bg-slate-700 dark:border-slate-600">
           <div className="bg-[#fc9d41] text-[#6b3900] h-7 w-7 rounded-full flex items-center justify-center">
             <span className="material-symbols-outlined text-[16px] font-bold">notifications</span>
           </div>

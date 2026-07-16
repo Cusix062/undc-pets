@@ -363,7 +363,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
 
             {/* Create Post Card - improved */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all hover:shadow-md">
-              <div className="bg-gradient-to-r from-[#eef4ff] to-white px-5 pt-5 pb-3 border-b border-slate-50">
+              <div className="bg-gradient-to-r from-[#eef4ff] to-white px-5 pt-5 pb-3 border-b border-slate-50 dark:from-slate-700 dark:to-slate-800 dark:border-slate-700">
                 <div className="flex gap-3 items-center">
                   {user?.user_metadata?.avatar_url ? (
                     <img src={user.user_metadata.avatar_url} alt="" className="h-11 w-11 rounded-full border-2 border-white shadow-sm" referrerPolicy="no-referrer" />
@@ -467,7 +467,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
                           </div>
                         </div>
                         <div className="px-5 pb-3">
-                          <div className="bg-rose-50/70 rounded-xl p-4 border border-rose-100">
+                          <div className="bg-rose-50/70 rounded-xl p-4 border border-rose-100 dark:bg-rose-950/40 dark:border-rose-900/50">
                             <p className="text-slate-800 text-sm leading-relaxed whitespace-pre-line">{post.content}</p>
                           </div>
                           {post.image && (
@@ -711,7 +711,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
           <div className="space-y-6">
 
             {/* Community Tips */}
-            <div className="bg-gradient-to-br from-[#eef4ff] to-white rounded-2xl border border-[#dfe9fa] p-5 space-y-4 shadow-sm">
+            <div className="bg-gradient-to-br from-[#eef4ff] to-white rounded-2xl border border-[#dfe9fa] p-5 space-y-4 shadow-sm dark:from-slate-700 dark:to-slate-800 dark:border-slate-600">
               <h3 className="font-display font-bold text-sm text-[#00346f] flex items-center gap-2">
                 <span className="bg-[#00346f] text-white h-6 w-6 rounded-lg flex items-center justify-center">
                   <span className="material-symbols-outlined text-[14px]">campaign</span>
@@ -748,7 +748,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
             </div>
 
             {/* Volunteer CTA */}
-            <div className="bg-gradient-to-br from-white to-amber-50 rounded-2xl border border-amber-100 p-5 shadow-sm text-center space-y-4">
+            <div className="bg-gradient-to-br from-white to-amber-50 rounded-2xl border border-amber-100 p-5 shadow-sm text-center space-y-4 dark:from-slate-800 dark:to-slate-700 dark:border-amber-900/50">
               <div className="bg-amber-100 w-14 h-14 rounded-full flex items-center justify-center mx-auto">
                 <span className="material-symbols-outlined text-[32px] text-amber-600">volunteer_activism</span>
               </div>
@@ -809,7 +809,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
               </button>
               {reportExpanded && (
                 <div className="px-5 pb-5 border-t border-slate-100 pt-4 animate-fade-in">
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 flex items-start gap-2 mb-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 flex items-start gap-2 mb-4 dark:bg-amber-900/40 dark:border-amber-700 dark:text-amber-300">
                     <span className="material-symbols-outlined text-[16px] mt-0.5 shrink-0">info</span>
                     <span>Tu reporte creará una publicación en el Muro y registrará la mascota en el sistema.</span>
                   </div>

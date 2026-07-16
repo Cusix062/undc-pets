@@ -114,7 +114,7 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
       </section>
 
       {/* ===== STATS SECTION ===== */}
-      <section className="bg-white border-b border-slate-100">
+      <section className="bg-white border-b border-slate-100 dark:bg-slate-800 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
@@ -127,7 +127,7 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
                 <div className={`h-12 w-12 ${stat.bg} rounded-2xl flex items-center justify-center mx-auto`}>
                   <span className={`material-symbols-outlined text-[24px] ${stat.color}`}>{stat.icon}</span>
                 </div>
-                <p className="font-display font-extrabold text-2xl md:text-3xl text-slate-900">{stat.value}</p>
+                <p className="font-display font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-slate-100">{stat.value}</p>
                 <p className="text-xs text-slate-500 font-semibold">{stat.label}</p>
               </div>
             ))}
@@ -136,24 +136,24 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
       </section>
 
       {/* ===== CÓMO AYUDAR SECTION ===== */}
-      <section className="bg-gradient-to-b from-white to-[#f8f9ff] py-16 md:py-20 px-4">
+      <section className="bg-gradient-to-b from-white to-[#f8f9ff] py-16 md:py-20 px-4 dark:from-slate-800 dark:to-slate-900">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 space-y-3">
             <span className="inline-block bg-[#00346f]/10 text-[#00346f] font-bold text-xs px-3.5 py-1.5 rounded-full uppercase tracking-wider">Cómo ayudar</span>
-            <h2 className="font-display font-extrabold text-2xl md:text-3xl text-slate-900">Formas de Contribuir</h2>
+            <h2 className="font-display font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-slate-100">Formas de Contribuir</h2>
             <p className="text-sm text-slate-500 max-w-xl mx-auto">Hay muchas maneras en las que puedes marcar la diferencia en la vida de nuestras mascotas comunitarias.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { icon: 'volunteer_activism', title: 'Donar', desc: 'Contribuye con alimento, medicinas o una donación económica para el cuidado de los animalitos del campus.', color: 'bg-[#00346f]', action: () => onNavigate('donaciones'), btnText: 'Ver Campañas' },
-              { icon: 'pets', title: 'Adoptar', desc: 'Dale un hogar temporal o definitivo a una de nuestras mascotas. El amor que recibirás será infinito.', color: 'bg-[#fc9d41]', action: () => onNavigate('directorio'), btnText: 'Ver Mascotas' },
+              { icon: 'pets', title: 'Adoptar', desc: 'Dale un hogar temporal o definitivo a una de nuestras mascotas. El amor que recibirás será infinito.', color: 'bg-[#fc9d41]', action: () => onNavigate('adopciones'), btnText: 'Ver Adopciones' },
               { icon: 'forum', title: 'Reportar', desc: '¿Viste una mascota en situación de riesgo? Reporta en la comunidad para que podamos actuar rápido.', color: 'bg-rose-600', action: () => onNavigate('comunidad'), btnText: 'Ir a Comunidad' },
             ].map(card => (
-              <div key={card.title} className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 text-center space-y-4 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <div key={card.title} className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 text-center space-y-4 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 dark:bg-slate-800 dark:border-slate-700">
                 <div className={`${card.color} h-14 w-14 rounded-2xl flex items-center justify-center mx-auto shadow-md`}>
                   <span className="material-symbols-outlined text-[28px] text-white">{card.icon}</span>
                 </div>
-                <h3 className="font-display font-bold text-lg text-slate-900">{card.title}</h3>
+                <h3 className="font-display font-bold text-lg text-slate-900 dark:text-slate-100">{card.title}</h3>
                 <p className="text-xs text-slate-500 leading-relaxed">{card.desc}</p>
                 <button onClick={card.action} className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all">
                   {card.btnText}
@@ -166,12 +166,12 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
 
       {/* ===== MASCOTAS DESTACADAS ===== */}
       {pets.length > 0 && (
-        <section className="bg-[#eef4ff] py-16 md:py-20 px-4">
+        <section className="bg-[#eef4ff] py-16 md:py-20 px-4 dark:bg-slate-800/60">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-end justify-between mb-10">
               <div className="space-y-2">
                 <span className="inline-block bg-[#fc9d41]/15 text-[#8f4e00] font-bold text-xs px-3.5 py-1.5 rounded-full uppercase tracking-wider">Conócelos</span>
-                <h2 className="font-display font-extrabold text-2xl md:text-3xl text-slate-900">Mascotas del Campus</h2>
+                <h2 className="font-display font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-slate-100">Mascotas del Campus</h2>
               </div>
               <button onClick={() => onNavigate('directorio')} className="hidden md:flex items-center gap-1.5 text-[#00346f] font-bold text-xs hover:underline">
                 Ver todas <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
@@ -182,7 +182,7 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
                 <button
                   key={pet.id}
                   onClick={() => onSelectPet(pet)}
-                  className="group bg-white rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 text-left shadow-md border-2 border-[#00346f]/10"
+                  className="group bg-white rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 text-left shadow-md border-2 border-[#00346f]/10 dark:bg-slate-800 dark:border-slate-600"
                 >
                   <div className="h-40 md:h-48 flex items-center justify-center p-4 relative bg-gradient-to-b from-[#00346f]/5 to-white">
                     <img src={pet.image} alt={pet.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
@@ -197,7 +197,7 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
                   </div>
                   <div className="p-3 space-y-1 border-t border-[#00346f]/10">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-display font-bold text-sm text-slate-900">{pet.name}</h3>
+                      <h3 className="font-display font-bold text-sm text-slate-900 dark:text-slate-100">{pet.name}</h3>
                       <span className="material-symbols-outlined text-[14px] text-[#00346f]/40">{speciesIcons[pet.species] || 'pets'}</span>
                     </div>
                     <p className="text-[10px] text-slate-500">{pet.age} • {pet.location}</p>
@@ -221,20 +221,20 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
 
       {/* ===== BLOG PREVIEW ===== */}
       {blogPosts.length > 0 && (
-        <section className="bg-white py-16 md:py-20 px-4">
+        <section className="bg-white py-16 md:py-20 px-4 dark:bg-slate-800">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-end justify-between mb-10">
               <div className="space-y-2">
                 <span className="inline-block bg-[#00346f]/10 text-[#00346f] font-bold text-xs px-3.5 py-1.5 rounded-full uppercase tracking-wider">Blog</span>
-                <h2 className="font-display font-extrabold text-2xl md:text-3xl text-slate-900">Noticias y Consejos</h2>
+                <h2 className="font-display font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-slate-100">Noticias y Consejos</h2>
               </div>
               <button onClick={() => onNavigate('blog')} className="hidden md:flex items-center gap-1.5 text-[#00346f] font-bold text-xs hover:underline">
                 Ver blog <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
               </button>
             </div>
             <div className="space-y-4">
-              {blogPosts.slice(0, 3).map(post => (
-                <button key={post.id} onClick={() => onNavigate('blog')} className="flex flex-col md:flex-row bg-white rounded-2xl border border-slate-100 overflow-hidden text-left hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group w-full shadow-sm">
+                {blogPosts.slice(0, 3).map(post => (
+                  <button key={post.id} onClick={() => onNavigate('blog')} className="flex flex-col md:flex-row bg-white rounded-2xl border border-slate-100 overflow-hidden text-left hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group w-full shadow-sm dark:bg-slate-800/80 dark:border-slate-700">
                   {post.image && (
                     <div className="md:w-56 md:h-44 shrink-0 bg-slate-50 flex items-center justify-center overflow-hidden">
                       <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
@@ -248,7 +248,7 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
                       <span className="material-symbols-outlined text-[12px]">person</span>
                       {post.author}
                     </div>
-                    <h3 className="font-display font-bold text-sm md:text-base text-slate-900 group-hover:text-[#00346f] transition-colors">{post.title}</h3>
+                    <h3 className="font-display font-bold text-sm md:text-base text-slate-900 group-hover:text-[#00346f] transition-colors dark:text-slate-100">{post.title}</h3>
                     <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{post.excerpt}</p>
                   </div>
                 </button>

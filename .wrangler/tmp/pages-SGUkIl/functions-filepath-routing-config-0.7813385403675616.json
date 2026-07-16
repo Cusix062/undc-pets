@@ -1,0 +1,13 @@
+{
+  "routes": [
+    {
+      "routePath": "/charge",
+      "mountPath": "/",
+      "method": "",
+      "module": [
+        "charge.js:onRequest"
+      ]
+    }
+  ],
+  "baseURL": "/"
+}

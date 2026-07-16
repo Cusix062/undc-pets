@@ -161,10 +161,10 @@ export default function AdoptionPanel({ onShowNotification }: AdoptionPanelProps
             </span>
             <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Buscar por nombre, descripción..." className="w-full text-xs pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/20 rounded-xl" />
           </div>
-          <div className="flex bg-slate-100 p-1 rounded-xl">
-            <button onClick={() => setSpeciesFilter('all')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${speciesFilter === 'all' ? 'bg-white text-slate-800 shadow-3xs' : 'text-slate-500 hover:text-slate-800'}`}>Todos</button>
-            <button onClick={() => setSpeciesFilter('dog')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${speciesFilter === 'dog' ? 'bg-emerald-600 text-white shadow-3xs' : 'text-slate-500 hover:text-slate-800'}`}><span className="material-symbols-outlined text-[14px]">pets</span>Perros</button>
-            <button onClick={() => setSpeciesFilter('cat')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${speciesFilter === 'cat' ? 'bg-emerald-600 text-white shadow-3xs' : 'text-slate-500 hover:text-slate-800'}`}><span className="text-[14px]">🐈</span>Gatos</button>
+          <div className="flex bg-slate-100 p-1 rounded-xl dark:bg-slate-700">
+            <button onClick={() => setSpeciesFilter('all')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${speciesFilter === 'all' ? 'bg-white text-slate-800 shadow-3xs dark:bg-slate-600 dark:text-slate-100' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}>Todos</button>
+            <button onClick={() => setSpeciesFilter('dog')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${speciesFilter === 'dog' ? 'bg-emerald-600 text-white shadow-3xs' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}><span className="material-symbols-outlined text-[14px]">pets</span>Perros</button>
+            <button onClick={() => setSpeciesFilter('cat')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${speciesFilter === 'cat' ? 'bg-emerald-600 text-white shadow-3xs' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}><span className="text-[14px]">🐈</span>Gatos</button>
           </div>
         </div>
         {user && (
@@ -183,7 +183,7 @@ export default function AdoptionPanel({ onShowNotification }: AdoptionPanelProps
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center space-y-3">
-          <div className="bg-emerald-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
+          <div className="bg-emerald-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto dark:bg-emerald-900/50">
             <span className="material-symbols-outlined text-[48px] text-emerald-400">pets</span>
           </div>
           <h3 className="font-display font-bold text-base text-slate-800">{searchQuery || speciesFilter !== 'all' ? 'Sin resultados' : 'No hay mascotas en adopción'}</h3>

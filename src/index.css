@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary: #00346f;
   --color-secondary: #8f4e00;
@@ -33,6 +35,53 @@ body {
   background-color: #f8f9ff;
   color: #121c28;
   -webkit-font-smoothing: antialiased;
+}
+
+.dark body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Dark mode palette override */
+.dark {
+  --color-slate-50: #0f172a;
+  --color-slate-100: #1e293b;
+  --color-slate-200: #334155;
+  --color-slate-300: #475569;
+  --color-slate-400: #64748b;
+  --color-slate-500: #94a3b8;
+  --color-slate-600: #cbd5e1;
+  --color-slate-700: #e2e8f0;
+  --color-slate-800: #f1f5f9;
+  --color-slate-900: #f8fafc;
+  --color-slate-950: #fdfdfe;
+  --color-surface-container-lowest: #1e293b;
+  --color-surface-container-low: #0f172a;
+  --color-on-surface: #f1f5f9;
+  --color-on-surface-variant: #cbd5e1;
+  --color-outline-variant: #475569;
+  --color-inverse-surface: #f1f5f9;
+}
+
+.dark .bg-white {
+  background-color: #1e293b;
+}
+
+.dark .to-white {
+  --tw-gradient-to: #1e293b;
+}
+
+.dark .from-white {
+  --tw-gradient-from: #1e293b;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.dark .divide-slate-100 > * + * {
+  border-color: #334155;
+}
+
+.dark .ring-white {
+  --tw-ring-color: #1e293b;
 }
 
 h1, h2, h3, h4, h5, h6 {

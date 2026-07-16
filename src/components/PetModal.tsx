@@ -14,7 +14,7 @@ export default function PetModal({ pet, onClose }: PetModalProps) {
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl md:rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl relative animate-scale-up my-2 md:my-8 max-h-[95vh] md:max-h-[90vh] flex flex-col md:flex-row"
+        className="bg-white rounded-2xl md:rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl relative animate-scale-up my-2 md:my-8 max-h-[95vh] md:max-h-[90vh] flex flex-col md:flex-row dark:bg-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -60,7 +60,7 @@ export default function PetModal({ pet, onClose }: PetModalProps) {
 
           <div className="space-y-6">
             {/* Short stats */}
-            <div className="grid grid-cols-3 gap-3 bg-[#eef4ff] rounded-2xl p-4 text-center border border-[#dfe9fa]">
+            <div className="grid grid-cols-3 gap-3 bg-[#eef4ff] rounded-2xl p-4 text-center border border-[#dfe9fa] dark:bg-slate-700 dark:border-slate-600">
               <div>
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Especie</p>
                 <p className="font-bold text-[#00346f] text-sm flex items-center justify-center gap-1">
@@ -129,7 +129,7 @@ export default function PetModal({ pet, onClose }: PetModalProps) {
                 <span className="material-symbols-outlined text-red-500">location_on</span>
                 Ubicación en el Campus UNDC
               </h4>
-              <div className="bg-[#f0f4ff] rounded-2xl p-4 border border-slate-200 flex items-center gap-3">
+              <div className="bg-[#f0f4ff] rounded-2xl p-4 border border-slate-200 flex items-center gap-3 dark:bg-slate-700 dark:border-slate-600">
                 <div className="bg-[#00346f]/10 p-3 rounded-full text-primary">
                   <span className="material-symbols-outlined text-[24px]">school</span>
                 </div>

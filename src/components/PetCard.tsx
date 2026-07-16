@@ -26,7 +26,7 @@ export default function PetCard({ pet, onSelect, isAdmin, onEdit, onDelete }: Pe
   return (
     <div 
       id={`pet-card-${pet.id}`}
-      className="group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col h-full transform hover:-translate-y-1 relative"
+      className="group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col h-full transform hover:-translate-y-1 relative dark:bg-slate-800"
     >
       {/* Admin Actions Overlay */}
       {isAdmin && (
