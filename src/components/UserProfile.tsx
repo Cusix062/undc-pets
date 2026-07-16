@@ -11,7 +11,7 @@ interface UserProfileProps {
 }
 
 export default function UserProfile({ userId, onGoBack }: UserProfileProps) {
-  const { user } = useAuth();
+  const { user, updateAvatar, deleteAccount } = useAuth();
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -20,11 +20,14 @@ export default function UserProfile({ userId, onGoBack }: UserProfileProps) {
   const [viewingUser, setViewingUser] = useState<{ name: string; avatar?: string; email?: string; description?: string } | null>(null);
   const [viewingPost, setViewingPost] = useState<Post | null>(null);
   const [modalComment, setModalComment] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const meta = user?.user_metadata || {};
   const [givenName, setGivenName] = useState('');
   const [familyName, setFamilyName] = useState('');
   const [description, setDescription] = useState('');
+  const [avatarPreview, setAvatarPreview] = useState('');
 
   const isOwnProfile = !userId || userId === user?.id;
 
@@ -69,7 +72,7 @@ export default function UserProfile({ userId, onGoBack }: UserProfileProps) {
   const photoPosts = profilePosts.filter(p => p.image);
   const totalLikes = profilePosts.reduce((sum, p) => sum + (p.likes || 0), 0);
   const profileName = isOwnProfile ? (meta.full_name || user?.email || 'Usuario') : (viewingUser?.name || 'Usuario');
-  const profileAvatar = isOwnProfile ? meta.avatar_url : viewingUser?.avatar;
+  const profileAvatar = avatarPreview || (isOwnProfile ? meta.avatar_url : viewingUser?.avatar);
   const profileInitials = profileName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
 
   const handleSave = async () => {
@@ -85,6 +88,30 @@ export default function UserProfile({ userId, onGoBack }: UserProfileProps) {
     });
     setSaving(false);
     setEditing(false);
+  };
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setAvatarPreview(dataUrl);
+      await updateAvatar(dataUrl);
+      setUploadingPhoto(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeleteAccount = async () => {
+    const { error } = await deleteAccount();
+    if (error) {
+      // fallback: sign out and delete user data manually
+      await supabase.from('posts').delete().eq('userId', user?.id);
+      await supabase.auth.signOut();
+    }
+    setDeletingAccount(false);
   };
 
   const handleModalComment = async (e: React.FormEvent) => {
@@ -155,7 +182,7 @@ export default function UserProfile({ userId, onGoBack }: UserProfileProps) {
             <span className="material-symbols-outlined text-[36px] text-slate-400">person</span>
           </div>
           <p className="text-sm font-bold text-slate-700">Inicia sesión para ver tu perfil</p>
-          <p className="text-xs text-slate-400 mt-1">Conecta con tu cuenta de Google</p>
+          <p className="text-xs text-slate-400 mt-1">Conecta con tu cuenta de Google o correo</p>
         </div>
       </div>
     );
@@ -163,6 +190,25 @@ export default function UserProfile({ userId, onGoBack }: UserProfileProps) {
 
   return (
     <div className="max-w-3xl mx-auto space-y-5 animate-fade-in">
+
+      {/* Delete Account Confirmation */}
+      {deletingAccount && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]" onClick={() => setDeletingAccount(false)}>
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl animate-scale-up" onClick={e => e.stopPropagation()}>
+            <div className="text-center">
+              <span className="material-symbols-outlined text-[48px] text-rose-500">warning</span>
+              <h3 className="font-display font-bold text-lg text-slate-900 mt-2">¿Eliminar cuenta?</h3>
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                Esta acción eliminará tus publicaciones y no se puede deshacer. Tus datos personales serán removidos.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setDeletingAccount(false)} className="flex-1 border border-slate-200 text-slate-600 text-xs font-bold py-2.5 rounded-xl hover:bg-slate-50 transition-all">Cancelar</button>
+              <button onClick={handleDeleteAccount} className="flex-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 rounded-xl shadow-xs transition-all">Eliminar Cuenta</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Post Detail Modal */}
       {viewingPost && (
@@ -238,15 +284,29 @@ export default function UserProfile({ userId, onGoBack }: UserProfileProps) {
 
       {/* Profile Card */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
-        <div className="px-6 pb-6">
-          <div className="flex items-end gap-4 mb-4 pt-6">
-            {profileAvatar ? (
-              <img src={profileAvatar} alt={profileName} className="h-20 w-20 rounded-full border-4 border-white shadow-md" referrerPolicy="no-referrer" />
-            ) : (
-              <div className="h-20 w-20 rounded-full border-4 border-white shadow-md bg-[#00346f] text-white text-2xl font-bold flex items-center justify-center">
-                {profileInitials}
-              </div>
-            )}
+        <div className="bg-gradient-to-r from-[#00346f]/5 to-white h-20" />
+        <div className="px-6 pb-6 -mt-10">
+          <div className="flex items-end gap-4 mb-4">
+            <div className="relative group">
+              {profileAvatar ? (
+                <img src={profileAvatar} alt={profileName} className="h-20 w-20 rounded-full border-4 border-white shadow-md object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="h-20 w-20 rounded-full border-4 border-white shadow-md bg-[#00346f] text-white text-2xl font-bold flex items-center justify-center">
+                  {profileInitials}
+                </div>
+              )}
+              {isOwnProfile && editing && (
+                <label className="absolute inset-0 bg-black/40 rounded-full border-4 border-white flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="material-symbols-outlined text-white text-[20px]">photo_camera</span>
+                  <input type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
+                </label>
+              )}
+              {uploadingPhoto && (
+                <div className="absolute inset-0 bg-black/50 rounded-full border-4 border-white flex items-center justify-center">
+                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
             <div className="flex-1 min-w-0">
               <h2 className="font-display font-extrabold text-lg text-slate-900 truncate">{profileName}</h2>
               {isOwnProfile && <p className="text-[11px] text-slate-500">{user?.email}</p>}
@@ -259,9 +319,9 @@ export default function UserProfile({ userId, onGoBack }: UserProfileProps) {
                 </button>
               )}
               {isOwnProfile && (
-                <button onClick={() => setEditing(true)} className="shrink-0 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-xs">
-                  <span className="material-symbols-outlined text-[14px]">edit</span>
-                  Editar
+                <button onClick={() => setEditing(!editing)} className={`shrink-0 border text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-xs ${editing ? 'bg-[#00346f] text-white border-[#00346f]' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-600'}`}>
+                  <span className="material-symbols-outlined text-[14px]">{editing ? 'close' : 'edit'}</span>
+                  {editing ? 'Cerrar' : 'Editar'}
                 </button>
               )}
             </div>
@@ -283,12 +343,18 @@ export default function UserProfile({ userId, onGoBack }: UserProfileProps) {
                 <label className="block text-[11px] font-bold text-slate-600 mb-1">Descripción</label>
                 <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full text-sm p-2.5 rounded-xl border border-slate-200 bg-white resize-none" placeholder="Cuéntanos sobre ti..." />
               </div>
-              <div className="flex gap-2">
-                <button onClick={handleSave} disabled={saving} className="bg-[#00346f] hover:bg-[#002450] text-white text-xs font-bold px-5 py-2 rounded-xl transition-all shadow-xs disabled:opacity-50">
-                  {saving ? 'Guardando...' : 'Guardar Cambios'}
-                </button>
-                <button onClick={() => setEditing(false)} className="border border-slate-200 bg-white text-slate-600 text-xs font-bold px-5 py-2 rounded-xl hover:bg-slate-50 transition-all">
-                  Cancelar
+              <div className="flex items-center justify-between">
+                <div className="flex gap-2">
+                  <button onClick={handleSave} disabled={saving} className="bg-[#00346f] hover:bg-[#002450] text-white text-xs font-bold px-5 py-2 rounded-xl transition-all shadow-xs disabled:opacity-50 flex items-center gap-1.5">
+                    {saving ? <><span className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Guardando...</> : <><span className="material-symbols-outlined text-[14px]">save</span> Guardar Cambios</>}
+                  </button>
+                  <button onClick={() => setEditing(false)} className="border border-slate-200 bg-white text-slate-600 text-xs font-bold px-5 py-2 rounded-xl hover:bg-slate-50 transition-all">
+                    Cancelar
+                  </button>
+                </div>
+                <button onClick={() => setDeletingAccount(true)} className="text-rose-500 hover:text-rose-700 text-xs font-bold flex items-center gap-1 hover:bg-rose-50 px-3 py-2 rounded-xl transition-all">
+                  <span className="material-symbols-outlined text-[14px]">delete_forever</span>
+                  Eliminar cuenta
                 </button>
               </div>
             </div>
@@ -297,6 +363,15 @@ export default function UserProfile({ userId, onGoBack }: UserProfileProps) {
               <p className="text-xs text-slate-600 leading-relaxed">{description}</p>
             </div>
           ) : null}
+
+          {isOwnProfile && !editing && (
+            <div className="flex justify-end mt-2">
+              <button onClick={() => setDeletingAccount(true)} className="text-[10px] text-slate-400 hover:text-rose-500 transition-colors flex items-center gap-1">
+                <span className="material-symbols-outlined text-[12px]">delete_forever</span>
+                Eliminar cuenta
+              </button>
+            </div>
+          )}
 
           <div className="flex items-center gap-6 mt-4 pt-4 border-t border-slate-100">
             <div className="text-center">
