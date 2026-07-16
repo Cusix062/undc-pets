@@ -191,133 +191,91 @@ function AppContent() {
     <div id="app-root-container" className="min-h-screen flex flex-col font-sans text-[#121c28]">
       
       {/* Header Navigation Bar */}
-      <header className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-slate-100 z-40 transition-shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          
+      <header className="sticky top-0 bg-white/90 backdrop-blur-lg border-b border-slate-100/60 z-40 transition-shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 md:h-16 flex items-center justify-between gap-2">
+
           {/* Logo Brand */}
-          <div 
+          <div
             onClick={() => setActiveTab('directorio')}
-            className="flex items-center gap-3 cursor-pointer group"
+            className="flex items-center gap-2.5 cursor-pointer group shrink-0"
           >
-            <div className="bg-[#00346f] text-white h-10 w-10 rounded-full flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-              <span className="material-symbols-outlined font-bold text-[22px]">pets</span>
+            <div className="bg-[#00346f] text-white h-8 w-8 md:h-9 md:w-9 rounded-lg flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+              <span className="material-symbols-outlined font-bold text-[18px] md:text-[20px]">pets</span>
             </div>
-            <div>
-              <span className="font-display font-black text-xl text-[#00346f] tracking-tight block">UNDC Pets</span>
-              <span className="text-[9px] text-[#8f4e00] font-bold tracking-wider uppercase block">Bienestar Animal</span>
+            <div className="hidden sm:block">
+              <span className="font-display font-black text-base md:text-lg text-[#00346f] tracking-tight block leading-tight">UNDC Pets</span>
+              <span className="text-[8px] text-[#8f4e00] font-bold tracking-wider uppercase block leading-tight">Bienestar Animal</span>
             </div>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
-            <button
-              onClick={() => setActiveTab('directorio')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'directorio' 
-                  ? 'bg-[#eef4ff] text-[#00346f]' 
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px]">folder_special</span>
-              Mascotas del Campus
-            </button>
-            <button
-              onClick={() => setActiveTab('comunidad')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'comunidad' 
-                  ? 'bg-[#eef4ff] text-[#00346f]' 
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px]">forum</span>
-              Comunidad
-            </button>
-            <button
-              onClick={() => setActiveTab('album')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'album' 
-                  ? 'bg-[#eef4ff] text-[#00346f]' 
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px]">photo_library</span>
-              Álbum
-            </button>
-            <button
-              onClick={() => setActiveTab('donaciones')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'donaciones' 
-                  ? 'bg-[#eef4ff] text-[#00346f]' 
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px]">volunteer_activism</span>
-              Donaciones
-            </button>
-            <button
-              onClick={() => setActiveTab('perfil')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'perfil' 
-                  ? 'bg-[#eef4ff] text-[#00346f]' 
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px]">person</span>
-              Usuario
-            </button>
-            <button
-              onClick={() => setActiveTab('faqs')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'faqs' 
-                  ? 'bg-[#eef4ff] text-[#00346f]' 
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px]">help</span>
-              FAQs
-            </button>
-            {isAdmin && (
+          <nav className="hidden md:flex items-center gap-0.5">
+            {[
+              { tab: 'directorio' as const, icon: 'pets', label: 'Mascotas' },
+              { tab: 'comunidad' as const, icon: 'forum', label: 'Comunidad' },
+              { tab: 'album' as const, icon: 'photo_library', label: 'Álbum' },
+              ...(isAdmin ? [{ tab: 'admin' as const, icon: 'admin_panel_settings', label: 'Panel' }] : []),
+            ].map(item => (
               <button
-                onClick={() => setActiveTab('admin')}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  activeTab === 'admin' 
-                    ? 'bg-[#eef4ff] text-[#00346f]' 
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                key={item.tab}
+                onClick={() => setActiveTab(item.tab)}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === item.tab
+                    ? 'bg-[#00346f] text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                 }`}
               >
-                <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
-                Admin
+                <span className="material-symbols-outlined text-[16px]">{item.icon}</span>
+                {item.label}
               </button>
-            )}
+            ))}
           </nav>
 
-          {/* Desktop Auth + Sponsoring */}
-          <div className="hidden md:flex items-center gap-3">
-            <GoogleSignIn />
+          {/* Right side: actions */}
+          <div className="flex items-center gap-1.5 md:gap-2">
             <button
               onClick={() => setActiveTab('donaciones')}
-              className="bg-[#fc9d41] hover:bg-[#fa8b23] text-[#6b3900] text-xs font-bold px-4 py-2 rounded-xl shadow-xs transition-colors flex items-center gap-1.5"
+              className="hidden md:inline-flex items-center gap-1.5 bg-[#fc9d41] hover:bg-[#fa8b23] text-[#6b3900] text-xs font-bold px-4 py-2 rounded-xl shadow-xs transition-all"
             >
-              <span className="material-symbols-outlined text-[16px] font-bold">favorite</span>
-              Apadrinar Mascota
+              <span className="material-symbols-outlined text-[15px]">favorite</span>
+              Donar
             </button>
-          </div>
 
-          {/* Mobile menu trigger */}
-          <div className="md:hidden flex items-center gap-2">
             <button
-              onClick={() => { setActiveTab('perfil'); setMobileMenuOpen(false); }}
-              className="bg-[#00346f] text-white p-2 rounded-full shadow-xs flex items-center justify-center"
+              onClick={() => setActiveTab('faqs')}
+              className={`hidden md:flex items-center justify-center h-9 w-9 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'faqs'
+                  ? 'bg-[#eef4ff] text-[#00346f]'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+              }`}
+              title="Preguntas frecuentes"
+            >
+              <span className="material-symbols-outlined text-[18px]">help</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('perfil')}
+              className={`flex items-center justify-center h-9 w-9 rounded-xl transition-all ${
+                activeTab === 'perfil'
+                  ? 'bg-[#eef4ff] text-[#00346f]'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+              }`}
               title="Mi Perfil"
             >
-              <span className="material-symbols-outlined text-[18px]">person</span>
+              <span className="material-symbols-outlined text-[20px]">person</span>
             </button>
+
+            <div className="hidden md:flex border-l border-slate-200 pl-2 ml-1">
+              <GoogleSignIn />
+            </div>
+
+            {/* Mobile menu trigger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 border border-slate-200 flex items-center justify-center"
+              className="md:hidden flex items-center justify-center h-9 w-9 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200"
               title="Menú"
             >
-              <span className="material-symbols-outlined text-[22px]">{mobileMenuOpen ? 'close' : 'menu'}</span>
+              <span className="material-symbols-outlined text-[20px]">{mobileMenuOpen ? 'close' : 'menu'}</span>
             </button>
           </div>
 
@@ -328,44 +286,49 @@ function AppContent() {
       {mobileMenuOpen && (
         <>
           <div
-            className="md:hidden fixed inset-0 top-16 z-40"
+            className="md:hidden fixed inset-0 top-14 z-40"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="md:hidden fixed inset-x-0 top-16 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-lg animate-slide-down">
-            <div className="px-4 pt-3 pb-2 border-b border-slate-100">
-              <GoogleSignIn />
-            </div>
-            <nav className="flex flex-col py-3 px-4 gap-1">
+          <div className="md:hidden fixed inset-x-0 top-14 z-50 bg-white/95 backdrop-blur-lg border-b border-slate-100 shadow-lg animate-slide-down">
+            <nav className="flex flex-col py-2 px-3 gap-0.5">
               {[
-                { tab: 'directorio' as const, icon: 'folder_special', label: 'Mascotas del Campus' },
+                { tab: 'directorio' as const, icon: 'pets', label: 'Mascotas' },
                 { tab: 'comunidad' as const, icon: 'forum', label: 'Comunidad' },
                 { tab: 'album' as const, icon: 'photo_library', label: 'Álbum' },
-                { tab: 'donaciones' as const, icon: 'volunteer_activism', label: 'Donaciones' },
-                { tab: 'perfil' as const, icon: 'person', label: 'Usuario' },
-                { tab: 'faqs' as const, icon: 'help', label: 'FAQs' },
-                ...(isAdmin ? [{ tab: 'admin' as const, icon: 'admin_panel_settings', label: 'Admin' }] : []),
+                { tab: 'faqs' as const, icon: 'help', label: 'FAQ' },
+                ...(isAdmin ? [{ tab: 'admin' as const, icon: 'admin_panel_settings', label: 'Panel Admin' }] : []),
               ].map((item) => (
                 <button
                   key={item.tab}
                   onClick={() => { setActiveTab(item.tab); setMobileMenuOpen(false); }}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
                     activeTab === item.tab
-                      ? 'bg-[#eef4ff] text-[#00346f]'
+                      ? 'bg-[#00346f] text-white shadow-xs'
                       : 'text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                  <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
                   {item.label}
                 </button>
               ))}
-              <div className="border-t border-slate-100 mt-2 pt-2">
+              <div className="border-t border-slate-100 mt-2 pt-2 space-y-0.5">
                 <button
                   onClick={() => { setActiveTab('donaciones'); setMobileMenuOpen(false); }}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#6b3900] bg-[#fc9d41]/10 hover:bg-[#fc9d41]/20 transition-all w-full"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-[#6b3900] bg-[#fc9d41]/10 hover:bg-[#fc9d41]/20 transition-all w-full"
                 >
-                  <span className="material-symbols-outlined text-[20px]">favorite</span>
-                  Apadrinar Mascota
+                  <span className="material-symbols-outlined text-[18px]">favorite</span>
+                  Donar / Apadrinar
                 </button>
+                <button
+                  onClick={() => { setActiveTab('perfil'); setMobileMenuOpen(false); }}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all w-full"
+                >
+                  <span className="material-symbols-outlined text-[18px]">person</span>
+                  Mi Perfil
+                </button>
+                <div className="px-4 py-2">
+                  <GoogleSignIn />
+                </div>
               </div>
             </nav>
           </div>

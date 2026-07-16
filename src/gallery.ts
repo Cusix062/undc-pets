@@ -3,7 +3,6 @@ export interface GalleryImage {
   name: string;
   image: string;
 }
-
 // Agrega aquí tus imágenes. Solo pon el nombre y la ruta.
 // Las imágenes van en la carpeta public/images/
 export const GALLERY_IMAGES: GalleryImage[] = [
