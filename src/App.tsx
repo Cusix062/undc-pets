@@ -337,7 +337,7 @@ function AppContent() {
 
       {/* Hero Header Section */}
       {activeTab === 'directorio' && (
-        <section className="bg-gradient-to-b from-white to-[#f8f9ff] border-b border-slate-100 py-8 md:py-12 px-4">
+        <section className="bg-gradient-to-b from-white to-[#f8f9ff] border-b border-slate-100 py-8 md:py-12 px-4 animate-fade-in-up">
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div className="space-y-4 text-center lg:text-left">
               <span className="inline-block bg-[#fc9d41]/10 text-[#8f4e00] font-bold text-xs px-3.5 py-1.5 rounded-full uppercase tracking-wider border border-[#fc9d41]/25">
@@ -379,7 +379,7 @@ function AppContent() {
         
         {/* DIRECTORY VIEW */}
         {activeTab === 'directorio' && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-fade-in-up">
 
             {/* Search and Filters Layout */}
             <div className="bg-white border border-slate-100 rounded-2xl shadow-xs p-5 space-y-4">
@@ -609,16 +609,20 @@ function AppContent() {
 
         {/* ALBUM VIEW */}
         {activeTab === 'album' && (
-          <PhotoAlbum pets={pets} />
+          <div className="animate-fade-in-up">
+            <PhotoAlbum pets={pets} />
+          </div>
         )}
 
         {/* COMMUNITY VIEW */}
         {activeTab === 'comunidad' && (
-          <CommunityFeed 
-            onAddPetToDirectory={handleAddPetToDirectory}
-            onShowNotification={triggerNotification}
-            onViewProfile={(userId) => { setProfileUserId(userId); setActiveTab('perfil'); }}
-          />
+          <div className="animate-fade-in-up">
+            <CommunityFeed 
+              onAddPetToDirectory={handleAddPetToDirectory}
+              onShowNotification={triggerNotification}
+              onViewProfile={(userId) => { setProfileUserId(userId); setActiveTab('perfil'); }}
+            />
+          </div>
         )}
 
         {/* DONATION VIEW */}
@@ -634,12 +638,14 @@ function AppContent() {
 
         {/* USER PROFILE VIEW */}
         {activeTab === 'perfil' && (
-          <UserProfile userId={profileUserId} onGoBack={() => { setProfileUserId(undefined); setActiveTab('comunidad'); }} />
+          <div className="animate-fade-in-up">
+            <UserProfile userId={profileUserId} onGoBack={() => { setProfileUserId(undefined); setActiveTab('comunidad'); }} />
+          </div>
         )}
 
         {/* FAQS VIEW */}
         {activeTab === 'faqs' && (
-          <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
+          <div className="max-w-3xl mx-auto space-y-6 animate-fade-in-up">
             <div className="text-center space-y-2 mb-8">
               <span className="material-symbols-outlined text-[48px] text-[#fc9d41] font-bold">help_center</span>
               <h2 className="font-display font-extrabold text-2xl md:text-3xl text-slate-900">Preguntas Frecuentes</h2>
