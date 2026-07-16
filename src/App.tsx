@@ -733,46 +733,54 @@ function AppContent() {
       </main>
 
       {/* Footer Branding section */}
-      <footer className="bg-white border-t border-slate-100 py-10 mt-16 text-xs text-slate-500 font-medium">
+      <footer className="bg-[#00346f] py-10 mt-16 text-xs font-medium">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
           
           {/* Logo and brief */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className="bg-[#00346f] text-white h-7 w-7 rounded-full flex items-center justify-center font-bold">
-                <span className="material-symbols-outlined text-[16px] font-bold">pets</span>
+              <div className="bg-white/20 text-white h-8 w-8 rounded-full flex items-center justify-center font-bold backdrop-blur-xs">
+                <span className="material-symbols-outlined text-[18px] font-bold">pets</span>
               </div>
-              <span className="font-display font-black text-slate-800 tracking-tight text-sm">UNDC Pets</span>
+              <span className="font-display font-black text-white tracking-tight text-sm">UNDC Pets</span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-slate-300 leading-relaxed">
               Iniciativa solidaria de la comunidad universitaria de la Universidad Nacional de Cañete para brindar refugio, alimentación y cuidado integral a las mascotas en situación vulnerable dentro de nuestras dependencias académicas.
             </p>
           </div>
 
           {/* Quick links */}
           <div className="space-y-2 md:pl-10">
-            <h4 className="font-display font-bold text-slate-800 text-[11px] uppercase tracking-wider mb-1">Navegación</h4>
-            <div className="flex flex-col gap-1.5">
-              <button onClick={() => setActiveTab('directorio')} className="hover:text-primary text-left">Mascotas del Campus</button>
-              <button onClick={() => setActiveTab('comunidad')} className="hover:text-primary text-left">Muro y Alertas</button>
-              <button onClick={() => setActiveTab('blog')} className="hover:text-primary text-left">Blog y Noticias</button>
-              <button onClick={() => setActiveTab('donaciones')} className="hover:text-primary text-left">Cuentas y Donaciones</button>
-              <button onClick={() => setActiveTab('perfil')} className="hover:text-primary text-left">Mi Perfil</button>
+            <h4 className="font-display font-bold text-white/70 text-[11px] uppercase tracking-wider mb-2">Navegación</h4>
+            <div className="flex flex-col gap-2">
+              <button onClick={() => setActiveTab('directorio')} className="text-slate-300 hover:text-white text-left transition-colors">Mascotas del Campus</button>
+              <button onClick={() => setActiveTab('comunidad')} className="text-slate-300 hover:text-white text-left transition-colors">Muro y Alertas</button>
+              <button onClick={() => setActiveTab('blog')} className="text-slate-300 hover:text-white text-left transition-colors">Blog y Noticias</button>
+              <button onClick={() => setActiveTab('donaciones')} className="text-slate-300 hover:text-white text-left transition-colors">Cuentas y Donaciones</button>
+              <button onClick={() => setActiveTab('perfil')} className="text-slate-300 hover:text-white text-left transition-colors">Mi Perfil</button>
             </div>
           </div>
 
           {/* Legal / credits */}
           <div className="space-y-3">
-            <h4 className="font-display font-bold text-slate-800 text-[11px] uppercase tracking-wider mb-1">Contacto Oficial</h4>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <h4 className="font-display font-bold text-white/70 text-[11px] uppercase tracking-wider mb-2">Contacto Oficial</h4>
+            <p className="text-[11px] text-slate-300 leading-relaxed">
               Oficina de Bienestar Universitario, Pabellón de Servicios Centrales, Cañete, Lima, Perú.<br/>
-              Correo: <a href="mailto:bienestar@undc.edu.pe" className="text-primary hover:underline font-bold">bienestar@undc.edu.pe</a>
+              Correo: <a href="mailto:bienestar@undc.edu.pe" className="text-[#fc9d41] hover:text-white font-bold transition-colors">bienestar@undc.edu.pe</a>
             </p>
-            <p className="text-[10px] text-slate-400">
-              © {new Date().getFullYear()} UNDC Pets. Todos los derechos reservados.
-            </p>
+            <div className="pt-3 flex items-center gap-2 text-[10px] text-slate-400">
+              <span className="bg-white/10 px-2.5 py-1 rounded-full">© {new Date().getFullYear()} UNDC Pets</span>
+              <span>Todos los derechos reservados</span>
+            </div>
           </div>
 
+        </div>
+
+        {/* Bottom bar */}
+        <div className="mt-8 pt-4 border-t border-white/10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-[10px] text-slate-400 text-center">
+            Hecho con ❤️ por la comunidad UNDC para el bienestar animal
+          </p>
         </div>
       </footer>
 

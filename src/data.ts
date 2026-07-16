@@ -211,6 +211,7 @@ Si ves a Curly, Princesa o cualquier mascota del campus mostrando signos de agot
     publishedAt: '2026-03-15',
     tags: ['calor', 'hidratacion', 'cuidado basico'],
     featured: true,
+    image: '/images/curly.jpeg',
   },
   {
     id: 'blog2',
@@ -231,6 +232,7 @@ Recuerda: No les des huesos cocidos ni chocolate, son tóxicos para ellos.`,
     publishedAt: '2026-02-28',
     tags: ['alimentacion', 'croquetas', 'nutricion'],
     featured: true,
+    image: '/images/princesa.jpeg',
   },
   {
     id: 'blog3',
@@ -258,6 +260,7 @@ El equipo de Bienestar Universitario tiene convenios con veterinarias locales pa
     publishedAt: '2026-02-10',
     tags: ['veterinaria', 'emergencia', 'salud'],
     featured: true,
+    image: '/images/runrun.jpeg',
   },
   {
     id: 'blog4',
@@ -280,6 +283,7 @@ El voluntariado coordina jornadas de esterilización con veterinarias aliadas. L
     publishedAt: '2026-01-20',
     tags: ['esterilizacion', 'poblacion', 'prevencion'],
     featured: false,
+    image: '/images/gata.jpeg',
   },
   {
     id: 'blog5',
@@ -303,6 +307,7 @@ No todos los animales del campus están acostumbrados al contacto humano frecuen
     publishedAt: '2025-12-05',
     tags: ['socializacion', 'comportamiento', 'convivencia'],
     featured: false,
+    image: '/images/curly2.jpeg',
   },
   {
     id: 'blog6',
@@ -320,6 +325,7 @@ Hoy, Curly está vacunado, esterilizado y en busca de un hogar permanente. Pero 
     publishedAt: '2025-11-15',
     tags: ['curly', 'historia', 'adopcion', 'campus'],
     featured: false,
+    image: '/images/curly3.jpeg',
   },
 ];
 
