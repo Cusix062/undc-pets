@@ -21,7 +21,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeSubTab, setActiveSubTab] = useState<' muro' | 'reporte'>(' muro');
+  const [activeSubTab, setActiveSubTab] = useState<'muro' | 'reporte'>('muro');
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostImage, setNewPostImage] = useState('');
   const [newPostFile, setNewPostFile] = useState<File | null>(null);
@@ -145,7 +145,6 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
     if (!newPostContent.trim()) return;
     if (!user) { onShowNotification('Debes iniciar sesión para publicar'); return; }
 
-    // Check if user is blocked
     const { data: blocked } = await supabase.from('blocked_users').select('user_id').eq('user_id', user.id).maybeSingle();
     if (blocked) { onShowNotification('Tu cuenta ha sido bloqueada para publicar. Contacta al administrador.'); return; }
 
@@ -263,9 +262,12 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
     setReportDescription('');
     setReportStory('');
     setReporterEmail('');
-    setActiveSubTab(' muro');
+    setActiveSubTab('muro');
     onShowNotification(`¡Reporte de ${reportName} registrado!`);
   };
+
+  const totalLikes = posts.reduce((sum, p) => sum + p.likes, 0);
+  const totalComments = posts.reduce((sum, p) => sum + p.comments.length, 0);
 
   return (
     <div id="community-feed-container" className="space-y-6">
@@ -294,38 +296,79 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
         </div>
       )}
 
-      <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-slate-100 shadow-xs">
-        <div className="flex">
+      {/* Hero Header */}
+      <div className="bg-gradient-to-br from-[#00346f] via-[#004a8c] to-[#005da8] rounded-3xl p-6 md:p-8 text-white shadow-md">
+        <div className="flex flex-col md:flex-row items-center gap-6">
+          <div className="md:w-2/3 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="bg-white/20 backdrop-blur-xs text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Comunidad UNDC</span>
+              <span className="bg-[#fc9d41] text-[#6b3900] text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">💬 Muro Social</span>
+            </div>
+            <h2 className="font-display font-extrabold text-2xl md:text-3xl tracking-tight">
+              El Rincón de los Amigos Peludos 🐾
+            </h2>
+            <p className="text-sm text-slate-100 leading-relaxed">
+              Comparte fotos, anécdotas y novedades sobre Curly, Princesa, RunRun y todas las mascotas que alegran nuestro campus. ¡Cada publicación ayuda a construir una comunidad más unida y consciente!
+            </p>
+          </div>
+          <div className="md:w-1/3 flex justify-center">
+            <div className="bg-white/10 backdrop-blur-xs rounded-full p-4 border border-white/20">
+              <span className="material-symbols-outlined text-[72px] text-white/40 select-none">pets</span>
+            </div>
+          </div>
+        </div>
+        {/* Stats bar */}
+        <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-white/20">
+          <div className="text-center">
+            <p className="text-2xl font-black text-white">{posts.length}</p>
+            <p className="text-[10px] text-slate-200 font-medium">Publicaciones</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-black text-white">{totalLikes}</p>
+            <p className="text-[10px] text-slate-200 font-medium">Me gusta</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-black text-white">{totalComments}</p>
+            <p className="text-[10px] text-slate-200 font-medium">Comentarios</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Switcher */}
+      <div className="flex items-center justify-between bg-white p-1.5 rounded-2xl border border-slate-100 shadow-xs">
+        <div className="flex gap-1">
           <button
-            onClick={() => setActiveSubTab(' muro')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-xs font-bold transition-all ${activeSubTab === ' muro' ? 'bg-[#00346f] text-white' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}
+            onClick={() => setActiveSubTab('muro')}
+            className={`flex items-center gap-2 py-2.5 px-5 rounded-xl text-xs font-bold transition-all ${activeSubTab === 'muro' ? 'bg-[#00346f] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}
           >
             <span className="material-symbols-outlined text-[16px]">forum</span>
-            Muro
+            Muro Comunitario
           </button>
           <button
             onClick={() => setActiveSubTab('reporte')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-xs font-bold transition-all ${activeSubTab === 'reporte' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-600 hover:bg-rose-50'}`}
+            className={`flex items-center gap-2 py-2.5 px-5 rounded-xl text-xs font-bold transition-all ${activeSubTab === 'reporte' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-600 hover:bg-rose-50'}`}
           >
-            <span className="material-symbols-outlined text-[16px] text-rose-500 font-bold">report</span>
-            Reportar
+            <span className="material-symbols-outlined text-[16px]">crisis_alert</span>
+            Reportar Mascota
           </button>
         </div>
-        <GoogleSignIn />
+        <div className="hidden sm:block">
+          <GoogleSignIn />
+        </div>
       </div>
 
-      {activeSubTab === ' muro' ? (
+      {activeSubTab === 'muro' ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
 
-            {/* Create Post Card */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
-              <div className="bg-gradient-to-r from-[#00346f]/5 to-transparent px-5 pt-5 pb-3">
-                <div className="flex gap-3">
+            {/* Create Post Card - improved */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all hover:shadow-md">
+              <div className="bg-gradient-to-r from-[#eef4ff] to-white px-5 pt-5 pb-3 border-b border-slate-50">
+                <div className="flex gap-3 items-center">
                   {user?.user_metadata?.avatar_url ? (
-                    <img src={user.user_metadata.avatar_url} alt="" className="h-10 w-10 rounded-full border-2 border-white shadow-xs" referrerPolicy="no-referrer" />
+                    <img src={user.user_metadata.avatar_url} alt="" className="h-11 w-11 rounded-full border-2 border-white shadow-sm" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="bg-[#00346f] text-white font-bold h-10 w-10 rounded-full flex items-center justify-center text-sm shadow-xs">
+                    <div className="bg-gradient-to-br from-[#00346f] to-[#0050aa] text-white font-bold h-11 w-11 rounded-full flex items-center justify-center text-sm shadow-sm">
                       {user ? user.user_metadata?.full_name?.charAt(0) || '?' : '?'}
                     </div>
                   )}
@@ -342,15 +385,15 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
                     <span className="absolute bottom-3 right-3 text-[10px] text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-200">{newPostContent.length} caracteres</span>
                   </div>
                   {newPostImage && (
-                    <div className="relative rounded-2xl overflow-hidden border border-slate-200 max-w-sm">
-                      <img src={newPostImage} alt="Preview" className="w-full max-h-48 object-contain bg-white" />
-                      <button type="button" onClick={() => { setNewPostFile(null); setNewPostImage(''); }} className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full h-7 w-7 flex items-center justify-center transition-all">
+                    <div className="relative rounded-2xl overflow-hidden border border-slate-200 max-w-sm shadow-xs">
+                      <img src={newPostImage} alt="Preview" className="w-full max-h-48 object-contain bg-slate-50" />
+                      <button type="button" onClick={() => { setNewPostFile(null); setNewPostImage(''); }} className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full h-7 w-7 flex items-center justify-center transition-all backdrop-blur-xs">
                         <span className="material-symbols-outlined text-[14px]">close</span>
                       </button>
                     </div>
                   )}
                   <div className="flex items-center justify-between gap-3">
-                    <label className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 hover:border-[#00346f] cursor-pointer transition-all text-xs font-bold text-slate-600 hover:text-[#00346f]">
+                    <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-[#00346f] hover:bg-[#eef4ff] cursor-pointer transition-all text-xs font-bold text-slate-600 hover:text-[#00346f]">
                       <span className="material-symbols-outlined text-[18px]">photo_camera</span>
                       {uploadingImage ? 'Procesando...' : 'Agregar Foto'}
                       <input type="file" accept="image/*" onChange={(e) => handleFileSelect(e.target.files?.[0] || null)} className="hidden" />
@@ -359,7 +402,7 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
                       {user?.user_metadata?.full_name && (
                         <span className="text-[11px] text-slate-400 font-medium truncate max-w-[120px]">{user.user_metadata.full_name.split(' ')[0]}</span>
                       )}
-                      <button type="submit" disabled={!newPostContent.trim()} className="bg-[#00346f] hover:bg-[#002450] disabled:bg-slate-300 text-white text-xs font-bold px-6 py-2.5 rounded-xl transition-all shadow-xs flex items-center gap-2">
+                      <button type="submit" disabled={!newPostContent.trim()} className="bg-gradient-to-r from-[#00346f] to-[#0050aa] hover:from-[#002450] hover:to-[#00346f] disabled:from-slate-300 disabled:to-slate-300 text-white text-xs font-bold px-6 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-2">
                         <span className="material-symbols-outlined text-[16px]">send</span>
                         Publicar
                       </button>
@@ -367,55 +410,72 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
                   </div>
                 </form>
               ) : (
-                <div className="text-center py-8 mx-5 mb-5 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                  <span className="material-symbols-outlined text-[40px] text-slate-300">login</span>
-                  <p className="text-sm text-slate-500 mt-2 font-medium">Inicia sesión con Google para compartir</p>
-                  <p className="text-xs text-slate-400 mt-1">Fotos, anécdotas y reportes de mascotas</p>
+                <div className="text-center py-10 mx-5 mb-5 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl border border-dashed border-slate-200">
+                  <div className="bg-white/60 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
+                    <span className="material-symbols-outlined text-[36px] text-slate-400">login</span>
+                  </div>
+                  <p className="text-sm text-slate-600 font-bold">Inicia sesión con Google</p>
+                  <p className="text-xs text-slate-400 mt-1 mb-4">Comparte fotos, anécdotas y reportes de mascotas</p>
+                  <div className="inline-block">
+                    <GoogleSignIn />
+                  </div>
                 </div>
               )}
             </div>
 
             {loading ? (
-              <div className="text-center py-12 text-slate-400 text-xs">Cargando publicaciones...</div>
+              <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#00346f] border-t-transparent mb-3"></div>
+                <p className="text-xs font-medium">Cargando publicaciones...</p>
+              </div>
             ) : posts.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 text-xs">No hay publicaciones aún. ¡Sé el primero en compartir!</div>
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center space-y-3">
+                <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
+                  <span className="material-symbols-outlined text-[48px] text-slate-300">forum</span>
+                </div>
+                <h3 className="font-display font-bold text-base text-slate-800">¡Sé el primero en compartir!</h3>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">No hay publicaciones aún. Anímate a contar una anécdota de los peludos del campus.</p>
+              </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-5">
                 {posts.map((post) => {
                   const isLiked = likedPosts[post.id];
                   const displayLikes = post.likes;
                   const isOwner = user && post.userId === user.id;
                   return (
-                    <div key={post.id} className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+                    <div key={post.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all hover:shadow-md">
+                      {/* Post Header */}
                       <div className="p-4 flex justify-between items-center border-b border-slate-50">
                         <div className="flex items-center gap-3">
                           {post.userAvatar ? (
-                            <img src={post.userAvatar} alt="" className="h-10 w-10 rounded-full border border-slate-200 cursor-pointer hover:ring-2 hover:ring-[#00346f] transition-all" referrerPolicy="no-referrer" onClick={() => post.userId && onViewProfile?.(post.userId)} />
+                            <img src={post.userAvatar} alt="" className="h-10 w-10 rounded-full border-2 border-slate-100 cursor-pointer hover:ring-2 hover:ring-[#00346f] transition-all shadow-xs" referrerPolicy="no-referrer" onClick={() => post.userId && onViewProfile?.(post.userId)} />
                           ) : (
-                            <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold font-display ${post.avatarColor} cursor-pointer hover:ring-2 hover:ring-[#00346f] transition-all`} onClick={() => post.userId && onViewProfile?.(post.userId)}>{post.authorInitials}</div>
+                            <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold font-display shadow-xs ${post.avatarColor} cursor-pointer hover:ring-2 hover:ring-[#00346f] transition-all`} onClick={() => post.userId && onViewProfile?.(post.userId)}>{post.authorInitials}</div>
                           )}
                           <div>
-                            <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                              <span className="cursor-pointer hover:text-[#00346f] transition-colors" onClick={() => post.userId && onViewProfile?.(post.userId)}>{post.authorName}</span>
-                              {post.isCampusFavorite && <span className="bg-amber-100 text-amber-800 text-[9px] font-bold px-1.5 py-0.5 rounded-full">⭐ Favorito del Campus</span>}
-                            </p>
-                            <p className="text-[10px] text-slate-400 font-medium">{post.authorRole} • {post.timeAgo}</p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-xs font-bold text-slate-800 cursor-pointer hover:text-[#00346f] transition-colors" onClick={() => post.userId && onViewProfile?.(post.userId)}>{post.authorName}</p>
+                              {post.isCampusFavorite && <span className="bg-amber-100 text-amber-800 text-[8px] font-bold px-1.5 py-0.5 rounded-full">⭐ Favorito</span>}
+                            </div>
+                            <p className="text-[10px] text-slate-400 font-medium">{post.authorRole} · {post.timeAgo}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           {post.tag && <span className="bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold px-2 py-0.5 rounded-md">{post.tag}</span>}
                           {isOwner && (
                             <div className="flex gap-1">
-                              <button onClick={() => { setEditingPostId(post.id); setEditContent(post.content); }} className="text-slate-400 hover:text-[#00346f] p-1 rounded-lg hover:bg-slate-50 transition-all" title="Editar">
+                              <button onClick={() => { setEditingPostId(post.id); setEditContent(post.content); }} className="text-slate-400 hover:text-[#00346f] p-1.5 rounded-lg hover:bg-[#eef4ff] transition-all" title="Editar">
                                 <span className="material-symbols-outlined text-[16px]">edit</span>
                               </button>
-                              <button onClick={() => handleDelete(post.id)} className="text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition-all" title="Eliminar">
+                              <button onClick={() => handleDelete(post.id)} className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-all" title="Eliminar">
                                 <span className="material-symbols-outlined text-[16px]">delete</span>
                               </button>
                             </div>
                           )}
                         </div>
                       </div>
+
+                      {/* Post Content */}
                       <div className="p-4 space-y-3">
                         {editingPostId === post.id ? (
                           <div className="space-y-3">
@@ -429,35 +489,48 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
                           <p className="text-slate-700 text-xs leading-relaxed whitespace-pre-line">{post.content}</p>
                         )}
                         {post.image && !editingPostId && (
-                          <div className="rounded-2xl overflow-hidden cursor-pointer" onClick={() => setViewingImage(post.image!)}>
-                            <img src={post.image} alt="Publicación" className="w-full object-cover" referrerPolicy="no-referrer" />
+                          <div className="rounded-xl overflow-hidden cursor-pointer border border-slate-100 shadow-xs" onClick={() => setViewingImage(post.image!)}>
+                            <img src={post.image} alt="Publicación" className="w-full object-cover hover:scale-[1.02] transition-transform duration-300" referrerPolicy="no-referrer" />
                           </div>
                         )}
                       </div>
-                      <div className="px-4 py-2 bg-slate-50/50 border-y border-slate-50 flex items-center justify-between text-[11px] text-slate-500 font-bold">
-                        <span className="flex items-center gap-1"><span className="material-symbols-outlined text-rose-500 font-bold text-[14px]">favorite</span>{displayLikes} Me gusta</span>
-                        <span>{post.comments.length} Comentarios</span>
+
+                      {/* Post Stats */}
+                      <div className="px-4 py-2.5 bg-slate-50/80 border-y border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-bold">
+                        <span className="flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-rose-500 font-bold text-[14px]">favorite</span>
+                          {displayLikes} {displayLikes === 1 ? 'Me gusta' : 'Me gusta'}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-slate-400 text-[14px]">chat_bubble</span>
+                          {post.comments.length} {post.comments.length === 1 ? 'Comentario' : 'Comentarios'}
+                        </span>
                       </div>
-                      <div className="px-4 py-1.5 border-b border-slate-50 flex gap-4">
-                        <button onClick={() => handleLike(post.id)} className={`flex-1 py-1 px-3 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${isLiked ? 'text-rose-600 bg-rose-50' : 'text-slate-600 hover:bg-slate-50'}`}>
-                          <span className="material-symbols-outlined text-[16px] font-bold">{isLiked ? 'favorite' : 'favorite'}</span>
+
+                      {/* Post Actions */}
+                      <div className="px-4 py-1.5 border-b border-slate-50 flex">
+                        <button onClick={() => handleLike(post.id)} className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${isLiked ? 'text-rose-600 bg-rose-50' : 'text-slate-600 hover:bg-slate-50 hover:text-rose-600'}`}>
+                          <span className={`material-symbols-outlined text-[18px] ${isLiked ? '' : ''}`}>{isLiked ? 'favorite' : 'favorite_border'}</span>
                           {isLiked ? 'Te gusta' : 'Me gusta'}
                         </button>
-                        <button onClick={() => handleShare(post.id)} className="flex-1 py-1 px-3 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 text-slate-600 hover:bg-slate-50">
-                          <span className="material-symbols-outlined text-[16px]">share</span>
+                        <button onClick={() => handleShare(post.id)} className="flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 text-slate-600 hover:bg-slate-50 hover:text-[#00346f]">
+                          <span className="material-symbols-outlined text-[18px]">share</span>
                           Compartir
                         </button>
-                        <div className="flex-1 text-center py-1 text-xs font-bold text-slate-600 flex items-center justify-center gap-1.5">
-                          <span className="material-symbols-outlined text-[16px]">chat_bubble</span>Comentar
+                        <div className="flex-1 text-center py-2 text-xs font-bold text-slate-600 flex items-center justify-center gap-1.5 hover:bg-slate-50 rounded-lg transition-all cursor-default">
+                          <span className="material-symbols-outlined text-[18px]">chat_bubble</span>
+                          Comentar
                         </div>
                       </div>
-                      <div className="p-4 bg-slate-50/40 space-y-3">
+
+                      {/* Comments Section */}
+                      <div className="px-4 py-3 bg-slate-50/40 space-y-3">
                         {post.comments.map((comment) => (
-                          <div key={comment.id} className="text-xs flex gap-2 items-start bg-slate-50 p-2.5 rounded-xl border border-slate-100 shadow-2xs">
+                          <div key={comment.id} className="text-xs flex gap-2.5 items-start bg-white p-3 rounded-xl border border-slate-100 shadow-2xs">
                             {comment.authorAvatar ? (
-                              <img src={comment.authorAvatar} alt="" className="h-6 w-6 rounded-full border border-slate-200" referrerPolicy="no-referrer" />
+                              <img src={comment.authorAvatar} alt="" className="h-7 w-7 rounded-full border border-slate-200 mt-0.5" referrerPolicy="no-referrer" />
                             ) : (
-                              <div className="bg-[#00346f]/10 text-primary h-6 w-6 rounded-full flex items-center justify-center font-bold text-[9px]">
+                              <div className="bg-gradient-to-br from-[#00346f]/20 to-[#0050aa]/20 text-primary h-7 w-7 rounded-full flex items-center justify-center font-bold text-[9px] mt-0.5">
                                 {comment.authorName.split(' ').map(n => n[0]).join('')}
                               </div>
                             )}
@@ -472,14 +545,16 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
                         ))}
                         <form onSubmit={(e) => handleAddComment(e, post.id)} className="flex gap-2 pt-2">
                           {user?.user_metadata?.avatar_url ? (
-                            <img src={user.user_metadata.avatar_url} alt="" className="h-7 w-7 rounded-full border border-slate-200 mt-0.5" referrerPolicy="no-referrer" />
+                            <img src={user.user_metadata.avatar_url} alt="" className="h-8 w-8 rounded-full border border-slate-200 mt-0.5 shadow-xs" referrerPolicy="no-referrer" />
                           ) : (
-                            <div className="h-7 w-7 rounded-full bg-slate-300 text-white text-[9px] font-bold flex items-center justify-center mt-0.5">?</div>
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 text-white text-[9px] font-bold flex items-center justify-center mt-0.5 shadow-xs">?</div>
                           )}
-                          <input type="text" value={commentInputs[post.id] || ''} onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))} placeholder="Escribe un comentario..." disabled={!user} className="flex-grow text-xs px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] bg-white disabled:bg-slate-50 disabled:text-slate-400" />
-                          <button type="submit" disabled={!user} className="bg-[#00346f] hover:bg-[#002450] text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xs flex items-center justify-center disabled:opacity-40">
-                            <span className="material-symbols-outlined text-[16px]">send</span>
-                          </button>
+                          <div className="flex-grow flex gap-2">
+                            <input type="text" value={commentInputs[post.id] || ''} onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))} placeholder="Escribe un comentario..." disabled={!user} className="flex-grow text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] bg-white disabled:bg-slate-50 disabled:text-slate-400 transition-all" />
+                            <button type="submit" disabled={!user} className="bg-[#00346f] hover:bg-[#002450] text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs flex items-center justify-center disabled:opacity-40 transition-all">
+                              <span className="material-symbols-outlined text-[16px]">send</span>
+                            </button>
+                          </div>
                         </form>
                       </div>
                     </div>
@@ -489,111 +564,184 @@ export default function CommunityFeed({ onAddPetToDirectory, onShowNotification,
             )}
           </div>
 
+          {/* Sidebar */}
           <div className="space-y-6">
-            <div className="bg-[#00346f]/5 rounded-2xl border border-[#00346f]/10 p-5 space-y-4">
-              <h3 className="font-display font-bold text-md text-[#00346f] flex items-center gap-2"><span className="material-symbols-outlined">campaign</span>Normas de Convivencia</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">El bienestar animal es responsabilidad de todos en la UNDC. Sigue estas recomendaciones:</p>
-              <ul className="space-y-2.5 text-xs text-slate-600 font-medium">
-                <li className="flex gap-2"><span className="material-symbols-outlined text-green-600 text-[16px] font-bold">check_circle</span><span>Respeta sus horas de sueño y descanso en los pasillos.</span></li>
-                <li className="flex gap-2"><span className="material-symbols-outlined text-green-600 text-[16px] font-bold">check_circle</span><span>No les des comida chatarra; consulta con el voluntariado.</span></li>
-                <li className="flex gap-2"><span className="material-symbols-outlined text-green-600 text-[16px] font-bold">check_circle</span><span>Si ves una herida, repórtalo de inmediato.</span></li>
+
+            {/* Community Tips */}
+            <div className="bg-gradient-to-br from-[#eef4ff] to-white rounded-2xl border border-[#dfe9fa] p-5 space-y-4 shadow-sm">
+              <h3 className="font-display font-bold text-sm text-[#00346f] flex items-center gap-2">
+                <span className="bg-[#00346f] text-white h-6 w-6 rounded-lg flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[14px]">campaign</span>
+                </span>
+                Normas de Convivencia
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">El bienestar animal es responsabilidad de todos en la UNDC:</p>
+              <ul className="space-y-3 text-xs text-slate-600">
+                <li className="flex gap-2.5">
+                  <span className="bg-emerald-100 text-emerald-600 h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="material-symbols-outlined text-[12px] font-bold">check</span>
+                  </span>
+                  <span><strong className="text-slate-800">Respeta su descanso:</strong> No los molestes mientras duermen en pasillos y jardines.</span>
+                </li>
+                <li className="flex gap-2.5">
+                  <span className="bg-emerald-100 text-emerald-600 h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="material-symbols-outlined text-[12px] font-bold">check</span>
+                  </span>
+                  <span><strong className="text-slate-800">No comida chatarra:</strong> Consulta con el voluntariado qué pueden comer.</span>
+                </li>
+                <li className="flex gap-2.5">
+                  <span className="bg-emerald-100 text-emerald-600 h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="material-symbols-outlined text-[12px] font-bold">check</span>
+                  </span>
+                  <span><strong className="text-slate-800">Reporta heridas:</strong> Si ves un animal lastimado, avisa inmediatamente.</span>
+                </li>
+                <li className="flex gap-2.5">
+                  <span className="bg-emerald-100 text-emerald-600 h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="material-symbols-outlined text-[12px] font-bold">check</span>
+                  </span>
+                  <span><strong className="text-slate-800">Comparte con respeto:</strong> Fotos y videos sin flash ni ruidos fuertes.</span>
+                </li>
               </ul>
             </div>
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs text-center space-y-3">
-              <span className="material-symbols-outlined text-[36px] text-[#00346f]">volunteer_activism</span>
+
+            {/* Volunteer CTA */}
+            <div className="bg-gradient-to-br from-white to-amber-50 rounded-2xl border border-amber-100 p-5 shadow-sm text-center space-y-4">
+              <div className="bg-amber-100 w-14 h-14 rounded-full flex items-center justify-center mx-auto">
+                <span className="material-symbols-outlined text-[32px] text-amber-600">volunteer_activism</span>
+              </div>
               <h4 className="font-display font-bold text-sm text-slate-900">¿Quieres ser Voluntario?</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">Coordinamos paseos, baños, jornadas de vacunación y alimentación.</p>
-              <a href="https://chat.whatsapp.com/CGE6Aw6FJP01wCHElUuSv0" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 bg-[#25D366] hover:bg-[#1ebd57] text-white font-bold text-xs px-4 py-2 rounded-xl shadow-xs transition-all">
-                <span className="material-symbols-outlined text-[15px] font-bold">chat</span>Unirse al Grupo WhatsApp
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Coordinamos paseos, baños, jornadas de vacunación y alimentación para los peludos del campus. ¡Tu ayuda es bienvenida!
+              </p>
+              <a href="https://chat.whatsapp.com/CGE6Aw6FJP01wCHElUuSv0" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebd57] text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+                <span className="material-symbols-outlined text-[16px]">chat</span>
+                Unirse al Grupo WhatsApp
               </a>
             </div>
+
+            {/* Quick Tips */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+              <h4 className="font-display font-bold text-xs text-slate-900 flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-amber-500 text-[18px]">lightbulb</span>
+                Tips rápidos para publicar
+              </h4>
+              <ul className="space-y-2 text-[11px] text-slate-500">
+                <li className="flex gap-2">
+                  <span className="text-[#00346f] font-bold">📸</span>
+                  Sube fotos claras de los animalitos
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-[#00346f] font-bold">📍</span>
+                  Menciona la ubicación en el campus
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-[#00346f] font-bold">❤️</span>
+                  Usa un tono positivo y respetuoso
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-[#00346f] font-bold">🏷️</span>
+                  Etiqueta a tus compañeros voluntarios
+                </li>
+              </ul>
+            </div>
+
           </div>
         </div>
       ) : (
-        <div className="max-w-2xl mx-auto bg-white rounded-3xl border border-slate-100 shadow-md p-6 md:p-8 space-y-6">
-          <div className="text-center space-y-2 border-b border-slate-100 pb-5">
-            <span className="material-symbols-outlined text-[48px] text-rose-600 animate-pulse">crisis_alert</span>
-            <h2 className="font-display font-extrabold text-2xl text-slate-900">Reportar Mascota (Alerta Campus)</h2>
-            <p className="text-xs text-slate-500">¿Viste una mascota perdida o herida? Regístrala para que la comunidad pueda ayudarla.</p>
-          </div>
-          <form onSubmit={handleReportMascotSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Nombre temporal *</label>
-                <input type="text" value={reportName} onChange={(e) => setReportName(e.target.value)} placeholder="Ej. Blanquita, Orejas" required className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50" />
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-md p-6 md:p-8 space-y-6">
+            <div className="text-center space-y-3 border-b border-slate-100 pb-6">
+              <div className="bg-rose-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                <span className="material-symbols-outlined text-[36px] text-rose-600">crisis_alert</span>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Ubicación *</label>
-                <input type="text" value={reportLocation} onChange={(e) => setReportLocation(e.target.value)} placeholder="Ej. Detrás del laboratorio" required className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50" />
+              <h2 className="font-display font-extrabold text-2xl text-slate-900">Reportar Mascota</h2>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">¿Viste una mascota perdida o herida en el campus? Regístrala para que la comunidad pueda ayudarla.</p>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 flex items-start gap-2 text-left">
+                <span className="material-symbols-outlined text-[16px] mt-0.5">info</span>
+                <span>Tu reporte creará automáticamente una publicación en el Muro Comunitario para máxima visibilidad.</span>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <form onSubmit={handleReportMascotSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Nombre temporal *</label>
+                  <input type="text" value={reportName} onChange={(e) => setReportName(e.target.value)} placeholder="Ej. Blanquita, Orejas" required className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 focus:ring-1 focus:ring-rose-600 bg-slate-50" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Ubicación *</label>
+                  <input type="text" value={reportLocation} onChange={(e) => setReportLocation(e.target.value)} placeholder="Ej. Detrás del laboratorio" required className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 focus:ring-1 focus:ring-rose-600 bg-slate-50" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Especie</label>
+                  <select value={reportSpecies} onChange={(e) => setReportSpecies(e.target.value as 'dog' | 'cat')} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50">
+                    <option value="dog">🐕 Perro</option>
+                    <option value="cat">🐈 Gato</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Género</label>
+                  <select value={reportGender} onChange={(e) => setReportGender(e.target.value as 'male' | 'female' | 'group')} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50">
+                    <option value="male">♂️ Macho</option>
+                    <option value="female">♀️ Hembra</option>
+                    <option value="group">👥 Grupo</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Edad</label>
+                  <input type="text" value={reportAge} onChange={(e) => setReportAge(e.target.value)} placeholder="Ej. Cachorro, 2 años" className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50" />
+                </div>
+              </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Especie</label>
-                <select value={reportSpecies} onChange={(e) => setReportSpecies(e.target.value as 'dog' | 'cat')} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50">
-                  <option value="dog">Perro</option>
-                  <option value="cat">Gato</option>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Estado</label>
+                <select value={reportStatus} onChange={(e) => setReportStatus(e.target.value)} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50">
+                  <option value="Avistado recientemente">👀 Avistado recientemente</option>
+                  <option value="Abandonado recientemente">🏠 Abandonado (Buscando hogar)</option>
+                  <option value="Herido / Necesita veterinario">🚑 Herido - Necesita asistencia</option>
+                  <option value="Desnutrido">🍽️ Desnutrido - Requiere alimento</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Género</label>
-                <select value={reportGender} onChange={(e) => setReportGender(e.target.value as 'male' | 'female' | 'group')} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50">
-                  <option value="male">Macho</option>
-                  <option value="female">Hembra</option>
-                  <option value="group">Grupo</option>
-                </select>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Descripción *</label>
+                <textarea rows={2} value={reportDescription} onChange={(e) => setReportDescription(e.target.value)} placeholder="Pelaje negro, collar rojo, tímido..." required className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50 resize-none"></textarea>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Edad</label>
-                <input type="text" value={reportAge} onChange={(e) => setReportAge(e.target.value)} placeholder="Ej. Cachorro" className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50" />
+                <label className="block text-xs font-bold text-slate-700 mb-1">Historia (Opcional)</label>
+                <textarea rows={3} value={reportStory} onChange={(e) => setReportStory(e.target.value)} placeholder="Más detalles para ayudar..." className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50 resize-none"></textarea>
               </div>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Estado</label>
-              <select value={reportStatus} onChange={(e) => setReportStatus(e.target.value)} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50">
-                <option value="Avistado recientemente">Avistado recientemente</option>
-                <option value="Abandonado recientemente">Abandonado (Buscando hogar)</option>
-                <option value="Herido / Necesita veterinario">Herido - Necesita asistencia</option>
-                <option value="Desnutrido">Desnutrido - Requiere alimento</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Descripción *</label>
-              <textarea rows={2} value={reportDescription} onChange={(e) => setReportDescription(e.target.value)} placeholder="Pelaje negro, collar rojo, tímido..." required className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50 resize-none"></textarea>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Historia (Opcional)</label>
-              <textarea rows={3} value={reportStory} onChange={(e) => setReportStory(e.target.value)} placeholder="Más detalles para ayudar..." className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50 resize-none"></textarea>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-2">Foto Representativa</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-                {REPORT_IMAGE_PRESETS.map((p, idx) => (
-                  <div key={idx} onClick={() => setReportImage(p.url)} className={`relative cursor-pointer rounded-xl overflow-hidden aspect-video border-2 transition-all ${reportImage === p.url ? 'border-rose-600 scale-[1.02] shadow-xs' : 'border-slate-200 opacity-70 hover:opacity-100'}`}>
-                    <img src={p.url} alt={p.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    <div className="absolute inset-0 bg-black/30 flex items-end p-1.5"><span className="text-[9px] text-white font-bold truncate">{p.name}</span></div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2">Foto Representativa</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                  {REPORT_IMAGE_PRESETS.map((p, idx) => (
+                    <div key={idx} onClick={() => setReportImage(p.url)} className={`relative cursor-pointer rounded-xl overflow-hidden aspect-video border-2 transition-all ${reportImage === p.url ? 'border-rose-600 scale-[1.02] shadow-md' : 'border-slate-200 opacity-70 hover:opacity-100'}`}>
+                      <img src={p.url} alt={p.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-1.5">
+                        <span className="text-[9px] text-white font-bold truncate drop-shadow-xs">{p.name}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = (ev) => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); let w = img.width, h = img.height, max = 1200; if (w > max || h > max) { if (w > h) { h = h * max / w; w = max; } else { w = w * max / h; h = max; } } c.width = w; c.height = h; c.getContext('2d')!.drawImage(img, 0, 0, w, h); setReportImage(c.toDataURL('image/jpeg', 0.7)); }; img.src = ev.target?.result as string; }; r.readAsDataURL(f); }} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-rose-600 file:text-white hover:file:bg-rose-700" />
+                {reportImage && reportImage.startsWith('data:') && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <img src={reportImage} alt="Preview" className="h-10 w-10 rounded object-cover border" />
+                    <button type="button" onClick={() => setReportImage(REPORT_IMAGE_PRESETS[0].url)} className="text-[10px] text-rose-600 font-bold">Usar imagen por defecto</button>
                   </div>
-                ))}
+                )}
               </div>
-              <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = (ev) => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); let w = img.width, h = img.height, max = 1200; if (w > max || h > max) { if (w > h) { h = h * max / w; w = max; } else { w = w * max / h; h = max; } } c.width = w; c.height = h; c.getContext('2d')!.drawImage(img, 0, 0, w, h); setReportImage(c.toDataURL('image/jpeg', 0.7)); }; img.src = ev.target?.result as string; }; r.readAsDataURL(f); }} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-600 bg-slate-50 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-rose-600 file:text-white hover:file:bg-rose-700" />
-              {reportImage && reportImage.startsWith('data:') && (
-                <div className="mt-2 flex items-center gap-2">
-                  <img src={reportImage} alt="Preview" className="h-10 w-10 rounded object-cover border" />
-                  <button type="button" onClick={() => setReportImage(REPORT_IMAGE_PRESETS[0].url)} className="text-[10px] text-rose-600 font-bold">Usar imagen por defecto</button>
+              {!user && (
+                <div className="border-t border-slate-100 pt-4">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Tu Correo (Opcional)</label>
+                  <input type="email" value={reporterEmail} onChange={(e) => setReporterEmail(e.target.value)} placeholder="alu.estudiante@undc.edu.pe" className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50" />
                 </div>
               )}
-            </div>
-            {!user && (
-              <div className="border-t border-slate-100 pt-4">
-                <label className="block text-xs font-bold text-slate-700 mb-1">Tu Correo (Opcional)</label>
-                <input type="email" value={reporterEmail} onChange={(e) => setReporterEmail(e.target.value)} placeholder="alu.estudiante@undc.edu.pe" className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50" />
-              </div>
-            )}
-            <button type="submit" className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm py-3 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 mt-4">
-              <span className="material-symbols-outlined font-bold">add_moderator</span>
-              Registrar Alerta y Publicar
-            </button>
-          </form>
+              <button type="submit" className="w-full bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-700 hover:to-rose-600 text-white font-bold text-sm py-3 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 mt-4 hover:shadow-lg hover:-translate-y-0.5">
+                <span className="material-symbols-outlined font-bold">add_moderator</span>
+                Registrar Alerta y Publicar
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </div>
