@@ -335,29 +335,27 @@ function DonacionesPanel({ onShowNotification, onConfigChanged, donationConfig }
   const [celebrationVerify, setCelebrationVerify] = useState<{ title: string; targetAmount: number; amount: number } | null>(null);
   const [localConfig, setLocalConfig] = useState<DonationConfig | null>(null);
 
-  // Use prop if available (reactive), otherwise load from Supabase
-  const config = donationConfig || localConfig;
+  // Fresh data from Supabase takes priority; fall back to prop
+  const config = localConfig || donationConfig;
 
+  // Always reload from Supabase when this panel opens (ensures fresh data)
   useEffect(() => {
-    if (!donationConfig) {
-      const load = async () => {
-        try {
-          const { data } = await supabase.from('donation_config').select('*').eq('id', 'main').single();
-          if (data) setLocalConfig(data.data as DonationConfig);
-          else setLocalConfig(getDefaultConfig());
-        } catch {
-          setLocalConfig(getDefaultConfig());
-        }
-      };
-      load();
-    }
+    const load = async () => {
+      try {
+        const { data } = await supabase.from('donation_config').select('*').eq('id', 'main').single();
+        if (data) setLocalConfig(data.data as DonationConfig);
+      } catch { /* ignore */ }
+    };
+    load();
+  }, []);
+
+  // When the prop changes (real-time / onConfigChanged), sync to local state
+  useEffect(() => {
+    if (donationConfig) setLocalConfig(donationConfig);
   }, [donationConfig]);
 
   const saveConfig = async (newConfig: DonationConfig) => {
-    try {
-      await supabase.from('donation_config').upsert({ id: 'main', data: newConfig as any });
-    } catch {}
-    if (!donationConfig) setLocalConfig(newConfig);
+    setLocalConfig(newConfig);
     if (onConfigChanged) onConfigChanged(newConfig);
     onShowNotification('Configuración de donaciones actualizada');
   };

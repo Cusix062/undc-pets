@@ -44,13 +44,27 @@ function AppContent() {
   
   // Data States
   const [pets, setPets] = useState<Pet[]>([]);
-  const [donationConfig, setDonationConfig] = useState<DonationConfig>({
-    accounts: [],
-    yapeNumber: '',
-    plinNumber: '',
-    qrCodes: { yape: '', plin: '', bcp: '', tunqui: '' },
-    campaigns: [],
-    pendingDonations: [],
+  const [donationConfig, setDonationConfig] = useState<DonationConfig>(() => {
+    const cached = localStorage.getItem('undc_donation_config');
+    if (cached) {
+      try { return JSON.parse(cached); } catch {}
+    }
+    return {
+      accounts: [
+        { bank: 'Banco de la Nación (Cta. Corriente)', number: '00-068-123456', CCI: '018-068-000068123456-78' },
+        { bank: 'BCP (Cuenta Recaudadora - Bienestar)', number: '191-9876543-0-12', CCI: '002-191-009876543012-54' },
+        { bank: 'Yape / Plin (Celular Coordinador)', number: '987 654 321', CCI: 'Nombre: Asociación UNDC Pets' },
+      ],
+      yapeNumber: '993 376 465',
+      plinNumber: '993 376 465',
+      qrCodes: { yape: '/images/yape.jpeg', plin: '/images/plin.jpeg', bcp: '/images/qr-bcp.svg', tunqui: '/images/qr-tunqui.svg' },
+      campaigns: [
+        { id: 'camp_food', title: 'Alimento Mensual', description: 'Compra de croquetas para los peludos del campus', currentAmount: 340, targetAmount: 500, urgency: 'Alta' },
+        { id: 'camp_medical', title: 'Cirugía de Firulais', description: 'Tratamiento de cadera y recuperación', currentAmount: 210, targetAmount: 800, urgency: 'Crítica' },
+        { id: 'camp_spay', title: 'Esterilización', description: 'Campaña de esterilización preventiva', currentAmount: 950, targetAmount: 1200, urgency: 'Media' },
+      ],
+      pendingDonations: [],
+    };
   });
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
@@ -128,7 +142,7 @@ function AppContent() {
   useEffect(() => {
     const channel = supabase.channel('donation_config_realtime')
       .on('postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'donation_config', filter: 'id=eq.main' },
+        { event: '*', schema: 'public', table: 'donation_config', filter: 'id=eq.main' },
         (payload: any) => {
           const cfg = payload.new?.data as DonationConfig;
           if (cfg) {
@@ -139,6 +153,17 @@ function AppContent() {
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  // Ensure default donation_config row exists in Supabase (so subsequent writes are UPDATEs, not INSERTs)
+  useEffect(() => {
+    const seed = async () => {
+      const { data } = await supabase.from('donation_config').select('id').eq('id', 'main').maybeSingle();
+      if (!data) {
+        await supabase.from('donation_config').upsert({ id: 'main', data: donationConfig as any }).catch(() => {});
+      }
+    };
+    seed();
   }, []);
 
   // Sync dark mode to document element
