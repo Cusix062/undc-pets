@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 
 type AuthMode = 'login' | 'register';
@@ -17,6 +18,15 @@ export default function AuthModal({ open, onClose, onNotification }: AuthModalPr
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  React.useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
 
   if (!open) return null;
 
@@ -67,7 +77,7 @@ export default function AuthModal({ open, onClose, onNotification }: AuthModalPr
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[70] animate-fade-in" onClick={onClose}>
       {/* Fondo con blur */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#001a3a] via-[#00346f] to-[#001a3a]" />
@@ -148,6 +158,7 @@ export default function AuthModal({ open, onClose, onNotification }: AuthModalPr
         </button>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

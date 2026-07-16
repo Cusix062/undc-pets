@@ -12,12 +12,13 @@ import PetCard from './components/PetCard';
 import PetModal from './components/PetModal';
 import CommunityFeed from './components/CommunityFeed';
 import DonationCampaigns from './components/DonationCampaigns';
-import PetCarousel from './components/PetCarousel';
 import PhotoAlbum from './components/PhotoAlbum';
 import GoogleSignIn from './components/GoogleSignIn';
+import AuthModal from './components/AuthModal';
 import UserProfile from './components/UserProfile';
 import AdminPanel from './components/AdminPanel';
 import PetBlog from './components/PetBlog';
+import LandingPage from './components/LandingPage';
 
 export default function App() {
   return (
@@ -31,9 +32,10 @@ function AppContent() {
   const { isAdmin } = useAuth();
 
   // Tabs: 'directorio' | 'comunidad' | 'donaciones' | 'perfil' | 'faqs' | 'album' | 'blog' | 'admin'
-  const [activeTab, setActiveTab] = useState<'directorio' | 'comunidad' | 'donaciones' | 'perfil' | 'faqs' | 'album' | 'blog' | 'admin'>('directorio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'directorio' | 'comunidad' | 'donaciones' | 'perfil' | 'faqs' | 'album' | 'blog' | 'admin'>('inicio');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileUserId, setProfileUserId] = useState<string | undefined>();
+  const [authOpen, setAuthOpen] = useState(false);
   
   // Data States
   const [pets, setPets] = useState<Pet[]>([]);
@@ -197,6 +199,7 @@ function AppContent() {
 
   return (
     <div id="app-root-container" className="min-h-screen flex flex-col font-sans text-[#121c28]">
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onNotification={(msg) => {}} />
       
       {/* Header Navigation Bar */}
       <header className="sticky top-0 bg-white/90 backdrop-blur-lg border-b border-slate-100/60 z-40 transition-shadow">
@@ -204,7 +207,7 @@ function AppContent() {
 
           {/* Logo Brand */}
           <div
-            onClick={() => setActiveTab('directorio')}
+            onClick={() => setActiveTab('inicio')}
             className="flex items-center gap-2.5 cursor-pointer group shrink-0"
           >
             <div className="bg-[#00346f] text-white h-8 w-8 md:h-9 md:w-9 rounded-lg flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
@@ -219,6 +222,7 @@ function AppContent() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-0.5">
             {[
+              { tab: 'inicio' as const, icon: 'home', label: 'Inicio' },
               { tab: 'directorio' as const, icon: 'pets', label: 'Mascotas' },
               { tab: 'comunidad' as const, icon: 'forum', label: 'Comunidad' },
               { tab: 'album' as const, icon: 'photo_library', label: 'Álbum' },
@@ -275,7 +279,7 @@ function AppContent() {
             </button>
 
             <div className="hidden md:flex border-l border-slate-200 pl-2 ml-1">
-              <GoogleSignIn />
+              <GoogleSignIn onOpenAuth={() => setAuthOpen(true)} />
             </div>
 
             {/* Mobile menu trigger */}
@@ -301,6 +305,7 @@ function AppContent() {
           <div className="md:hidden fixed inset-x-0 top-14 z-50 bg-white/95 backdrop-blur-lg border-b border-slate-100 shadow-lg animate-slide-down">
             <nav className="flex flex-col py-2 px-3 gap-0.5">
               {[
+                { tab: 'inicio' as const, icon: 'home', label: 'Inicio' },
                 { tab: 'directorio' as const, icon: 'pets', label: 'Mascotas' },
                 { tab: 'comunidad' as const, icon: 'forum', label: 'Comunidad' },
                 { tab: 'album' as const, icon: 'photo_library', label: 'Álbum' },
@@ -337,7 +342,7 @@ function AppContent() {
                   Mi Perfil
                 </button>
                 <div className="px-4 py-2">
-                  <GoogleSignIn />
+                  <GoogleSignIn onOpenAuth={() => setAuthOpen(true)} />
                 </div>
               </div>
             </nav>
@@ -345,48 +350,21 @@ function AppContent() {
         </>
       )}
 
-      {/* Hero Header Section */}
-      {activeTab === 'directorio' && (
-        <section className="bg-gradient-to-b from-white to-[#f8f9ff] border-b border-slate-100 py-8 md:py-12 px-4 animate-fade-in-up">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="space-y-4 text-center lg:text-left">
-              <span className="inline-block bg-[#fc9d41]/10 text-[#8f4e00] font-bold text-xs px-3.5 py-1.5 rounded-full uppercase tracking-wider border border-[#fc9d41]/25">
-                🎓 Universidad Nacional de Cañete
-              </span>
-              <h1 className="font-display font-extrabold text-3xl md:text-5xl text-slate-900 tracking-tight leading-tight">
-                Un Hogar Fuera de Casa para los <span className="text-[#00346f]">Perros y Gatos</span> de la UNDC
-              </h1>
-              <p className="text-slate-600 text-sm md:text-base max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                Únete a la red estudiantil y universitaria dedicada a cuidar la salud, alimentación y adopción responsable de nuestras mascotas comunitarias del campus.
-              </p>
-              
-              <div className="flex flex-wrap justify-center lg:justify-start gap-3 pt-3">
-                <button
-                  onClick={() => setActiveTab('perfil')}
-                  className="bg-[#00346f] hover:bg-[#002450] text-white text-xs font-bold px-6 py-3 rounded-2xl shadow-md transition-all flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-[18px]">person</span>
-                  Mi Perfil
-                </button>
-                <button
-                  onClick={() => { setActiveTab('comunidad'); }}
-                  className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-6 py-3 rounded-2xl shadow-md transition-all flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-[18px] font-bold">report</span>
-                  Reportar Mascota Perdida
-                </button>
-              </div>
-            </div>
-            <div className="w-full">
-              <PetCarousel pets={pets} onSelectPet={setSelectedPet} />
-            </div>
-          </div>
-        </section>
-      )}
+
 
       {/* Main Content Body Container */}
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className={`flex-grow w-full mx-auto ${activeTab === 'inicio' ? '' : 'max-w-7xl px-4 sm:px-6 lg:px-8 py-8'}`}>
         
+        {/* LANDING PAGE */}
+        {activeTab === 'inicio' && (
+          <LandingPage
+            pets={pets}
+            blogPosts={blogPosts}
+            onNavigate={(tab) => setActiveTab(tab as any)}
+            onSelectPet={setSelectedPet}
+          />
+        )}
+
         {/* DIRECTORY VIEW */}
         {activeTab === 'directorio' && (
           <div className="space-y-6 animate-fade-in-up">
