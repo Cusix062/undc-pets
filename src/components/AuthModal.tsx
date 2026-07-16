@@ -68,8 +68,9 @@ export default function AuthModal({ open, onClose, onNotification }: AuthModalPr
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[70] animate-fade-in" onClick={onClose}>
-      <div className="bg-white rounded-3xl w-full max-w-md overflow-y-auto max-h-[90vh] shadow-2xl animate-scale-up" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] animate-fade-in overflow-y-auto" onClick={onClose}>
+      <div className="min-h-full flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-scale-up my-8" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="bg-gradient-to-r from-[#00346f] to-[#0050aa] p-6 text-white text-center space-y-1">
           <span className="material-symbols-outlined text-[36px] text-white/80">pets</span>
@@ -127,6 +128,7 @@ export default function AuthModal({ open, onClose, onNotification }: AuthModalPr
 
           <button type="button" onClick={onClose} className="w-full text-xs text-slate-400 hover:text-slate-600 py-1">Cancelar</button>
         </form>
+      </div>
       </div>
     </div>
   );
