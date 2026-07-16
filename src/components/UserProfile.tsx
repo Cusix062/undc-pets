@@ -34,7 +34,7 @@ export default function UserProfile({ userId, onGoBack }: UserProfileProps) {
   useEffect(() => {
     if (user) {
       setGivenName(user.user_metadata?.given_name || user.user_metadata?.full_name?.split(' ')[0] || '');
-      setFamilyName(user.user_metadata?.family_name || user.user_metadata?.full_name?.slice(1).join(' ') || '');
+      setFamilyName(user.user_metadata?.family_name || user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '');
       setDescription(user.user_metadata?.description || '');
     }
   }, [user]);

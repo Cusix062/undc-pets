@@ -34,14 +34,16 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
           <div className="absolute top-10 left-10 w-72 h-72 bg-[#fc9d41] rounded-full blur-[100px]" />
           <div className="absolute bottom-10 right-10 w-96 h-96 bg-white rounded-full blur-[120px]" />
         </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6 text-center lg:text-left">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-24">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
+
+            {/* Left: Text */}
+            <div className="space-y-5 md:space-y-6 text-center lg:text-left order-2 lg:order-1">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-xs rounded-full px-4 py-1.5 text-xs font-bold text-white/80">
                 <span className="h-2 w-2 bg-green-400 rounded-full animate-pulse" />
                 Bienestar Animal UNDC
               </div>
-              <h1 className="font-display font-extrabold text-4xl md:text-5xl lg:text-6xl tracking-tight leading-tight">
+              <h1 className="font-display font-extrabold text-3xl md:text-5xl lg:text-6xl tracking-tight leading-tight">
                 Un Hogar Fuera de Casa
                 <span className="block text-[#fc9d41] mt-2">para Ellos</span>
               </h1>
@@ -60,37 +62,52 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
               </div>
             </div>
 
-            {/* Carousel */}
-            <div className="relative hidden lg:block">
-              <div className="relative h-[420px] rounded-2xl overflow-hidden bg-white/5 backdrop-blur-xs border border-white/10 shadow-2xl">
-                {featuredPets.map((pet, i) => (
-                  <button
-                    key={pet.id}
-                    onClick={() => onSelectPet(pet)}
-                    className={`absolute inset-0 flex items-center justify-center p-8 transition-all duration-700 ${i === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
-                  >
-                    <img
-                      src={pet.image}
-                      alt={pet.name}
-                      className="w-full h-full object-contain drop-shadow-2xl"
-                    />
-                  </button>
-                ))}
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-5 pt-12">
-                  <p className="font-display font-bold text-white text-lg">{featuredPets[currentSlide]?.name}</p>
-                  <p className="text-xs text-white/60">{featuredPets[currentSlide]?.age} • {featuredPets[currentSlide]?.location}</p>
+            {/* Right: Carousel - visible on all screens */}
+            <div className="order-1 lg:order-2">
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ aspectRatio: '4/3' }}>
+                {featuredPets.map((pet, i) => {
+                  const isActive = i === currentSlide;
+                  return (
+                    <button
+                      key={pet.id}
+                      onClick={() => onSelectPet(pet)}
+                      className={`absolute inset-0 transition-all duration-700 ${isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    >
+                      {/* Fondo: imagen cubriendo todo con blur */}
+                      <div className="absolute inset-0 scale-110">
+                        <img
+                          src={pet.image}
+                          alt=""
+                          className="w-full h-full object-cover blur-xl opacity-60"
+                        />
+                      </div>
+                      {/* Imagen principal centrada sin recortar */}
+                      <div className="absolute inset-0 flex items-center justify-center p-4 md:p-8">
+                        <img
+                          src={pet.image}
+                          alt={pet.name}
+                          className="w-full h-full object-contain drop-shadow-2xl"
+                        />
+                      </div>
+                    </button>
+                  );
+                })}
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 pt-12 z-10">
+                  <p className="font-display font-bold text-white text-sm md:text-lg">{featuredPets[currentSlide]?.name}</p>
+                  <p className="text-[10px] md:text-xs text-white/60">{featuredPets[currentSlide]?.age} • {featuredPets[currentSlide]?.location}</p>
                 </div>
               </div>
-              <div className="flex justify-center gap-2 mt-4">
+              <div className="flex justify-center gap-2 mt-3 md:mt-4">
                 {featuredPets.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setCurrentSlide(i)}
-                    className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? 'w-8 bg-[#fc9d41]' : 'w-2 bg-white/30 hover:bg-white/50'}`}
+                    className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? 'w-6 md:w-8 bg-[#fc9d41]' : 'w-2 bg-white/30 hover:bg-white/50'}`}
                   />
                 ))}
               </div>
             </div>
+
           </div>
         </div>
       </section>
@@ -131,7 +148,7 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
               { icon: 'pets', title: 'Adoptar', desc: 'Dale un hogar temporal o definitivo a una de nuestras mascotas. El amor que recibirás será infinito.', color: 'bg-[#fc9d41]', action: () => onNavigate('directorio'), btnText: 'Ver Mascotas' },
               { icon: 'forum', title: 'Reportar', desc: '¿Viste una mascota en situación de riesgo? Reporta en la comunidad para que podamos actuar rápido.', color: 'bg-rose-600', action: () => onNavigate('comunidad'), btnText: 'Ir a Comunidad' },
             ].map(card => (
-              <div key={card.title} className="bg-white rounded-2xl border border-slate-100 p-6 md:p-8 text-center space-y-4 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+              <div key={card.title} className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 text-center space-y-4 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                 <div className={`${card.color} h-14 w-14 rounded-2xl flex items-center justify-center mx-auto shadow-md`}>
                   <span className="material-symbols-outlined text-[28px] text-white">{card.icon}</span>
                 </div>
@@ -148,11 +165,11 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
 
       {/* ===== MASCOTAS DESTACADAS ===== */}
       {pets.length > 0 && (
-        <section className="bg-[#f8f9ff] py-16 md:py-20 px-4">
+        <section className="bg-[#eef4ff] py-16 md:py-20 px-4">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-end justify-between mb-10">
               <div className="space-y-2">
-                <span className="inline-block bg-[#fc9d41]/10 text-[#8f4e00] font-bold text-xs px-3.5 py-1.5 rounded-full uppercase tracking-wider">Conócelos</span>
+                <span className="inline-block bg-[#fc9d41]/15 text-[#8f4e00] font-bold text-xs px-3.5 py-1.5 rounded-full uppercase tracking-wider">Conócelos</span>
                 <h2 className="font-display font-extrabold text-2xl md:text-3xl text-slate-900">Mascotas del Campus</h2>
               </div>
               <button onClick={() => onNavigate('directorio')} className="hidden md:flex items-center gap-1.5 text-[#00346f] font-bold text-xs hover:underline">
@@ -164,9 +181,9 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
                 <button
                   key={pet.id}
                   onClick={() => onSelectPet(pet)}
-                  className="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg hover:-translate-y-1.5 transition-all duration-300 text-left shadow-sm"
+                  className="group bg-white rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 text-left shadow-md border-2 border-[#00346f]/10"
                 >
-                  <div className="h-40 md:h-48 bg-slate-50 flex items-center justify-center p-4 relative">
+                  <div className="h-40 md:h-48 flex items-center justify-center p-4 relative bg-gradient-to-b from-[#00346f]/5 to-white">
                     <img src={pet.image} alt={pet.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                     <span className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full ${
                       pet.statusType === 'success' ? 'bg-green-100 text-green-700' :
@@ -177,15 +194,15 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
                       {pet.status}
                     </span>
                   </div>
-                  <div className="p-3 space-y-1">
+                  <div className="p-3 space-y-1 border-t border-[#00346f]/10">
                     <div className="flex items-center justify-between">
                       <h3 className="font-display font-bold text-sm text-slate-900">{pet.name}</h3>
-                      <span className="material-symbols-outlined text-[14px] text-slate-400">{speciesIcons[pet.species] || 'pets'}</span>
+                      <span className="material-symbols-outlined text-[14px] text-[#00346f]/40">{speciesIcons[pet.species] || 'pets'}</span>
                     </div>
                     <p className="text-[10px] text-slate-500">{pet.age} • {pet.location}</p>
                     <div className="flex flex-wrap gap-1 pt-1">
                       {pet.tags?.slice(0, 2).map(tag => (
-                        <span key={tag} className="text-[8px] bg-slate-50 text-slate-500 px-1.5 py-0.5 rounded-full border border-slate-100">{tag}</span>
+                        <span key={tag} className="text-[8px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full border border-slate-200">{tag}</span>
                       ))}
                     </div>
                   </div>
@@ -216,7 +233,7 @@ export default function LandingPage({ pets, blogPosts, onNavigate, onSelectPet }
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {blogPosts.slice(0, 3).map(post => (
-                <button key={post.id} onClick={() => onNavigate('blog')} className="group bg-white rounded-2xl border border-slate-100 overflow-hidden text-left hover:shadow-lg hover:-translate-y-1 transition-all duration-300 shadow-sm">
+                <button key={post.id} onClick={() => onNavigate('blog')} className="group bg-white rounded-2xl border-2 border-slate-100 overflow-hidden text-left hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-md">
                   {post.image && (
                     <div className="h-44 bg-slate-100 overflow-hidden">
                       <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

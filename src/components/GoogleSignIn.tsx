@@ -1,23 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
-import type { User } from '@supabase/supabase-js';
 
 interface GoogleSignInProps {
   onOpenAuth?: () => void;
 }
 
 export default function GoogleSignIn({ onOpenAuth }: GoogleSignInProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const { isAdmin } = useAuth();
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
-    const { unsubscribe } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-    return unsubscribe;
-  }, []);
+  const { user, isAdmin, signOut } = useAuth();
 
   const handleGoogleSignIn = async () => {
     await supabase.auth.signInWithOAuth({
@@ -27,7 +17,7 @@ export default function GoogleSignIn({ onOpenAuth }: GoogleSignInProps) {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOut();
   };
 
   const avatar = user?.user_metadata?.avatar_url;

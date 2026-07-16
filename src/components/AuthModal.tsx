@@ -52,26 +52,26 @@ export default function AuthModal({ open, onClose, onNotification }: AuthModalPr
       if (mode === 'register') {
         if (password.length < 6) { setError('La contraseña debe tener al menos 6 caracteres'); setLoading(false); return; }
         if (password !== confirm) { setError('Las contraseñas no coinciden'); setLoading(false); return; }
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: { full_name: name, given_name: name.split(' ')[0], family_name: name.split(' ').slice(1).join(' ') },
           },
         });
-        if (signUpError) throw signUpError;
+        if (error) throw error;
         onNotification('¡Cuenta creada! Revisa tu correo para confirmar.');
         onClose();
         reset();
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (signInError) throw signInError;
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
         onNotification('¡Bienvenido de vuelta!');
         onClose();
         reset();
       }
     } catch (err: any) {
-      setError(err.message || 'Error de autenticación');
+      setError(err?.message || err?.error_description || 'Error de autenticación');
     } finally {
       setLoading(false);
     }
