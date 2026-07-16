@@ -61,7 +61,16 @@ INSERT INTO donation_config (id, data) VALUES ('main', '{
 }'::jsonb)
 ON CONFLICT (id) DO NOTHING;
 
--- 4. Blocked users table
+-- 5. Blog posts table
+CREATE TABLE IF NOT EXISTS blog_posts (
+  id TEXT PRIMARY KEY,
+  data JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER PUBLICATION supabase_realtime ADD TABLE blog_posts;
+
+-- 6. Blocked users table
 CREATE TABLE IF NOT EXISTS blocked_users (
   user_id TEXT PRIMARY KEY,
   reason TEXT,

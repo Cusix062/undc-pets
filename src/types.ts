@@ -76,6 +76,21 @@ export interface PendingDonation {
   verifiedAt?: string;
 }
 
+export type BlogCategory = 'cuidado' | 'salud' | 'alimentacion' | 'adopcion' | 'historias' | 'consejos';
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  image?: string;
+  category: BlogCategory;
+  author: string;
+  publishedAt: string;
+  tags: string[];
+  featured?: boolean;
+}
+
 export interface DonationConfig {
   accounts: DonationAccount[];
   yapeNumber: string;

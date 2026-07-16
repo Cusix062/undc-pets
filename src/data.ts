@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Pet, Post } from './types';
+import { Pet, Post, BlogPost } from './types';
 
 export const INITIAL_PETS: Pet[] = [
   {
@@ -190,6 +190,137 @@ export const FAQS = [
     question: '¿Qué días se realizan los paseos?',
     answer: 'Los voluntarios coordinan turnos vía WhatsApp los fines de semana y feriados, cuando el campus está más tranquilo.'
   }
+];
+
+export const INITIAL_BLOG_POSTS: BlogPost[] = [
+  {
+    id: 'blog1',
+    title: 'Cuidado de perros y gatos en épocas de calor',
+    excerpt: 'Conoce las señales de golpe de calor en mascotas y cómo mantenerlas hidratadas durante los meses más calurosos en Cañete.',
+    content: `El calor en Cañete puede ser intenso, y nuestras mascotas del campus también lo sufren. Aquí te damos consejos prácticos:
+
+• Agua fresca siempre: Coloca bebederos en puntos estratégicos del campus.
+• Sombra disponible: Identifica espacios techados donde puedan refugiarse.
+• No dejar en vehículos: Aunque sea "solo un momento", la temperatura sube peligrosamente.
+• Señales de alerta: Jadeo excesivo, letargia y encías rojas pueden indicar golpe de calor.
+• Horarios de paseo: Prefiere las mañanas temprano o al atardecer.
+
+Si ves a Curly, Princesa o cualquier mascota del campus mostrando signos de agotamiento por calor, avisa al voluntariado de Bienestar Universitario.`,
+    category: 'cuidado',
+    author: 'Voluntariado UNDC Pets',
+    publishedAt: '2026-03-15',
+    tags: ['calor', 'hidratacion', 'cuidado basico'],
+    featured: true,
+  },
+  {
+    id: 'blog2',
+    title: 'Alimentación adecuada para perros y gatos del campus',
+    excerpt: '¿Croquetas o comida húmeda? Te explicamos qué necesita cada mascota según su edad, tamaño y estado de salud.',
+    content: `La alimentación es clave para la salud de las mascotas del campus. Recomendaciones del equipo veterinario:
+
+• Perros adultos (como Curly): 2 raciones diarias de croquetas de alta calidad.
+• Gatos (como Gata Ingeniera): Alimento balanceado específico para gatos, no uses comida de perro.
+• Cachorros: Necesitan raciones más pequeñas y frecuentes.
+• Animales en tratamiento (RunRun): Dieta especial según indicación del veterinario.
+
+Marcas recomendadas: Ricocan, Ricocat, Mimaskot, Cambo. Evita el alimento a granel.
+
+Recuerda: No les des huesos cocidos ni chocolate, son tóxicos para ellos.`,
+    category: 'alimentacion',
+    author: 'Bienestar Universitario',
+    publishedAt: '2026-02-28',
+    tags: ['alimentacion', 'croquetas', 'nutricion'],
+    featured: true,
+  },
+  {
+    id: 'blog3',
+    title: '¿Cómo saber si un animal necesita atención veterinaria?',
+    excerpt: 'Señales de alerta que todo estudiante voluntario debe conocer para actuar a tiempo y ayudar a las mascotas del campus.',
+    content: `Como miembros de la comunidad UNDC, es importante identificar cuándo una mascota necesita ayuda profesional:
+
+🚨 SEÑALES DE ALERTA:
+• Heridas visibles o sangrado
+• Cojera o dificultad para moverse
+• Ojos con secreción o enrojecidos
+• Vómitos o diarrea repetidos
+• Pérdida de apetito por más de 24 horas
+• Apatía o aislamiento inusual
+
+✅ QUÉ HACER:
+1. Contacta al voluntariado por los canales oficiales
+2. No intentes medicar por tu cuenta
+3. Si es grave, lleva al animal a la veterinaria más cercana
+4. Reporta el caso en el Muro Comunitario para seguimiento
+
+El equipo de Bienestar Universitario tiene convenios con veterinarias locales para la atención de las mascotas del campus.`,
+    category: 'salud',
+    author: 'Dra. Elena Prado',
+    publishedAt: '2026-02-10',
+    tags: ['veterinaria', 'emergencia', 'salud'],
+    featured: true,
+  },
+  {
+    id: 'blog4',
+    title: 'Beneficios de la esterilización en mascotas comunitarias',
+    excerpt: 'La esterilización ayuda a controlar la población animal y mejora la calidad de vida de perros y gatos en el campus.',
+    content: `La campaña de esterilización es una de las iniciativas más importantes de UNDC Pets:
+
+🏥 BENEFICIOS:
+• Control de la población: Evita camadas no deseadas en el campus.
+• Salud: Reduce riesgos de cáncer y enfermedades reproductivas.
+• Comportamiento: Disminuye la agresividad y el marcaje territorial.
+• Comunidad: Menos conflictos con la comunidad universitaria.
+
+💉 PROCESO:
+El voluntariado coordina jornadas de esterilización con veterinarias aliadas. Los animales son evaluados previamente y reciben cuidados post-operatorios.
+
+📊 Nuestra meta: Esterilizar al menos al 80% de la población animal del campus para fin de año.`,
+    category: 'salud',
+    author: 'Voluntariado UNDC Pets',
+    publishedAt: '2026-01-20',
+    tags: ['esterilizacion', 'poblacion', 'prevencion'],
+    featured: false,
+  },
+  {
+    id: 'blog5',
+    title: 'Cómo socializar a tu mascota con otros animales del campus',
+    excerpt: 'Tips para presentar a tu mascota con los perros y gatos de la universidad de forma segura y respetuosa.',
+    content: `Si llevas a tu mascota al campus o quieres interactuar con las mascotas comunitarias, sigue estas pautas:
+
+🐕 PRESENTACIÓN SEGURA:
+1. Mantén a tu mascota con correa al principio
+2. Permite que se huelan a distancia
+3. Observa el lenguaje corporal: cola erguida, orejas hacia atrás = estrés
+4. No fuerces el encuentro, deja que ellos decidan el ritmo
+
+🐱 CON GATOS:
+Los gatos son más territoriales. Acércate despacio, extiende la mano para que te huelan, y evita movimientos bruscos.
+
+⚠️ RECUERDA:
+No todos los animales del campus están acostumbrados al contacto humano frecuente. Respeta su espacio y nunca los persigas.`,
+    category: 'consejos',
+    author: 'Estudiantes de Veterinaria',
+    publishedAt: '2025-12-05',
+    tags: ['socializacion', 'comportamiento', 'convivencia'],
+    featured: false,
+  },
+  {
+    id: 'blog6',
+    title: 'La historia de Curly: de vagabundo a guardián del campus',
+    excerpt: 'Conoce cómo Curly pasó de deambular por las calles a convertirse en la mascota más querida de la sede San Luis.',
+    content: `Curly llegó al campus hace más de dos años, buscando refugio y alimento. Era desconfiado, tenía pulgas y estaba bastante desnutrido.
+
+Los estudiantes de la sede San Luis comenzaron a darle agua y comida. Poco a poco, Curly fue soltando su carácter juguetón. Se ganó el cariño de todos por su lealtad: acompañaba a los vigilantes en sus rondas nocturnas y recibía a los estudiantes en la puerta cada mañana.
+
+Hoy, Curly está vacunado, esterilizado y en busca de un hogar permanente. Pero mientras tanto, sigue siendo el guardián oficial de la sede, moviendo la cola feliz cada vez que alguien llega.
+
+¿Te animas a adoptarlo? Habla con Bienestar Universitario.`,
+    category: 'historias',
+    author: 'Comunidad UNDC',
+    publishedAt: '2025-11-15',
+    tags: ['curly', 'historia', 'adopcion', 'campus'],
+    featured: false,
+  },
 ];
 
 export const PUNTOS_ACOPIO = [

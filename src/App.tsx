@@ -4,8 +4,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Pet, DonationConfig, PendingDonation } from './types';
-import { INITIAL_PETS, FAQS } from './data';
+import { Pet, DonationConfig, PendingDonation, BlogPost } from './types';
+import { INITIAL_PETS, FAQS, INITIAL_BLOG_POSTS } from './data';
 import { supabase } from './lib/supabase';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import PetCard from './components/PetCard';
@@ -17,6 +17,7 @@ import PhotoAlbum from './components/PhotoAlbum';
 import GoogleSignIn from './components/GoogleSignIn';
 import UserProfile from './components/UserProfile';
 import AdminPanel from './components/AdminPanel';
+import PetBlog from './components/PetBlog';
 
 export default function App() {
   return (
@@ -29,8 +30,8 @@ export default function App() {
 function AppContent() {
   const { isAdmin } = useAuth();
 
-  // Tabs: 'directorio' | 'comunidad' | 'donaciones' | 'perfil' | 'faqs' | 'album' | 'admin'
-  const [activeTab, setActiveTab] = useState<'directorio' | 'comunidad' | 'donaciones' | 'perfil' | 'faqs' | 'album' | 'admin'>('directorio');
+  // Tabs: 'directorio' | 'comunidad' | 'donaciones' | 'perfil' | 'faqs' | 'album' | 'blog' | 'admin'
+  const [activeTab, setActiveTab] = useState<'directorio' | 'comunidad' | 'donaciones' | 'perfil' | 'faqs' | 'album' | 'blog' | 'admin'>('directorio');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileUserId, setProfileUserId] = useState<string | undefined>();
   
@@ -44,6 +45,7 @@ function AppContent() {
     campaigns: [],
     pendingDonations: [],
   });
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [editingPet, setEditingPet] = useState<Pet | null>(null);
@@ -78,9 +80,10 @@ function AppContent() {
   // Load pets and donation config from Supabase on mount
   useEffect(() => {
     const load = async () => {
-      const [petsRes, configRes] = await Promise.all([
+      const [petsRes, configRes, blogRes] = await Promise.all([
         supabase.from('pets').select('*'),
         supabase.from('donation_config').select('*').eq('id', 'main').single(),
+        supabase.from('blog_posts').select('*').order('created_at', { ascending: false }),
       ]);
       if (petsRes.data && petsRes.data.length > 0) {
         const loaded = petsRes.data.map((r: any) => r.data as Pet);
@@ -103,6 +106,11 @@ function AppContent() {
         if (cached) {
           try { setDonationConfig(JSON.parse(cached)); } catch {}
         }
+      }
+      if (blogRes.data && blogRes.data.length > 0) {
+        setBlogPosts(blogRes.data.map((r: any) => r.data as BlogPost));
+      } else {
+        setBlogPosts(INITIAL_BLOG_POSTS);
       }
       setDataLoaded(true);
     };
@@ -214,6 +222,7 @@ function AppContent() {
               { tab: 'directorio' as const, icon: 'pets', label: 'Mascotas' },
               { tab: 'comunidad' as const, icon: 'forum', label: 'Comunidad' },
               { tab: 'album' as const, icon: 'photo_library', label: 'Álbum' },
+              { tab: 'blog' as const, icon: 'newspaper', label: 'Blog' },
               ...(isAdmin ? [{ tab: 'admin' as const, icon: 'admin_panel_settings', label: 'Panel' }] : []),
             ].map(item => (
               <button
@@ -295,6 +304,7 @@ function AppContent() {
                 { tab: 'directorio' as const, icon: 'pets', label: 'Mascotas' },
                 { tab: 'comunidad' as const, icon: 'forum', label: 'Comunidad' },
                 { tab: 'album' as const, icon: 'photo_library', label: 'Álbum' },
+                { tab: 'blog' as const, icon: 'newspaper', label: 'Blog' },
                 { tab: 'faqs' as const, icon: 'help', label: 'FAQ' },
                 ...(isAdmin ? [{ tab: 'admin' as const, icon: 'admin_panel_settings', label: 'Panel Admin' }] : []),
               ].map((item) => (
@@ -508,6 +518,13 @@ function AppContent() {
               </div>
             )}
 
+            {/* Blog / Consejos section on homepage */}
+            {blogPosts.length > 0 && (
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-5">
+                <PetBlog posts={blogPosts} compact />
+              </div>
+            )}
+
           </div>
         )}
 
@@ -611,6 +628,13 @@ function AppContent() {
         {activeTab === 'album' && (
           <div className="animate-fade-in-up">
             <PhotoAlbum pets={pets} />
+          </div>
+        )}
+
+        {/* BLOG VIEW */}
+        {activeTab === 'blog' && (
+          <div className="animate-fade-in-up">
+            <PetBlog posts={blogPosts} />
           </div>
         )}
 
@@ -731,6 +755,7 @@ function AppContent() {
             <div className="flex flex-col gap-1.5">
               <button onClick={() => setActiveTab('directorio')} className="hover:text-primary text-left">Mascotas del Campus</button>
               <button onClick={() => setActiveTab('comunidad')} className="hover:text-primary text-left">Muro y Alertas</button>
+              <button onClick={() => setActiveTab('blog')} className="hover:text-primary text-left">Blog y Noticias</button>
               <button onClick={() => setActiveTab('donaciones')} className="hover:text-primary text-left">Cuentas y Donaciones</button>
               <button onClick={() => setActiveTab('perfil')} className="hover:text-primary text-left">Mi Perfil</button>
             </div>
