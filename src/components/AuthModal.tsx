@@ -68,67 +68,85 @@ export default function AuthModal({ open, onClose, onNotification }: AuthModalPr
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] animate-fade-in overflow-y-auto" onClick={onClose}>
-      <div className="min-h-full flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-scale-up my-8" onClick={e => e.stopPropagation()}>
-        {/* Header */}
-        <div className="bg-gradient-to-r from-[#00346f] to-[#0050aa] p-6 text-white text-center space-y-1">
-          <span className="material-symbols-outlined text-[36px] text-white/80">pets</span>
-          <h2 className="font-display font-extrabold text-xl">UNDC Pets</h2>
-          <p className="text-xs text-slate-200">{mode === 'login' ? 'Inicia sesión en tu cuenta' : 'Crea tu cuenta en la comunidad'}</p>
+    <div className="fixed inset-0 z-[70] animate-fade-in" onClick={onClose}>
+      {/* Fondo con blur */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#001a3a] via-[#00346f] to-[#001a3a]" />
+
+      {/* Contenedor scrollable */}
+      <div className="relative h-full w-full overflow-y-auto">
+        <div className="min-h-full flex items-center justify-center p-5">
+          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl animate-scale-up" onClick={e => e.stopPropagation()}>
+
+            {/* Header */}
+            <div className="text-center pt-8 pb-4 px-6">
+              <div className="bg-[#00346f] text-white h-14 w-14 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md">
+                <span className="material-symbols-outlined text-[32px]">pets</span>
+              </div>
+              <h2 className="font-display font-extrabold text-xl text-slate-900">
+                {mode === 'login' ? 'Bienvenido' : 'Únete'}
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                {mode === 'login' ? 'Ingresa con tu correo electrónico' : 'Crea una cuenta en la comunidad'}
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="px-6 pb-8 space-y-3.5">
+              {error && (
+                <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-700 font-medium flex items-start gap-2">
+                  <span className="material-symbols-outlined text-[16px] mt-0.5 shrink-0">error</span>
+                  {error}
+                </div>
+              )}
+
+              {mode === 'register' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">Nombre completo</label>
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Ej. Juan Pérez" required className="w-full text-sm p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] focus:ring-2 focus:ring-[#00346f]/20 bg-slate-50 transition-all" />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Correo electrónico</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="ejemplo@undc.edu.pe" required className="w-full text-sm p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] focus:ring-2 focus:ring-[#00346f]/20 bg-slate-50 transition-all" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Contraseña</label>
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required minLength={6} className="w-full text-sm p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] focus:ring-2 focus:ring-[#00346f]/20 bg-slate-50 transition-all" />
+              </div>
+
+              {mode === 'register' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">Confirmar contraseña</label>
+                  <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repite la contraseña" required minLength={6} className="w-full text-sm p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] focus:ring-2 focus:ring-[#00346f]/20 bg-slate-50 transition-all" />
+                </div>
+              )}
+
+              <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#00346f] to-[#0050aa] hover:from-[#002450] hover:to-[#00346f] disabled:from-slate-300 disabled:to-slate-300 text-white font-bold text-sm py-3.5 rounded-xl shadow-lg shadow-[#00346f]/25 transition-all flex items-center justify-center gap-2 mt-1">
+                {loading ? (
+                  <><span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Procesando...</>
+                ) : (
+                  <><span className="material-symbols-outlined text-[18px]">{mode === 'login' ? 'login' : 'person_add'}</span>{mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}</>
+                )}
+              </button>
+
+              <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100 mt-4">
+                {mode === 'login' ? (
+                  <span>¿No tienes cuenta? <button type="button" onClick={() => switchMode('register')} className="text-[#00346f] font-bold hover:underline">Regístrate aquí</button></span>
+                ) : (
+                  <span>¿Ya tienes cuenta? <button type="button" onClick={() => switchMode('login')} className="text-[#00346f] font-bold hover:underline">Inicia sesión</button></span>
+                )}
+              </div>
+            </form>
+
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-700 font-medium flex items-start gap-2">
-              <span className="material-symbols-outlined text-[16px] mt-0.5">error</span>
-              {error}
-            </div>
-          )}
+        {/* Botón cerrar flotante */}
+        <button type="button" onClick={onClose} className="fixed top-4 right-4 bg-white/10 hover:bg-white/20 text-white h-10 w-10 rounded-xl flex items-center justify-center backdrop-blur-xs transition-all z-10">
+          <span className="material-symbols-outlined text-[22px]">close</span>
+        </button>
 
-          {mode === 'register' && (
-            <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1.5">Nombre completo</label>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Ej. Juan Pérez" required className="w-full text-sm p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] focus:ring-1 focus:ring-[#00346f]/20 bg-slate-50" />
-            </div>
-          )}
-
-          <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5">Correo electrónico</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="ejemplo@undc.edu.pe" required className="w-full text-sm p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] focus:ring-1 focus:ring-[#00346f]/20 bg-slate-50" />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5">Contraseña</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required minLength={6} className="w-full text-sm p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] focus:ring-1 focus:ring-[#00346f]/20 bg-slate-50" />
-          </div>
-
-          {mode === 'register' && (
-            <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1.5">Confirmar contraseña</label>
-              <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repite la contraseña" required minLength={6} className="w-full text-sm p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#00346f] focus:ring-1 focus:ring-[#00346f]/20 bg-slate-50" />
-            </div>
-          )}
-
-          <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#00346f] to-[#0050aa] hover:from-[#002450] hover:to-[#00346f] disabled:from-slate-300 disabled:to-slate-300 text-white font-bold text-sm py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
-            {loading ? (
-              <><span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Procesando...</>
-            ) : (
-              <><span className="material-symbols-outlined text-[18px]">{mode === 'login' ? 'login' : 'person_add'}</span>{mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}</>
-            )}
-          </button>
-
-          <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100">
-            {mode === 'login' ? (
-              <span>¿No tienes cuenta? <button type="button" onClick={() => switchMode('register')} className="text-[#00346f] font-bold hover:underline">Regístrate aquí</button></span>
-            ) : (
-              <span>¿Ya tienes cuenta? <button type="button" onClick={() => switchMode('login')} className="text-[#00346f] font-bold hover:underline">Inicia sesión</button></span>
-            )}
-          </div>
-
-          <button type="button" onClick={onClose} className="w-full text-xs text-slate-400 hover:text-slate-600 py-1">Cancelar</button>
-        </form>
-      </div>
       </div>
     </div>
   );
