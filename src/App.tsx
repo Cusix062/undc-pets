@@ -727,7 +727,7 @@ function AppContent() {
 
         {/* ADMIN VIEW */}
         {activeTab === 'admin' && isAdmin && (
-          <AdminPanel onShowNotification={triggerNotification} onPetsChanged={handlePetsChanged} onConfigChanged={handleConfigChanged} />
+          <AdminPanel onShowNotification={triggerNotification} onPetsChanged={handlePetsChanged} onConfigChanged={handleConfigChanged} donationConfig={donationConfig} />
         )}
 
       </main>

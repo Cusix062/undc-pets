@@ -5,7 +5,7 @@ import { Pet, Post, DonationCampana, DonationConfig, DonationAccount, PendingDon
 
 type AdminTab = 'posts' | 'pets' | 'donaciones' | 'bloqueados';
 
-export default function AdminPanel({ onShowNotification, onPetsChanged, onConfigChanged }: { onShowNotification: (msg: string) => void; onPetsChanged?: (pet?: Pet, action?: string) => void; onConfigChanged?: (config: DonationConfig) => void }) {
+export default function AdminPanel({ onShowNotification, onPetsChanged, onConfigChanged, donationConfig }: { onShowNotification: (msg: string) => void; onPetsChanged?: (pet?: Pet, action?: string) => void; onConfigChanged?: (config: DonationConfig) => void; donationConfig?: DonationConfig }) {
   const { user, isAdmin } = useAuth();
   const [tab, setTab] = useState<AdminTab>('posts');
 
@@ -46,7 +46,7 @@ export default function AdminPanel({ onShowNotification, onPetsChanged, onConfig
 
       {tab === 'posts' && <PostsPanel onShowNotification={onShowNotification} />}
       {tab === 'pets' && <PetsPanel onShowNotification={onShowNotification} onPetsChanged={onPetsChanged} />}
-      {tab === 'donaciones' && <DonacionesPanel onShowNotification={onShowNotification} onConfigChanged={onConfigChanged} />}
+      {tab === 'donaciones' && <DonacionesPanel onShowNotification={onShowNotification} onConfigChanged={onConfigChanged} donationConfig={donationConfig} />}
       {tab === 'bloqueados' && <BloqueadosPanel onShowNotification={onShowNotification} />}
     </div>
   );
@@ -323,55 +323,57 @@ function PetsPanel({ onShowNotification, onPetsChanged }: { onShowNotification: 
 /* ===== Donaciones Panel ===== */
 type DonacionSubTab = 'metas' | 'pendientes' | 'bancaria';
 
-function DonacionesPanel({ onShowNotification, onConfigChanged }: { onShowNotification: (msg: string) => void; onConfigChanged?: (config: DonationConfig) => void }) {
-  const [config, setConfig] = useState<DonationConfig | null>(null);
+function DonacionesPanel({ onShowNotification, onConfigChanged, donationConfig }: { onShowNotification: (msg: string) => void; onConfigChanged?: (config: DonationConfig) => void; donationConfig?: DonationConfig }) {
   const [subTab, setSubTab] = useState<DonacionSubTab>('metas');
   const [editCampaign, setEditCampaign] = useState<DonationCampana | null>(null);
   const [showCampaignForm, setShowCampaignForm] = useState(false);
   const [campForm, setCampForm] = useState<Partial<DonationCampana>>({});
   const [celebrationVerify, setCelebrationVerify] = useState<{ title: string; targetAmount: number; amount: number } | null>(null);
+  const [localConfig, setLocalConfig] = useState<DonationConfig | null>(null);
 
-  const load = useCallback(async () => {
-    try {
-      const { data } = await supabase.from('donation_config').select('*').eq('id', 'main').single();
-      if (data) setConfig(data.data as DonationConfig);
-      else setDefaultConfig();
-    } catch {
-      setDefaultConfig();
+  // Use prop if available (reactive), otherwise load from Supabase
+  const config = donationConfig || localConfig;
+
+  useEffect(() => {
+    if (!donationConfig) {
+      const load = async () => {
+        try {
+          const { data } = await supabase.from('donation_config').select('*').eq('id', 'main').single();
+          if (data) setLocalConfig(data.data as DonationConfig);
+          else setLocalConfig(getDefaultConfig());
+        } catch {
+          setLocalConfig(getDefaultConfig());
+        }
+      };
+      load();
     }
-  }, []);
-
-  const setDefaultConfig = () => {
-    setConfig({
-      accounts: [
-        { bank: 'Banco de la Nación (Cta. Corriente)', number: '00-068-123456', CCI: '018-068-000068123456-78' },
-        { bank: 'BCP (Cuenta Recaudadora - Bienestar)', number: '191-9876543-0-12', CCI: '002-191-009876543012-54' },
-        { bank: 'Yape / Plin (Celular Coordinador)', number: '987 654 321', CCI: 'Nombre: Asociación UNDC Pets' },
-      ],
-      yapeNumber: '993 376 465',
-      plinNumber: '993 376 465',
-      qrCodes: { yape: '/images/yape.jpeg', plin: '/images/plin.jpeg', bcp: '/images/qr-bcp.svg', tunqui: '/images/qr-tunqui.svg' },
-      campaigns: [
-        { id: 'camp_food', title: 'Alimento Mensual', description: 'Compra de croquetas', currentAmount: 340, targetAmount: 500, urgency: 'Alta' },
-        { id: 'camp_medical', title: 'Cirugía de Firulais', description: 'Tratamiento de cadera', currentAmount: 210, targetAmount: 800, urgency: 'Crítica' },
-        { id: 'camp_spay', title: 'Esterilización', description: 'Esterilización preventiva', currentAmount: 950, targetAmount: 1200, urgency: 'Media' },
-      ],
-      pendingDonations: [],
-    });
-  };
-
-  useEffect(() => { load(); }, [load]);
+  }, [donationConfig]);
 
   const saveConfig = async (newConfig: DonationConfig) => {
     try {
       await supabase.from('donation_config').upsert({ id: 'main', data: newConfig as any });
     } catch {}
-    setConfig(newConfig);
+    if (!donationConfig) setLocalConfig(newConfig);
     if (onConfigChanged) onConfigChanged(newConfig);
     onShowNotification('Configuración de donaciones actualizada');
   };
 
-  if (!config) return null;
+  const getDefaultConfig = (): DonationConfig => ({
+    accounts: [
+      { bank: 'Banco de la Nación (Cta. Corriente)', number: '00-068-123456', CCI: '018-068-000068123456-78' },
+      { bank: 'BCP (Cuenta Recaudadora - Bienestar)', number: '191-9876543-0-12', CCI: '002-191-009876543012-54' },
+      { bank: 'Yape / Plin (Celular Coordinador)', number: '987 654 321', CCI: 'Nombre: Asociación UNDC Pets' },
+    ],
+    yapeNumber: '993 376 465',
+    plinNumber: '993 376 465',
+    qrCodes: { yape: '/images/yape.jpeg', plin: '/images/plin.jpeg', bcp: '/images/qr-bcp.svg', tunqui: '/images/qr-tunqui.svg' },
+    campaigns: [
+      { id: 'camp_food', title: 'Alimento Mensual', description: 'Compra de croquetas', currentAmount: 340, targetAmount: 500, urgency: 'Alta' },
+      { id: 'camp_medical', title: 'Cirugía de Firulais', description: 'Tratamiento de cadera', currentAmount: 210, targetAmount: 800, urgency: 'Crítica' },
+      { id: 'camp_spay', title: 'Esterilización', description: 'Esterilización preventiva', currentAmount: 950, targetAmount: 1200, urgency: 'Media' },
+    ],
+    pendingDonations: [],
+  });
 
   const pendingCount = (config.pendingDonations || []).filter(pd => !pd.verified).length;
 
